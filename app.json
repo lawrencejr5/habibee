@@ -2,10 +2,10 @@
   "expo": {
     "name": "habibee",
     "slug": "habibee",
+    "scheme": "com.lawrencejr.habibee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "habibee",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -22,7 +22,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.lawrencejr.habibee"
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +35,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "52883c36-301b-4fdf-b88b-85b3bf6746fb"
+      }
+    },
+    "owner": "lawrencejr"
   }
 }
