@@ -28,11 +28,23 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    GoogleSans: require("../assets/fonts/GoogleSans/GoogleSansFlex.ttf"),
     FredokaBold: require("../assets/fonts/Fredoka/Fredoka-Bold.ttf"),
     FredokaLight: require("../assets/fonts/Fredoka/Fredoka-Light.ttf"),
     FredokaMedium: require("../assets/fonts/Fredoka/Fredoka-Medium.ttf"),
     FredokaRegular: require("../assets/fonts/Fredoka/Fredoka-Regular.ttf"),
     FredokaSemiBold: require("../assets/fonts/Fredoka/Fredoka-SemiBold.ttf"),
+    NunitoBold: require("../assets/fonts/Nunito/Nunito-Bold.ttf"),
+    NunitoLight: require("../assets/fonts/Nunito/Nunito-Light.ttf"),
+    NunitoMedium: require("../assets/fonts/Nunito/Nunito-Medium.ttf"),
+    NunitoRegular: require("../assets/fonts/Nunito/Nunito-Regular.ttf"),
+    NunitoSemiBold: require("../assets/fonts/Nunito/Nunito-SemiBold.ttf"),
+    ManropeBold: require("../assets/fonts/Manrope/Manrope-Bold.ttf"),
+    ManropeLight: require("../assets/fonts/Manrope/Manrope-Light.ttf"),
+    ManropeMedium: require("../assets/fonts/Manrope/Manrope-Medium.ttf"),
+    ManropeRegular: require("../assets/fonts/Manrope/Manrope-Regular.ttf"),
+    ManropeSemiBold: require("../assets/fonts/Manrope/Manrope-SemiBold.ttf"),
+    ManropeExtraBold: require("../assets/fonts/Manrope/Manrope-ExtraBold.ttf"),
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
