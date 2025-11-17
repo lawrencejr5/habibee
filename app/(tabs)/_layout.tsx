@@ -32,7 +32,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="index"
         options={{
           title: "Home",
           tabBarIcon: ({ focused }) => (
@@ -79,7 +79,7 @@ export default function TabLayout() {
                 alignSelf: "center",
                 marginBottom: -12,
                 borderColor: Colors[theme].primary,
-                borderWidth: focused ? 1 : 0,
+                // borderWidth: focused ? 2 : 0,
               }}
               resizeMode="contain"
             />
