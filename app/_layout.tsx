@@ -1,4 +1,3 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
   DefaultTheme,
@@ -28,7 +27,11 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-    ...FontAwesome.font,
+    FredokaBold: require("../assets/fonts/Fredoka/Fredoka-Bold.ttf"),
+    FredokaLight: require("../assets/fonts/Fredoka/Fredoka-Light.ttf"),
+    FredokaMedium: require("../assets/fonts/Fredoka/Fredoka-Medium.ttf"),
+    FredokaRegular: require("../assets/fonts/Fredoka/Fredoka-Regular.ttf"),
+    FredokaSemiBold: require("../assets/fonts/Fredoka/Fredoka-SemiBold.ttf"),
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
