@@ -1,6 +1,8 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
+import * as Haptics from "expo-haptics";
+
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -12,6 +14,11 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      screenListeners={{
+        tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        },
+      }}
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
         headerShown: useClientOnlyValue(false, false),
@@ -42,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          title: "Friends",
+          title: "Connect",
           tabBarIcon: ({ focused }) => (
             <Image
               source={require("../../assets/icons/friends.png")}
@@ -64,13 +71,12 @@ export default function TabLayout() {
             <Image
               source={require("../../assets/images/avatar.png")}
               style={{
-                height: 40,
-                width: 40,
+                height: 35,
+                width: 35,
                 borderRadius: 25,
                 alignSelf: "center",
-                marginBottom: -12,
+                marginBottom: -15,
                 borderColor: Colors[theme].primary,
-                // borderWidth: focused ? 2 : 0,
               }}
               resizeMode="contain"
             />

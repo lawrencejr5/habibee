@@ -1,12 +1,18 @@
 import { StyleSheet } from "react-native";
 
 import { Text, View } from "@/components/Themed";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function TabTwoScreen() {
+export default function ConnectPage() {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="#121212" />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingHorizontal: 20 },
+      ]}
+    >
+      <Text style={styles.title}>Connect</Text>
     </View>
   );
 }
@@ -14,12 +20,10 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 30,
+    fontFamily: "NunitoBold",
   },
   separator: {
     marginVertical: 30,

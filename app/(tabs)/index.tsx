@@ -11,6 +11,8 @@ import { useColorScheme } from "react-native";
 import AddButton from "@/components/AddButton";
 import { habitIcons, habitsData } from "@/data/habits";
 
+import * as Haptics from "expo-haptics";
+
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
@@ -217,7 +219,13 @@ const HabitCard: React.FC<{
   const theme = useColorScheme();
 
   return (
-    <View
+    <Pressable
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }}
+      onLongPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }}
       style={{
         flexDirection: "row",
         justifyContent: "space-between",
@@ -336,7 +344,7 @@ const HabitCard: React.FC<{
           }}
         />
       </View>
-    </View>
+    </Pressable>
   );
 };
 
@@ -361,7 +369,7 @@ const styles = StyleSheet.create({
 
   streak_card: {
     width: "100%",
-    marginTop: 30,
+    marginTop: 10,
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,

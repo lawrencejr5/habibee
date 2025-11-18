@@ -1,21 +1,33 @@
-import { Text, View } from "@/components/Themed";
-import React from "react";
 import { StyleSheet } from "react-native";
 
-const Account = () => {
+import { Text, View } from "@/components/Themed";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+export default function Account() {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
-      <Text>Account</Text>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingHorizontal: 20 },
+      ]}
+    >
+      <Text style={styles.title}>Account</Text>
     </View>
   );
-};
-
-export default Account;
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  },
+  title: {
+    fontSize: 30,
+    fontFamily: "NunitoBold",
+  },
+  separator: {
+    marginVertical: 30,
+    height: 1,
+    width: "80%",
   },
 });
