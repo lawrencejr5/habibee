@@ -36,7 +36,7 @@ export function Text(props: TextProps) {
 
   return (
     <DefaultText
-      style={[{ color, fontFamily: "ManropeRegular" }, style]}
+      style={[{ color, fontFamily: "NunitoRegular" }, style]}
       {...otherProps}
     />
   );

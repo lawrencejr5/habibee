@@ -1,4 +1,4 @@
-import { Image, StyleSheet } from "react-native";
+import { Image, Pressable, StyleSheet } from "react-native";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,8 +28,12 @@ export default function TabOneScreen() {
       {/* User */}
       <View style={styles.user_container}>
         <Image
-          source={require("../../assets/images/avatar.png")}
-          style={{ width: 40, height: 40, borderRadius: 20 }}
+          source={
+            theme === "light"
+              ? require("../../assets/images/icon-nobg-black.png")
+              : require("../../assets/images/icon-nobg-white.png")
+          }
+          style={{ width: 60, height: 60, borderRadius: 20 }}
         />
         <View>
           <ThemedText style={styles.greeting_user}>
@@ -38,7 +42,7 @@ export default function TabOneScreen() {
           <Text
             style={[
               styles.date_time,
-              { color: Colors[theme ?? "light"].text_grey },
+              { color: Colors[theme ?? "light"].text_secondary },
             ]}
           >
             Thur, 10 March 2025
@@ -50,7 +54,11 @@ export default function TabOneScreen() {
       <View
         style={[
           styles.streak_card,
-          { backgroundColor: Colors[theme ?? "light"].light_background },
+          {
+            backgroundColor: Colors[theme ?? "light"].surface,
+            borderWidth: 3,
+            borderColor: Colors[theme ?? "light"].border,
+          },
         ]}
       >
         <View
@@ -68,12 +76,10 @@ export default function TabOneScreen() {
             }}
           />
           <View style={{ backgroundColor: "transparent" }}>
-            <ThemedText
-              style={{ fontFamily: "ManropeExtraBold", fontSize: 25 }}
-            >
+            <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 25 }}>
               365
             </ThemedText>
-            <ThemedText style={{ fontFamily: "ManropeLight", fontSize: 14 }}>
+            <ThemedText style={{ fontFamily: "NunitoLight", fontSize: 14 }}>
               day streak
             </ThemedText>
           </View>
@@ -87,21 +93,50 @@ export default function TabOneScreen() {
             gap: 10,
           }}
         >
-          <StreakDay day="S" done={true} />
-          <StreakDay day="M" done={true} />
-          <StreakDay day="T" done={true} />
-          <StreakDay day="W" done={true} />
-          <StreakDay day="T" done={false} />
-          <StreakDay day="F" done={false} />
-          <StreakDay day="S" done={false} />
+          <StreakDay day="Sun" done={true} />
+          <StreakDay day="Mon" done={true} />
+          <StreakDay day="Tue" done={true} />
+          <StreakDay day="Wed" done={false} />
+          <StreakDay day="Thu" done={false} />
+          <StreakDay day="Fri" done={false} />
+          <StreakDay day="Sat" done={false} />
         </View>
       </View>
 
       {/* Tasks */}
       <View style={{ marginTop: 40 }}>
-        <ThemedText style={{ fontFamily: "ManropeExtraBold", fontSize: 20 }}>
-          Current Habibees...
-        </ThemedText>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 20 }}>
+            Current Habibees
+          </ThemedText>
+          <Pressable
+            style={{
+              paddingVertical: 5,
+              paddingHorizontal: 10,
+              borderRadius: 20,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 7,
+            }}
+          >
+            <ThemedText
+              style={{
+                fontFamily: "NunitoBold",
+                fontSize: 14,
+                color: Colors[theme ?? "light"].text_secondary,
+              }}
+            >
+              See all
+            </ThemedText>
+          </Pressable>
+        </View>
         <View>
           <HabitCard duration="32 mins" title="Praying everyday" done={true} />
           <HabitCard duration="2 hrs" title="Gyming" done={false} />
@@ -131,16 +166,21 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
             ? require("../../assets/icons/check-fill.png")
             : require("../../assets/icons/check-outline.png")
         }
-        style={{ tintColor: "#e56d2b", width: 22, height: 22 }}
-      />
-      <Text
         style={{
-          color: Colors[theme ?? "light"].text_grey,
+          tintColor: Colors[theme ?? "light"].primary,
+          width: 22,
+          height: 22,
+        }}
+      />
+      <ThemedText
+        style={{
+          color: Colors[theme ?? "light"].text_secondary,
           marginTop: 10,
+          fontFamily: "NunitoBold",
         }}
       >
         {day}
-      </Text>
+      </ThemedText>
     </View>
   );
 };
@@ -158,14 +198,16 @@ const HabitCard: React.FC<{
         justifyContent: "space-between",
         alignItems: "center",
         width: "100%",
-        backgroundColor: Colors[theme ?? "light"].light_background,
+        backgroundColor: Colors[theme ?? "light"].surface,
         padding: 15,
         marginTop: 15,
-        borderRadius: 12,
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: Colors[theme ?? "light"].border,
       }}
     >
       <View>
-        <ThemedText style={{ fontFamily: "ManropeExtraBold" }}>
+        <ThemedText style={{ fontFamily: "NunitoBold", fontSize: 16 }}>
           {title}
         </ThemedText>
         <View
@@ -179,27 +221,37 @@ const HabitCard: React.FC<{
           <Image
             source={require("../../assets/icons/clock.png")}
             style={{
-              tintColor: Colors[theme ?? "light"].text_grey,
+              tintColor: Colors[theme ?? "light"].text_secondary,
               width: 14,
               height: 14,
             }}
           />
           <ThemedText
             style={{
-              fontFamily: "ManropeLight",
+              fontFamily: "NunitoLight",
               fontSize: 12,
-              color: Colors[theme ?? "light"].text_grey,
+              color: Colors[theme ?? "light"].text_secondary,
             }}
           >
             {duration}
           </ThemedText>
         </View>
       </View>
-      <View>
+      <View
+        style={{
+          borderLeftWidth: 3,
+          borderColor: Colors[theme ?? "light"].border,
+          width: 50,
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          height: "100%",
+        }}
+      >
         <Image
           source={require("../../assets/icons/fire.png")}
           style={{
-            tintColor: !done ? Colors[theme ?? "light"].text_grey : "",
+            tintColor: !done ? Colors[theme ?? "light"].text_secondary : "",
             width: 30,
             height: 30,
           }}
@@ -217,14 +269,13 @@ const styles = StyleSheet.create({
   user_container: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
   greeting_user: {
     fontSize: 18,
-    fontFamily: "ManropeExtraBold",
+    fontFamily: "NunitoExtraBold",
   },
   date_time: {
-    fontFamily: "ManropeRegular",
+    fontFamily: "NunitoRegular",
     fontSize: 12,
     marginTop: 5,
   },
@@ -232,7 +283,7 @@ const styles = StyleSheet.create({
   streak_card: {
     width: "100%",
     marginTop: 30,
-    borderRadius: 15,
+    borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,
   },
