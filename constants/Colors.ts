@@ -9,12 +9,12 @@ export default {
     primary_variant: "#cc5f25",
     text: "#1f2428",
     text_secondary: "#4a4f55",
-    border: "#dbdbdbff",
+    border: "#e6e6e6",
     card: "#f7f7f7",
     success: "#3fbf6b",
     warning: "#f5a623",
     danger: "#e63946",
-    accent1: "#ff9f66",
+    accent1: "#fe8f4f",
     accent2: "#ffd7b5",
   },
 
@@ -30,7 +30,7 @@ export default {
     success: "#3fbf6b",
     warning: "#f5a623",
     danger: "#e63946",
-    accent1: "#ff9f66",
+    accent1: "#fe8f4f",
     accent2: "#e8bb99",
   },
 };

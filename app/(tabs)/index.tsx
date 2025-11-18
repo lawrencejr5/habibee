@@ -9,6 +9,7 @@ import Colors from "@/constants/Colors";
 import { useColorScheme } from "react-native";
 
 import AddButton from "@/components/AddButton";
+import { habitIcons, habitsData } from "@/data/habits";
 
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
@@ -128,7 +129,7 @@ export default function TabOneScreen() {
             }}
           >
             <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 20 }}>
-              Current Habibees
+              Daily Habibees
             </ThemedText>
             <Pressable
               style={{
@@ -153,18 +154,17 @@ export default function TabOneScreen() {
             </Pressable>
           </View>
           <View>
-            <HabitCard
-              duration="32 mins"
-              title="Praying everyday"
-              done={true}
-            />
-            <HabitCard duration="2 hrs" title="Gyming" done={false} />
-            <HabitCard
-              duration="10 mins"
-              title="Read 10 chapters of a book"
-              done={true}
-            />
-            <HabitCard duration="1 hr" title="Code for an hour" done={true} />
+            {habitsData.map((habit) => (
+              <HabitCard
+                key={habit.id}
+                duration={habit.duration}
+                title={habit.title}
+                done={habit.done}
+                streak={habit.streak}
+                habitType={habit.habitType}
+                themeColor={habit.themeColor}
+              />
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -210,8 +210,12 @@ const HabitCard: React.FC<{
   duration: string;
   title: string;
   done: boolean;
-}> = ({ duration, title, done }) => {
+  streak: number;
+  habitType: string;
+  themeColor: string;
+}> = ({ duration, title, done, streak, habitType, themeColor }) => {
   const theme = useColorScheme();
+
   return (
     <View
       style={{
@@ -227,35 +231,89 @@ const HabitCard: React.FC<{
         borderColor: Colors[theme ?? "light"].border,
       }}
     >
-      <View>
-        <ThemedText style={{ fontFamily: "NunitoBold", fontSize: 16 }}>
-          {title}
-        </ThemedText>
-        <View
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 15,
+          marginLeft: 5,
+        }}
+      >
+        <Image
+          source={habitIcons[habitType]}
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 10,
-            gap: 7,
+            width: 20,
+            height: 20,
+            tintColor: themeColor,
           }}
-        >
-          <Image
-            source={require("../../assets/icons/clock.png")}
-            style={{
-              tintColor: Colors[theme ?? "light"].text_secondary,
-              width: 14,
-              height: 14,
-            }}
-          />
+        />
+
+        <View>
           <ThemedText
+            numberOfLines={1}
+            style={{ fontFamily: "NunitoBold", fontSize: 16, width: 200 }}
+          >
+            {title}
+          </ThemedText>
+          <View
             style={{
-              fontFamily: "NunitoLight",
-              fontSize: 12,
-              color: Colors[theme ?? "light"].text_secondary,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 10,
             }}
           >
-            {duration}
-          </ThemedText>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 7,
+                width: 70,
+              }}
+            >
+              <Image
+                source={require("../../assets/icons/clock.png")}
+                style={{
+                  tintColor: Colors[theme ?? "light"].text_secondary,
+                  width: 14,
+                  height: 14,
+                }}
+              />
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoLight",
+                  fontSize: 12,
+                  color: Colors[theme ?? "light"].text_secondary,
+                }}
+              >
+                {duration}
+              </ThemedText>
+            </View>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 7 }}
+            >
+              <Image
+                source={require("../../assets/icons/fire.png")}
+                style={{
+                  tintColor: !done
+                    ? Colors[theme ?? "light"].text_secondary
+                    : "",
+                  width: 14,
+                  height: 14,
+                }}
+              />
+              <ThemedText
+                style={{
+                  color: done
+                    ? Colors[theme ?? "light"].accent1
+                    : Colors[theme ?? "light"].text_secondary,
+                  fontFamily: "NunitoBold",
+                }}
+              >
+                {streak}
+              </ThemedText>
+            </View>
+          </View>
         </View>
       </View>
       <View
