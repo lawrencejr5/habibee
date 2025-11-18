@@ -8,25 +8,26 @@ import { Text as ThemedText } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "react-native";
 
+import AddButton from "@/components/AddButton";
+
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
   return (
-    <ScrollView
-      style={[
-        styles.container,
-        {
-          backgroundColor: Colors[theme ?? "light"].background,
-        },
-      ]}
-      contentContainerStyle={{
-        paddingVertical: insets.top + 20,
-        paddingBottom: 40,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* User */}
-      <View style={styles.user_container}>
+    <View style={{ flex: 1 }}>
+      {/* User - Fixed Header */}
+      <View
+        style={[
+          styles.user_container,
+          {
+            paddingTop: insets.top + 10,
+            paddingBottom: 10,
+            paddingHorizontal: 20,
+            backgroundColor: Colors[theme ?? "light"].background,
+            zIndex: 2,
+          },
+        ]}
+      >
         <Image
           source={
             theme === "light"
@@ -50,105 +51,125 @@ export default function TabOneScreen() {
         </View>
       </View>
 
-      {/* Streak Card */}
-      <View
+      <ScrollView
         style={[
-          styles.streak_card,
+          styles.container,
           {
-            backgroundColor: Colors[theme ?? "light"].surface,
-            borderWidth: 3,
-            borderColor: Colors[theme ?? "light"].border,
+            backgroundColor: Colors[theme ?? "light"].background,
           },
         ]}
+        contentContainerStyle={{
+          paddingBottom: 40,
+        }}
+        showsVerticalScrollIndicator={false}
       >
+        {/* Streak Card */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-          }}
+          style={[
+            styles.streak_card,
+            {
+              backgroundColor: Colors[theme ?? "light"].surface,
+              borderWidth: 3,
+              borderColor: Colors[theme ?? "light"].border,
+            },
+          ]}
         >
-          <Image
-            source={require("../../assets/icons/fire.png")}
+          <View
             style={{
-              width: 50,
-              height: 50,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
             }}
-          />
-          <View style={{ backgroundColor: "transparent" }}>
-            <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 25 }}>
-              365
-            </ThemedText>
-            <ThemedText style={{ fontFamily: "NunitoLight", fontSize: 14 }}>
-              day streak
-            </ThemedText>
+          >
+            <Image
+              source={require("../../assets/icons/fire.png")}
+              style={{
+                width: 50,
+                height: 50,
+              }}
+            />
+            <View style={{ backgroundColor: "transparent" }}>
+              <ThemedText
+                style={{ fontFamily: "NunitoExtraBold", fontSize: 25 }}
+              >
+                365
+              </ThemedText>
+              <ThemedText style={{ fontFamily: "NunitoLight", fontSize: 14 }}>
+                day streak
+              </ThemedText>
+            </View>
+          </View>
+
+          <View
+            style={{
+              marginTop: 30,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <StreakDay day="Sun" done={true} />
+            <StreakDay day="Mon" done={true} />
+            <StreakDay day="Tue" done={true} />
+            <StreakDay day="Wed" done={false} />
+            <StreakDay day="Thu" done={false} />
+            <StreakDay day="Fri" done={false} />
+            <StreakDay day="Sat" done={false} />
           </View>
         </View>
 
-        <View
-          style={{
-            marginTop: 30,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <StreakDay day="Sun" done={true} />
-          <StreakDay day="Mon" done={true} />
-          <StreakDay day="Tue" done={true} />
-          <StreakDay day="Wed" done={false} />
-          <StreakDay day="Thu" done={false} />
-          <StreakDay day="Fri" done={false} />
-          <StreakDay day="Sat" done={false} />
-        </View>
-      </View>
-
-      {/* Tasks */}
-      <View style={{ marginTop: 40 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 20 }}>
-            Current Habibees
-          </ThemedText>
-          <Pressable
+        {/* Tasks */}
+        <View style={{ marginTop: 40 }}>
+          <View
             style={{
-              paddingVertical: 5,
-              paddingHorizontal: 10,
-              borderRadius: 20,
               flexDirection: "row",
-              alignItems: "center",
               justifyContent: "space-between",
-              gap: 7,
+              alignItems: "center",
             }}
           >
-            <ThemedText
+            <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 20 }}>
+              Current Habibees
+            </ThemedText>
+            <Pressable
               style={{
-                fontFamily: "NunitoBold",
-                fontSize: 14,
-                color: Colors[theme ?? "light"].text_secondary,
+                paddingVertical: 5,
+                paddingHorizontal: 10,
+                borderRadius: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 7,
               }}
             >
-              See all
-            </ThemedText>
-          </Pressable>
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 14,
+                  color: Colors[theme ?? "light"].text_secondary,
+                }}
+              >
+                See all
+              </ThemedText>
+            </Pressable>
+          </View>
+          <View>
+            <HabitCard
+              duration="32 mins"
+              title="Praying everyday"
+              done={true}
+            />
+            <HabitCard duration="2 hrs" title="Gyming" done={false} />
+            <HabitCard
+              duration="10 mins"
+              title="Read 10 chapters of a book"
+              done={true}
+            />
+            <HabitCard duration="1 hr" title="Code for an hour" done={true} />
+          </View>
         </View>
-        <View>
-          <HabitCard duration="32 mins" title="Praying everyday" done={true} />
-          <HabitCard duration="2 hrs" title="Gyming" done={false} />
-          <HabitCard
-            duration="10 mins"
-            title="Read 10 chapters of a book"
-            done={true}
-          />
-          <HabitCard duration="1 hr" title="Code for an hour" done={true} />
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+      <AddButton />
+    </View>
   );
 }
 
