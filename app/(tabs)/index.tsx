@@ -11,46 +11,84 @@ import { useColorScheme } from "react-native";
 import AddButton from "@/components/AddButton";
 import { habitIcons, habitsData } from "@/data/habits";
 
+import AddModal from "@/components/home/AddModal";
 import * as Haptics from "expo-haptics";
+import { useState } from "react";
 
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+
+  const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
+
+  const open = () => {
+    setAddModalVisible(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* User - Fixed Header */}
       <View
-        style={[
-          styles.user_container,
-          {
-            paddingTop: insets.top + 10,
-            paddingBottom: 10,
-            paddingHorizontal: 20,
-            backgroundColor: Colors[theme ?? "light"].background,
-            zIndex: 2,
-          },
-        ]}
+        style={{
+          paddingTop: insets.top + 10,
+          paddingBottom: 10,
+          paddingHorizontal: 10,
+          backgroundColor: Colors[theme ?? "light"].background,
+          zIndex: 2,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
       >
-        <Image
-          source={
-            theme === "light"
-              ? require("../../assets/images/icon-nobg-black.png")
-              : require("../../assets/images/icon-nobg-white.png")
-          }
-          style={{ width: 60, height: 60, borderRadius: 20 }}
-        />
-        <View>
-          <ThemedText style={styles.greeting_user}>
-            Morning, Lawrencejr
-          </ThemedText>
+        <View style={styles.user_container}>
+          <Image
+            source={
+              theme === "light"
+                ? require("../../assets/images/icon-nobg-black.png")
+                : require("../../assets/images/icon-nobg-white.png")
+            }
+            style={{ width: 60, height: 60, borderRadius: 20 }}
+          />
+          <View>
+            <ThemedText style={styles.greeting_user}>
+              Morning, Lawrencejr
+            </ThemedText>
+            <Text
+              style={[
+                styles.date_time,
+                { color: Colors[theme ?? "light"].text_secondary },
+              ]}
+            >
+              Thur, 10 March 2025
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            marginTop: 10,
+          }}
+        >
           <Text
-            style={[
-              styles.date_time,
-              { color: Colors[theme ?? "light"].text_secondary },
-            ]}
+            style={{
+              fontFamily: "NunitoExtraBold",
+              fontSize: 16,
+              color: Colors[theme ?? "light"].accent1,
+            }}
           >
-            Thur, 10 March 2025
+            365
           </Text>
+          <Image
+            source={require("../../assets/icons/fire.png")}
+            style={{
+              width: 20,
+              height: 20,
+            }}
+          />
         </View>
       </View>
 
@@ -67,45 +105,10 @@ export default function TabOneScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Streak Card */}
-        <View
-          style={[
-            styles.streak_card,
-            {
-              backgroundColor: Colors[theme ?? "light"].surface,
-              borderWidth: 3,
-              borderColor: Colors[theme ?? "light"].border,
-            },
-          ]}
-        >
+        <View style={[styles.streak_card]}>
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <Image
-              source={require("../../assets/icons/fire.png")}
-              style={{
-                width: 50,
-                height: 50,
-              }}
-            />
-            <View style={{ backgroundColor: "transparent" }}>
-              <ThemedText
-                style={{ fontFamily: "NunitoExtraBold", fontSize: 25 }}
-              >
-                365
-              </ThemedText>
-              <ThemedText style={{ fontFamily: "NunitoLight", fontSize: 14 }}>
-                day streak
-              </ThemedText>
-            </View>
-          </View>
-
-          <View
-            style={{
-              marginTop: 30,
+              marginTop: 10,
               flexDirection: "row",
               justifyContent: "space-between",
               gap: 10,
@@ -170,7 +173,8 @@ export default function TabOneScreen() {
           </View>
         </View>
       </ScrollView>
-      <AddButton />
+      <AddButton onPress={open} />
+      <AddModal visible={addModalVisible} setVisible={setAddModalVisible} />
     </View>
   );
 }
@@ -183,6 +187,14 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
         alignItems: "center",
       }}
     >
+      <ThemedText
+        style={{
+          color: Colors[theme ?? "light"].text_secondary,
+          fontFamily: "NunitoBold",
+        }}
+      >
+        {day}
+      </ThemedText>
       <Image
         source={
           done
@@ -191,19 +203,11 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
         }
         style={{
           tintColor: Colors[theme ?? "light"].primary,
-          width: 22,
-          height: 22,
+          width: 25,
+          marginTop: 15,
+          height: 25,
         }}
       />
-      <ThemedText
-        style={{
-          color: Colors[theme ?? "light"].text_secondary,
-          marginTop: 10,
-          fontFamily: "NunitoBold",
-        }}
-      >
-        {day}
-      </ThemedText>
     </View>
   );
 };
@@ -275,8 +279,8 @@ const HabitCard: React.FC<{
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 7,
-                width: 70,
+                gap: 5,
+                width: 80,
               }}
             >
               <Image
@@ -289,7 +293,7 @@ const HabitCard: React.FC<{
               />
               <ThemedText
                 style={{
-                  fontFamily: "NunitoLight",
+                  fontFamily: "NunitoBold",
                   fontSize: 12,
                   color: Colors[theme ?? "light"].text_secondary,
                 }}
@@ -358,7 +362,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   greeting_user: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "NunitoExtraBold",
   },
   date_time: {
@@ -369,9 +373,7 @@ const styles = StyleSheet.create({
 
   streak_card: {
     width: "100%",
-    marginTop: 10,
     borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
 });

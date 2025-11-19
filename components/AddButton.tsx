@@ -4,11 +4,12 @@ import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 
-const AddButton = () => {
+const AddButton: React.FC<{ onPress: () => void }> = ({ onPress }) => {
   const theme = useColorScheme();
   return (
     <View style={{ bottom: 10, right: 20, zIndex: 3, position: "absolute" }}>
       <Pressable
+        onPress={onPress}
         style={{
           backgroundColor: Colors[theme ?? "light"].primary,
           width: 50,
