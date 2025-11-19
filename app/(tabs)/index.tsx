@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text as ThemedText } from "@/components/Themed";
 
+import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "react-native";
 
 import AddButton from "@/components/AddButton";
 import { habitIcons, habitsData } from "@/data/habits";
@@ -34,7 +34,7 @@ export default function TabOneScreen() {
           paddingTop: insets.top + 10,
           paddingBottom: 10,
           paddingHorizontal: 10,
-          backgroundColor: Colors[theme ?? "light"].background,
+          backgroundColor: Colors[theme].background,
           zIndex: 2,
           flexDirection: "row",
           justifyContent: "space-between",
@@ -57,7 +57,7 @@ export default function TabOneScreen() {
             <Text
               style={[
                 styles.date_time,
-                { color: Colors[theme ?? "light"].text_secondary },
+                { color: Colors[theme].text_secondary },
               ]}
             >
               Thur, 10 March 2025
@@ -77,7 +77,7 @@ export default function TabOneScreen() {
             style={{
               fontFamily: "NunitoExtraBold",
               fontSize: 16,
-              color: Colors[theme ?? "light"].accent1,
+              color: Colors[theme].accent1,
             }}
           >
             365
@@ -96,7 +96,7 @@ export default function TabOneScreen() {
         style={[
           styles.container,
           {
-            backgroundColor: Colors[theme ?? "light"].background,
+            backgroundColor: Colors[theme].background,
           },
         ]}
         contentContainerStyle={{
@@ -151,7 +151,7 @@ export default function TabOneScreen() {
                 style={{
                   fontFamily: "NunitoBold",
                   fontSize: 14,
-                  color: Colors[theme ?? "light"].text_secondary,
+                  color: Colors[theme].text_secondary,
                 }}
               >
                 See all
@@ -189,7 +189,7 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
     >
       <ThemedText
         style={{
-          color: Colors[theme ?? "light"].text_secondary,
+          color: Colors[theme].text_secondary,
           fontFamily: "NunitoBold",
         }}
       >
@@ -202,7 +202,7 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
             : require("../../assets/icons/check-outline.png")
         }
         style={{
-          tintColor: Colors[theme ?? "light"].primary,
+          tintColor: Colors[theme].primary,
           width: 25,
           marginTop: 15,
           height: 25,
@@ -235,12 +235,12 @@ const HabitCard: React.FC<{
         justifyContent: "space-between",
         alignItems: "center",
         width: "100%",
-        backgroundColor: Colors[theme ?? "light"].surface,
+        backgroundColor: Colors[theme].surface,
         padding: 15,
         marginTop: 15,
         borderRadius: 15,
         borderWidth: 2,
-        borderColor: Colors[theme ?? "light"].border,
+        borderColor: Colors[theme].border,
       }}
     >
       <View
@@ -286,7 +286,7 @@ const HabitCard: React.FC<{
               <Image
                 source={require("../../assets/icons/clock.png")}
                 style={{
-                  tintColor: Colors[theme ?? "light"].text_secondary,
+                  tintColor: Colors[theme].text_secondary,
                   width: 14,
                   height: 14,
                 }}
@@ -295,7 +295,7 @@ const HabitCard: React.FC<{
                 style={{
                   fontFamily: "NunitoBold",
                   fontSize: 12,
-                  color: Colors[theme ?? "light"].text_secondary,
+                  color: Colors[theme].text_secondary,
                 }}
               >
                 {duration}
@@ -307,9 +307,7 @@ const HabitCard: React.FC<{
               <Image
                 source={require("../../assets/icons/fire.png")}
                 style={{
-                  tintColor: !done
-                    ? Colors[theme ?? "light"].text_secondary
-                    : "",
+                  tintColor: !done ? Colors[theme].text_secondary : "",
                   width: 14,
                   height: 14,
                 }}
@@ -317,8 +315,8 @@ const HabitCard: React.FC<{
               <ThemedText
                 style={{
                   color: done
-                    ? Colors[theme ?? "light"].accent1
-                    : Colors[theme ?? "light"].text_secondary,
+                    ? Colors[theme].accent1
+                    : Colors[theme].text_secondary,
                   fontFamily: "NunitoBold",
                 }}
               >
@@ -331,7 +329,7 @@ const HabitCard: React.FC<{
       <View
         style={{
           borderLeftWidth: 3,
-          borderColor: Colors[theme ?? "light"].border,
+          borderColor: Colors[theme].border,
           width: 50,
           flexDirection: "row",
           justifyContent: "flex-end",
@@ -342,7 +340,7 @@ const HabitCard: React.FC<{
         <Image
           source={require("../../assets/icons/fire.png")}
           style={{
-            tintColor: !done ? Colors[theme ?? "light"].text_secondary : "",
+            tintColor: !done ? Colors[theme].text_secondary : "",
             width: 30,
             height: 30,
           }}
