@@ -11,17 +11,18 @@ import Colors from "@/constants/Colors";
 import AddButton from "@/components/AddButton";
 import { habitIcons, habitsData } from "@/data/habits";
 
+import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import AddModal from "@/components/home/AddModal";
 import * as Haptics from "expo-haptics";
 import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
 const motivationalMessages = [
-  "Your future self will thank you! Start building better habits today 🚀",
-  "Small steps today lead to big changes tomorrow! Let's get started 💪",
-  "Every habit is a vote for the person you want to become ✨",
+  "Your future self will thank you! Start building habits today 🚀",
+  "Small steps today lead to big changes tomorrow! 💪",
+  "Every habit is a vote for who you want to become ✨",
   "Success is the sum of small efforts repeated daily 🌟",
-  "The best time to start was yesterday. The next best time is now! ⏰",
+  "The best time to start is now! Let's get going ⏰",
   "Transform your life one habit at a time! You've got this 🎯",
 ];
 
@@ -31,6 +32,11 @@ export default function TabOneScreen() {
   const pathname = usePathname();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
+  const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
+  const [selectedHabit, setSelectedHabit] = useState<{
+    title: string;
+    duration: string;
+  } | null>(null);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
@@ -50,9 +56,9 @@ export default function TabOneScreen() {
         if (currentIndex <= currentMessage.length) {
           setDisplayedText(currentMessage.slice(0, currentIndex));
           // Add haptic feedback for each character typed only when on index page
-          if (currentIndex > 0 && isOnIndexPage) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }
+          // if (currentIndex > 0 && isOnIndexPage) {
+          //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          // }
           currentIndex++;
         } else {
           clearInterval(typingInterval);
@@ -84,7 +90,7 @@ export default function TabOneScreen() {
           paddingBottom: 10,
           paddingHorizontal: 10,
           backgroundColor: Colors[theme].background,
-          zIndex: 2,
+          zIndex: timerModalVisible || addModalVisible ? 0 : 2,
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
@@ -283,13 +289,27 @@ export default function TabOneScreen() {
                 streak={habit.streak}
                 habitType={habit.habitType}
                 themeColor={habit.themeColor}
+                onFireIconPress={() => {
+                  setSelectedHabit({
+                    title: habit.title,
+                    duration: habit.duration,
+                  });
+                  setTimerModalVisible(true);
+                  console.log("fire!");
+                }}
               />
             ))}
           </View>
         </View>
       </ScrollView>
-      <AddButton onPress={open} />
+      {!timerModalVisible && !addModalVisible && <AddButton onPress={open} />}
       <AddModal visible={addModalVisible} setVisible={setAddModalVisible} />
+      <TaskTimerModal
+        visible={timerModalVisible}
+        setVisible={setTimerModalVisible}
+        duration={selectedHabit?.duration || "30 mins"}
+        habitTitle={selectedHabit?.title || ""}
+      />
     </View>
   );
 }
@@ -335,7 +355,17 @@ const HabitCard: React.FC<{
   habitType: string;
   themeColor: string;
   id: string;
-}> = ({ duration, title, done, streak, habitType, themeColor, id }) => {
+  onFireIconPress: () => void;
+}> = ({
+  duration,
+  title,
+  done,
+  streak,
+  habitType,
+  themeColor,
+  id,
+  onFireIconPress,
+}) => {
   const theme = useColorScheme();
   const router = useRouter();
 
@@ -354,7 +384,8 @@ const HabitCard: React.FC<{
         alignItems: "center",
         width: "100%",
         backgroundColor: Colors[theme].surface,
-        padding: 15,
+        paddingVertical: 15,
+        paddingHorizontal: 5,
         marginTop: 15,
         borderRadius: 15,
         borderWidth: 2,
@@ -369,14 +400,27 @@ const HabitCard: React.FC<{
           marginLeft: 5,
         }}
       >
-        <Image
-          source={habitIcons[habitType]}
+        <View
           style={{
-            width: 20,
-            height: 20,
-            tintColor: themeColor,
+            width: 50,
+            height: 50,
+            borderRadius: 10,
+            backgroundColor: themeColor + "20",
+            justifyContent: "center",
+            alignItems: "center",
+            // borderWidth: 0.5,
+            borderColor: themeColor,
           }}
-        />
+        >
+          <Image
+            source={habitIcons[habitType]}
+            style={{
+              width: 20,
+              height: 20,
+              tintColor: themeColor,
+            }}
+          />
+        </View>
 
         <View>
           <ThemedText
@@ -420,7 +464,11 @@ const HabitCard: React.FC<{
               </ThemedText>
             </View>
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 7 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 7,
+              }}
             >
               <Image
                 source={require("../../assets/icons/fire.png")}
@@ -444,7 +492,11 @@ const HabitCard: React.FC<{
           </View>
         </View>
       </View>
-      <View
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          onFireIconPress();
+        }}
         style={{
           borderLeftWidth: 3,
           borderColor: Colors[theme].border,
@@ -453,6 +505,7 @@ const HabitCard: React.FC<{
           justifyContent: "flex-end",
           alignItems: "center",
           height: "100%",
+          paddingHorizontal: 10,
         }}
       >
         <Image
@@ -463,7 +516,7 @@ const HabitCard: React.FC<{
             height: 30,
           }}
         />
-      </View>
+      </Pressable>
     </Pressable>
   );
 };

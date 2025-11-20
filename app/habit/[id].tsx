@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Image,
   Pressable,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import { Text as ThemedText } from "@/components/Themed";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -22,6 +23,7 @@ export default function HabitDetailScreen() {
   const router = useRouter();
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const [timerModalVisible, setTimerModalVisible] = useState(false);
 
   // Find the habit by id
   const habit = habitsData.find((h) => h.id === id);
@@ -61,7 +63,7 @@ export default function HabitDetailScreen() {
 
   const handleStart = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    // Add your start task logic here
+    setTimerModalVisible(true);
   };
 
   return (
@@ -265,7 +267,7 @@ export default function HabitDetailScreen() {
                           height: 12,
                           borderRadius: 2,
                           backgroundColor: day.completed
-                            ? habit.themeColor
+                            ? Colors[theme].accent1
                             : Colors[theme].border,
                         }}
                       />
@@ -316,7 +318,7 @@ export default function HabitDetailScreen() {
         <Pressable
           onPress={handleStart}
           style={{
-            backgroundColor: habit.themeColor,
+            backgroundColor: Colors[theme].primary,
             paddingVertical: 16,
             borderRadius: 50,
             alignItems: "center",
@@ -341,6 +343,13 @@ export default function HabitDetailScreen() {
           </Text>
         </Pressable>
       </View>
+
+      <TaskTimerModal
+        visible={timerModalVisible}
+        setVisible={setTimerModalVisible}
+        duration={habit.duration}
+        habitTitle={habit.title}
+      />
     </View>
   );
 }
