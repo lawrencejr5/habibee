@@ -13,6 +13,7 @@ import { habitIcons, habitsData } from "@/data/habits";
 
 import AddModal from "@/components/home/AddModal";
 import * as Haptics from "expo-haptics";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
 const motivationalMessages = [
@@ -27,14 +28,20 @@ const motivationalMessages = [
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+  const pathname = usePathname();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
 
+  // Check if we're on the index page
+  const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
+
   // Typing animation effect
   useEffect(() => {
+    if (!isOnIndexPage) return;
+
     const currentMessage = motivationalMessages[currentMessageIndex];
     let currentIndex = 0;
 
@@ -42,6 +49,10 @@ export default function TabOneScreen() {
       const typingInterval = setInterval(() => {
         if (currentIndex <= currentMessage.length) {
           setDisplayedText(currentMessage.slice(0, currentIndex));
+          // Add haptic feedback for each character typed only when on index page
+          if (currentIndex > 0 && isOnIndexPage) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
           currentIndex++;
         } else {
           clearInterval(typingInterval);
@@ -58,8 +69,7 @@ export default function TabOneScreen() {
 
       return () => clearInterval(typingInterval);
     }
-  }, [currentMessageIndex, isTyping]);
-
+  }, [currentMessageIndex, isTyping, isOnIndexPage]);
   const open = () => {
     setAddModalVisible(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -266,6 +276,7 @@ export default function TabOneScreen() {
             {habitsData.map((habit) => (
               <HabitCard
                 key={habit.id}
+                id={habit.id}
                 duration={habit.duration}
                 title={habit.title}
                 done={habit.done}
@@ -323,13 +334,16 @@ const HabitCard: React.FC<{
   streak: number;
   habitType: string;
   themeColor: string;
-}> = ({ duration, title, done, streak, habitType, themeColor }) => {
+  id: string;
+}> = ({ duration, title, done, streak, habitType, themeColor, id }) => {
   const theme = useColorScheme();
+  const router = useRouter();
 
   return (
     <Pressable
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        router.push(`/habit/${id}` as any);
       }}
       onLongPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
