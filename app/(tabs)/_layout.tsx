@@ -47,7 +47,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="friends"
+        name="connect"
         options={{
           title: "Connect",
           tabBarIcon: ({ focused }) => (
