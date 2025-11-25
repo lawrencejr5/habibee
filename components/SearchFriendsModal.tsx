@@ -181,8 +181,8 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
         backgroundColor: Colors[theme].background,
       }}
       handleIndicatorStyle={{
-        width: 40,
-        height: 5,
+        width: 0,
+        height: 0,
         backgroundColor: "transaparent",
         marginTop: 10,
         borderRadius: 20,
@@ -232,7 +232,6 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
               placeholderTextColor={Colors[theme].text_secondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              autoFocus
               style={{
                 flex: 1,
                 fontFamily: "NunitoRegular",

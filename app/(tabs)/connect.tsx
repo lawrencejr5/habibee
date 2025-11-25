@@ -170,74 +170,50 @@ export default function ConnectPage() {
       {/* Main ScrollView */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 20 }}
       >
-        {/* Friends Stories Section */}
-        <View style={{ marginBottom: 20, paddingHorizontal: 20 }}>
-          <Text
-            style={{
-              fontFamily: "NunitoBold",
-              fontSize: 16,
-              color: Colors[theme].text,
-              marginBottom: 15,
-            }}
-          >
-            Your Friend's streaks
-          </Text>
-          <View
-            style={{
-              backgroundColor: Colors[theme].surface,
-              borderRadius: 15,
-              borderWidth: 2,
-              borderColor: Colors[theme].border,
-              paddingVertical: 15,
-              paddingHorizontal: 10,
-            }}
-          >
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10 }}
-            >
-              {myFriends.map((friend) => (
-                <FriendStoryCircle
-                  key={friend.id}
-                  name={friend.name}
-                  avatar={friend.avatar}
-                  streak={friend.streak}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        </View>
+        <View
+          style={{
+            backgroundColor: Colors[theme].surface,
+            borderColor: Colors[theme].border,
+            borderWidth: 3,
+            borderRadius: 20,
+            height: 400,
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Image
+            source={
+              theme === "light"
+                ? require("../../assets/images/icon-nobg-black.png")
+                : require("../../assets/images/icon-nobg-white.png")
+            }
+            style={{ width: 100, height: 100, borderRadius: 20 }}
+          />
 
-        {/* Suggested Friends */}
-        <View>
           <Text
             style={{
-              fontFamily: "NunitoBold",
-              fontSize: 16,
+              fontFamily: "NunitoExtraBold",
+              fontSize: 25,
               color: Colors[theme].text,
-              paddingHorizontal: 20,
-              marginBottom: 15,
+              marginTop: 20,
             }}
           >
-            Suggested Friends
+            Coming Soon!
           </Text>
-          <View style={{ paddingHorizontal: 20 }}>
-            {suggestedFriends.map((friend) => (
-              <SuggestedFriendCard
-                key={friend.id}
-                id={friend.id}
-                name={friend.name}
-                username={friend.username}
-                avatar={friend.avatar}
-                mutualFriends={friend.mutualFriends}
-                isAdded={addedFriends.includes(friend.id)}
-                onAdd={() => handleAddFriend(friend.id)}
-              />
-            ))}
-          </View>
+          <Text
+            style={{
+              fontFamily: "NunitoMedium",
+              fontSize: 14,
+              color: Colors[theme].text_secondary,
+              textAlign: "center",
+            }}
+          >
+            You’ll soon be able to add friends, share streaks, and motivate each
+            other.
+          </Text>
         </View>
       </ScrollView>
       <SearchFriendsModal
