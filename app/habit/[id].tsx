@@ -1,14 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
@@ -353,5 +346,3 @@ export default function HabitDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({});

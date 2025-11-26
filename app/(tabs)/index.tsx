@@ -11,10 +11,11 @@ import Colors from "@/constants/Colors";
 import AddButton from "@/components/AddButton";
 import { habitIcons, habitsData } from "@/data/habits";
 
+import HabitDetaillsModal from "@/components/habit/HabitDetaillsModal";
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import AddModal from "@/components/home/AddModal";
 import * as Haptics from "expo-haptics";
-import { usePathname, useRouter } from "expo-router";
+import { usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 
 const motivationalMessages = [
@@ -26,7 +27,7 @@ const motivationalMessages = [
   "Transform your life one habit at a time! You've got this 🎯",
 ];
 
-export default function TabOneScreen() {
+const Home = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
   const pathname = usePathname();
@@ -37,6 +38,10 @@ export default function TabOneScreen() {
     title: string;
     duration: string;
   } | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] =
+    useState<boolean>(false);
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
+
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
@@ -76,6 +81,7 @@ export default function TabOneScreen() {
       return () => clearInterval(typingInterval);
     }
   }, [currentMessageIndex, isTyping, isOnIndexPage]);
+
   const open = () => {
     setAddModalVisible(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -295,7 +301,12 @@ export default function TabOneScreen() {
                     duration: habit.duration,
                   });
                   setTimerModalVisible(true);
-                  console.log("fire!");
+                }}
+                onCardPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setSelectedHabitId(habit.id);
+                  setDetailsModalVisible(true);
+                  console.log(selectedHabitId);
                 }}
               />
             ))}
@@ -310,9 +321,14 @@ export default function TabOneScreen() {
         duration={selectedHabit?.duration || "30 mins"}
         habitTitle={selectedHabit?.title || ""}
       />
+      <HabitDetaillsModal
+        visible={detailsModalVisible}
+        setVisible={setDetailsModalVisible}
+        habit_id={selectedHabitId!}
+      />
     </View>
   );
-}
+};
 
 const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
   const theme = useColorScheme();
@@ -356,6 +372,7 @@ const HabitCard: React.FC<{
   themeColor: string;
   id: string;
   onFireIconPress: () => void;
+  onCardPress: () => void;
 }> = ({
   duration,
   title,
@@ -365,16 +382,13 @@ const HabitCard: React.FC<{
   themeColor,
   id,
   onFireIconPress,
+  onCardPress,
 }) => {
   const theme = useColorScheme();
-  const router = useRouter();
 
   return (
     <Pressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.push(`/habit/${id}` as any);
-      }}
+      onPress={onCardPress}
       onLongPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }}
@@ -520,6 +534,8 @@ const HabitCard: React.FC<{
     </Pressable>
   );
 };
+
+export default Home;
 
 const styles = StyleSheet.create({
   container: {
