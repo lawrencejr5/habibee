@@ -6,8 +6,9 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
@@ -31,7 +32,6 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-
     NunitoBold: require("../assets/fonts/Nunito/Nunito-Bold.ttf"),
     NunitoLight: require("../assets/fonts/Nunito/Nunito-Light.ttf"),
     NunitoMedium: require("../assets/fonts/Nunito/Nunito-Medium.ttf"),
@@ -40,6 +40,8 @@ export default function RootLayout() {
     NunitoExtraBold: require("../assets/fonts/Nunito/Nunito-ExtraBold.ttf"),
   });
 
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -47,12 +49,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      // keep splash for at least 2 seconds
+      const timer = setTimeout(() => {
+        SplashScreen.hideAsync();
+        setShowSplash(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  if (!loaded || showSplash) {
+    return <CustomSplash />;
   }
 
   return <RootLayoutNav />;
