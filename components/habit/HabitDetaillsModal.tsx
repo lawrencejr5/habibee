@@ -1,4 +1,11 @@
-import React, { Dispatch, FC, SetStateAction, useMemo, useRef } from "react";
+import React, {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import * as Haptics from "expo-haptics";
@@ -14,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "../useColorScheme";
 
 import { habitIcons, habitsData } from "@/data/habits";
+import TaskTimerModal from "./TaskTimerModal";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -29,7 +37,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["90%"], []);
+  const snapPoints = useMemo(() => ["100%"], []);
 
   // Generate heat map data (365 days) — memoized so it only runs when `habit_id` changes
   const heatMapData = useMemo(() => {
@@ -56,6 +64,13 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     }
     return out;
   }, [heatMapData]);
+
+  const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
+
+  const handleStart = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setTimerModalVisible(true);
+  };
 
   // Render nothing when not visible to avoid mounting BottomSheet in a closed/half state
   if (!visible) return null;
@@ -84,15 +99,15 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
       handleIndicatorStyle={{
         width: 0,
         height: 0,
-        backgroundColor: "transparent",
+        backgroundColor: "grey",
         marginTop: 10,
-        borderRadius: 20,
+        borderRadius: 30,
       }}
     >
       <BottomSheetView
         style={{
           flex: 1,
-          paddingTop: 20,
+          zIndex: 5,
         }}
       >
         <View
@@ -112,42 +127,23 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 paddingTop: 20,
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
               }}
             >
               <Pressable
+                style={{
+                  padding: 8,
+                  borderRadius: 50,
+                  backgroundColor: Colors[theme].surface,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                }}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-                style={{
-                  padding: 8,
-                  borderRadius: 50,
-                  backgroundColor: Colors[theme].surface,
-                  borderWidth: 2,
-                  borderColor: Colors[theme].border,
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  bottomSheetRef.current?.close();
                 }}
               >
-                <Feather
-                  name="arrow-left"
-                  size={20}
-                  color={Colors[theme].text}
-                />
-              </Pressable>
-
-              <Pressable
-                style={{
-                  padding: 8,
-                  borderRadius: 50,
-                  backgroundColor: Colors[theme].surface,
-                  borderWidth: 2,
-                  borderColor: Colors[theme].border,
-                }}
-              >
-                <Feather
-                  name="more-vertical"
-                  size={20}
-                  color={Colors[theme].text}
-                />
+                <Feather name="x" size={25} color={Colors[theme].text} />
               </Pressable>
             </View>
 
@@ -346,7 +342,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             }}
           >
             <Pressable
-              //   onPress={handleStart}
+              onPress={handleStart}
               style={{
                 backgroundColor: Colors[theme].primary,
                 paddingVertical: 16,
@@ -374,12 +370,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             </Pressable>
           </View>
 
-          {/* <TaskTimerModal
+          <TaskTimerModal
             visible={timerModalVisible}
             setVisible={setTimerModalVisible}
             duration={habit.duration}
             habitTitle={habit.title}
-          /> */}
+          />
         </View>
       </BottomSheetView>
     </BottomSheet>

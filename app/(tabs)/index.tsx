@@ -1,5 +1,7 @@
 import { Image, Pressable, StyleSheet } from "react-native";
 
+import * as Haptics from "expo-haptics";
+
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,7 +16,6 @@ import { habitIcons, habitsData } from "@/data/habits";
 import HabitDetaillsModal from "@/components/habit/HabitDetaillsModal";
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import AddModal from "@/components/home/AddModal";
-import * as Haptics from "expo-haptics";
 import { usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -96,7 +97,8 @@ const Home = () => {
           paddingBottom: 10,
           paddingHorizontal: 10,
           backgroundColor: Colors[theme].background,
-          zIndex: timerModalVisible || addModalVisible ? 0 : 2,
+          zIndex:
+            timerModalVisible || addModalVisible || detailsModalVisible ? 0 : 2,
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
@@ -313,7 +315,9 @@ const Home = () => {
           </View>
         </View>
       </ScrollView>
-      {!timerModalVisible && !addModalVisible && <AddButton onPress={open} />}
+      {!timerModalVisible && !addModalVisible && !detailsModalVisible && (
+        <AddButton onPress={open} />
+      )}
       <AddModal visible={addModalVisible} setVisible={setAddModalVisible} />
       <TaskTimerModal
         visible={timerModalVisible}
