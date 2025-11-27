@@ -14,29 +14,39 @@ import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AccountInfoModal from "@/components/account/AccountInfoModal";
+import { useState } from "react";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
-  return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={{ paddingBottom: 20 }}>
-        <ThemedText style={styles.title}>Account</ThemedText>
-      </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View
-          style={{
-            backgroundColor: Colors[theme].surface,
-            borderColor: Colors[theme].border,
-            borderWidth: 3,
-            borderRadius: 15,
-            padding: 10,
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+  const [openAccountInfoModal, setOpenAccountInfoModal] =
+    useState<boolean>(false);
+
+  return (
+    <>
+      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={{ paddingBottom: 20 }}>
+          <ThemedText style={styles.title}>Account</ThemedText>
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setOpenAccountInfoModal(true);
+            }}
+            style={{
+              backgroundColor: Colors[theme].surface,
+              borderColor: Colors[theme].border,
+              borderWidth: 3,
+              borderRadius: 15,
+              padding: 10,
+              flexDirection: "row",
+              gap: 10,
+            }}
+          >
             <Image
               source={require("@/assets/images/avatar.png")}
               style={{ height: 70, width: 70, borderRadius: 50 }}
@@ -46,7 +56,7 @@ export default function Account() {
                 style={{
                   fontFamily: "NunitoExtraBold",
                   color: Colors[theme].text,
-                  fontSize: 18,
+                  fontSize: 22,
                 }}
               >
                 Oputa Lawrence
@@ -54,20 +64,34 @@ export default function Account() {
               <View
                 style={{
                   flexDirection: "row",
-                  gap: 10,
+                  gap: 15,
                   alignItems: "center",
-                  marginTop: 5,
+                  marginTop: 10,
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontFamily: "NunitoMedium",
-                    color: Colors[theme].text_secondary,
-                    fontSize: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 3,
                   }}
                 >
-                  @lawrencejr
-                </Text>
+                  <Feather
+                    name="user"
+                    size={14}
+                    color={Colors[theme].text_secondary}
+                  />
+
+                  <Text
+                    style={{
+                      fontFamily: "NunitoMedium",
+                      color: Colors[theme].text_secondary,
+                      fontSize: 13,
+                    }}
+                  >
+                    lawrencejr
+                  </Text>
+                </View>
                 <View
                   style={{
                     flexDirection: "row",
@@ -91,392 +115,352 @@ export default function Account() {
                 </View>
               </View>
             </View>
-          </View>
-
-          <Pressable
-            style={{
-              alignSelf: "center",
-              padding: 2,
-              borderRadius: 20,
-              marginRight: 10,
-            }}
-          >
-            <Image
-              source={require("@/assets/icons/chevron-down.png")}
-              style={{
-                height: 16,
-                width: 16,
-                tintColor: Colors[theme].text_secondary,
-              }}
-            />
           </Pressable>
-        </View>
 
-        <View style={{ marginTop: 10 }}>
-          {/* Personal */}
-          <View style={{ marginTop: 10 }}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <Feather
-                name="settings"
-                size={18}
-                color={Colors[theme].text_secondary}
-              />
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                }}
-              >
-                Personal & Account
-              </Text>
-            </View>
-
-            <View style={[styles.settingsContainer]}>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
+          <View style={{ marginTop: 30 }}>
+            {/* Personal */}
+            <View style={{ marginTop: 10 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
               >
                 <Feather
-                  name="user"
+                  name="settings"
                   size={18}
                   color={Colors[theme].text_secondary}
-                  style={styles.icon}
                 />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
+                <Text
+                  style={{
+                    color: Colors[theme].text_secondary,
+                    fontFamily: "NunitoBold",
+                    fontSize: 16,
+                  }}
                 >
-                  Personal Information
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
+                  Personal & Account
+                </Text>
+              </View>
 
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="lock"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Change Password
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="trash"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Delete Account
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Preferences */}
-          <View style={{ marginTop: 10 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <Feather
-                name="settings"
-                size={18}
-                color={Colors[theme].text_secondary}
-              />
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                }}
-              >
-                Preferences
-              </Text>
-            </View>
-
-            <View style={[styles.settingsContainer]}>
               <View
                 style={[
-                  styles.row,
+                  styles.settingsContainer,
                   {
                     backgroundColor: Colors[theme].surface,
                     borderColor: Colors[theme].border,
                   },
                 ]}
               >
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="user"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Personal Information
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="lock"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Change Password
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="trash"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Delete Account
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Preferences */}
+            <View style={{ marginTop: 10 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
                 <Feather
-                  name="sun"
+                  name="settings"
                   size={18}
                   color={Colors[theme].text_secondary}
-                  style={styles.icon}
                 />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Dark / Light Mode
-                </ThemedText>
-                <ToggleButton
-                  isOn={theme === "dark"}
-                  onToggle={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                <Text
+                  style={{
+                    color: Colors[theme].text_secondary,
+                    fontFamily: "NunitoBold",
+                    fontSize: 16,
                   }}
-                />
+                >
+                  Preferences
+                </Text>
               </View>
+
               <View
                 style={[
-                  styles.row,
+                  styles.settingsContainer,
                   {
                     backgroundColor: Colors[theme].surface,
                     borderColor: Colors[theme].border,
                   },
                 ]}
               >
+                <View style={[styles.row]}>
+                  <Feather
+                    name="sun"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Dark / Light Mode
+                  </ThemedText>
+                  <ToggleButton
+                    isOn={theme === "dark"}
+                    onToggle={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
+                  />
+                </View>
+                <View style={[styles.row]}>
+                  <Feather
+                    name="activity"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Haptic Feedback
+                  </ThemedText>
+                  <ToggleButton
+                    isOn={theme === "dark"}
+                    onToggle={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Support */}
+            <View style={{ marginTop: 10 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              >
                 <Feather
-                  name="activity"
+                  name="settings"
                   size={18}
                   color={Colors[theme].text_secondary}
-                  style={styles.icon}
                 />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Haptic Feedback
-                </ThemedText>
-                <ToggleButton
-                  isOn={theme === "dark"}
-                  onToggle={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                <Text
+                  style={{
+                    color: Colors[theme].text_secondary,
+                    fontFamily: "NunitoBold",
+                    fontSize: 16,
                   }}
+                >
+                  Support
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.settingsContainer,
+                  {
+                    backgroundColor: Colors[theme].surface,
+                    borderColor: Colors[theme].border,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="help-circle"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Help & Feedback
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* About */}
+            <View style={{ marginTop: 10 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              >
+                <Feather
+                  name="settings"
+                  size={18}
+                  color={Colors[theme].text_secondary}
                 />
+                <Text
+                  style={{
+                    color: Colors[theme].text_secondary,
+                    fontFamily: "NunitoBold",
+                    fontSize: 16,
+                  }}
+                >
+                  App Info
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.settingsContainer,
+                  {
+                    backgroundColor: Colors[theme].surface,
+                    borderColor: Colors[theme].border,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="info"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    About Habibee
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="file-text"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Terms & Conditions
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  }
+                  style={[styles.row]}
+                >
+                  <Feather
+                    name="shield"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                    style={styles.icon}
+                  />
+                  <ThemedText
+                    style={[styles.rowText, { color: Colors[theme].text }]}
+                  >
+                    Privacy Policy
+                  </ThemedText>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
               </View>
             </View>
           </View>
-
-          {/* Support */}
-          <View style={{ marginTop: 10 }}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <Feather
-                name="settings"
-                size={18}
-                color={Colors[theme].text_secondary}
-              />
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                }}
-              >
-                Support
-              </Text>
-            </View>
-
-            <View style={[styles.settingsContainer]}>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="help-circle"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Help & Feedback
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* About */}
-          <View style={{ marginTop: 10 }}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <Feather
-                name="settings"
-                size={18}
-                color={Colors[theme].text_secondary}
-              />
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                }}
-              >
-                App Info
-              </Text>
-            </View>
-
-            <View style={[styles.settingsContainer]}>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="info"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  About Habibee
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="file-text"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Terms & Conditions
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-              <Pressable
-                onPress={() =>
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                }
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                ]}
-              >
-                <Feather
-                  name="shield"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                  style={styles.icon}
-                />
-                <ThemedText
-                  style={[styles.rowText, { color: Colors[theme].text }]}
-                >
-                  Privacy Policy
-                </ThemedText>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={Colors[theme].text_secondary}
-                />
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </ThemedView>
+        </ScrollView>
+      </ThemedView>
+      <AccountInfoModal
+        visible={openAccountInfoModal}
+        setVisible={setOpenAccountInfoModal}
+      />
+    </>
   );
 }
 
@@ -493,6 +477,10 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingVertical: 6,
     overflow: "hidden",
+    borderRadius: 15,
+    borderWidth: 3,
+    marginTop: 10,
+    marginBottom: 20,
   },
   row: {
     flexDirection: "row",
@@ -500,8 +488,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderWidth: 3,
-    borderRadius: 12,
     marginVertical: 5,
   },
   icon: {

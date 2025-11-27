@@ -107,7 +107,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
       <BottomSheetView
         style={{
           flex: 1,
-          zIndex: 5,
         }}
       >
         <View

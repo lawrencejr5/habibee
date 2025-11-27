@@ -308,7 +308,6 @@ const Home = () => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   setSelectedHabitId(habit.id);
                   setDetailsModalVisible(true);
-                  console.log(selectedHabitId);
                 }}
               />
             ))}
