@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View as ThemedView } from "../Themed";
 
 import ToggleButton from "@/components/ToggleButton";
+import IconColorPicker from "@/components/home/IconColorPicker";
+import { habitIcons } from "@/data/habits";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "../useColorScheme";
 
@@ -25,6 +27,9 @@ const AddModal: React.FC<{
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
   const [isEnabled, setIsEnabled] = useState(true);
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
+  const [selectedIcon, setSelectedIcon] = useState<any>(null);
+  const [selectedColor, setSelectedColor] = useState<string>("#c5c9cc");
 
   const close = () => {
     setVisible(false);
@@ -82,24 +87,25 @@ const AddModal: React.FC<{
               backgroundColor: Colors[theme].surface,
               alignSelf: "center",
               padding: 30,
-              borderRadius: "50%",
+              borderRadius: 999,
             }}
           >
             <Image
-              source={require("@/assets/icons/habit/emoji.png")}
+              source={selectedIcon || require("@/assets/icons/habit/emoji.png")}
               style={{
                 width: 50,
                 height: 50,
-                tintColor: Colors[theme].text_secondary,
+                tintColor: selectedColor || Colors[theme].text_secondary,
               }}
             />
             <Pressable
+              onPress={() => setIconPickerVisible(true)}
               style={{
                 position: "absolute",
                 right: 4,
                 bottom: 4,
-                width: 24,
-                height: 24,
+                width: 28,
+                height: 28,
                 borderRadius: 18,
                 backgroundColor: Colors[theme].text_secondary,
                 justifyContent: "center",
@@ -111,6 +117,17 @@ const AddModal: React.FC<{
               <Feather name="plus" size={16} color="#121212" />
             </Pressable>
           </View>
+
+          <IconColorPicker
+            visible={iconPickerVisible}
+            icons={Object.values(habitIcons)}
+            selectedColor={selectedColor}
+            onClose={() => setIconPickerVisible(false)}
+            onSelect={(icon, color) => {
+              setSelectedIcon(icon);
+              setSelectedColor(color);
+            }}
+          />
 
           {/* Form */}
           <View style={{ marginTop: 30 }}>
