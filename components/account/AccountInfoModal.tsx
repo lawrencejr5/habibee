@@ -16,6 +16,9 @@ import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
 import { Feather } from "@expo/vector-icons";
 
+import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
+
 interface AccountModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
@@ -24,7 +27,7 @@ interface AccountModalProps {
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["50%"], []);
+  const snapPoints = useMemo(() => ["20%"], []);
 
   useEffect(() => {
     if (visible) bottomSheetRef.current?.expand();
@@ -40,6 +43,8 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
       pressBehavior="close"
     />
   );
+
+  if (!visible) return null;
 
   return (
     <BottomSheet
@@ -60,12 +65,14 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
         borderRadius: 30,
       }}
     >
-      <View
+      <BottomSheetView
         style={{
           flex: 1,
           backgroundColor: Colors[theme].background,
           paddingVertical: 20,
           paddingHorizontal: 20,
+          justifyContent: "space-between",
+          gap: 40,
         }}
       >
         <View
@@ -150,6 +157,11 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             paddingVertical: 10,
             borderRadius: 50,
           }}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push("/account/personal_info");
+            setVisible(false);
+          }}
         >
           <Text
             style={{
@@ -162,11 +174,9 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             Edit Details
           </Text>
         </Pressable>
-      </View>
+      </BottomSheetView>
     </BottomSheet>
   );
 };
 
 export default AccountInfoModal;
-
-const styles = StyleSheet.create({});

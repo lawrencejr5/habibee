@@ -74,7 +74,13 @@ function RootLayoutNav() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              presentation: "modal",
+              animation: "ios_from_right",
+            }}
+          />
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

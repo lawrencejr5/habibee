@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import { useState } from "react";
+import { router } from "expo-router";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
@@ -149,9 +150,10 @@ export default function Account() {
                 ]}
               >
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push("/account/personal_info");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
@@ -173,9 +175,10 @@ export default function Account() {
                 </Pressable>
 
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push("/account/update_password");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
