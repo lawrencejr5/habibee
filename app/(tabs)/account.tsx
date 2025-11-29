@@ -330,9 +330,10 @@ export default function Account() {
                 ]}
               >
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push("/account/feedback");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather

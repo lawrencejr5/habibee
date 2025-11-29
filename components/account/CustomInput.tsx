@@ -12,6 +12,7 @@ interface CustomInputProps {
   disabled?: boolean;
   password?: boolean;
   value: string;
+  big?: boolean;
   setValue: Dispatch<SetStateAction<string>>;
 }
 
@@ -22,6 +23,7 @@ const CustomInput: FC<CustomInputProps> = ({
   setValue,
   disabled = false,
   password = false,
+  big = false,
 }) => {
   const theme = useColorScheme();
 
@@ -47,7 +49,14 @@ const CustomInput: FC<CustomInputProps> = ({
           editable={!disabled}
           secureTextEntry={password}
           onChangeText={setValue}
-          style={{ fontFamily: "NunitoMedium", color: Colors[theme].text }}
+          multiline
+          numberOfLines={12}
+          textAlignVertical="top"
+          style={{
+            fontFamily: "NunitoMedium",
+            color: Colors[theme].text,
+            minHeight: big ? 200 : 0,
+          }}
         />
       </View>
     </View>
