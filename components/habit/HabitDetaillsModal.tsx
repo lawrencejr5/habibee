@@ -13,7 +13,7 @@ import * as Haptics from "expo-haptics";
 import { Text as ThemedText } from "../Themed";
 
 import Colors from "@/constants/Colors";
-import { Feather } from "@expo/vector-icons";
+import { Entypo, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -22,6 +22,7 @@ import { useColorScheme } from "../useColorScheme";
 
 import { habitIcons, habitsData } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
+import EditHabitModal from "./EditHabitModal";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -66,6 +67,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   }, [heatMapData]);
 
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
+  const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
+  const [showEditButton, setShowEditButton] = useState<boolean>(false);
 
   const handleStart = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -126,24 +129,70 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 paddingTop: 20,
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "flex-end",
+                justifyContent: "space-between",
               }}
             >
               <Pressable
                 style={{
                   padding: 8,
-                  borderRadius: 50,
-                  backgroundColor: Colors[theme].surface,
-                  borderWidth: 2,
-                  borderColor: Colors[theme].border,
                 }}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   bottomSheetRef.current?.close();
                 }}
               >
-                <Feather name="x" size={25} color={Colors[theme].text} />
+                <Feather
+                  name="chevron-down"
+                  size={30}
+                  color={Colors[theme].text}
+                />
               </Pressable>
+              <Pressable
+                style={{
+                  padding: 8,
+                }}
+                onPress={() => setShowEditButton(!showEditButton)}
+              >
+                <MaterialCommunityIcons
+                  name="dots-vertical"
+                  size={25}
+                  color={Colors[theme].text}
+                />
+              </Pressable>
+              {showEditButton && (
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setEditModalVisible(true);
+                    setShowEditButton(false);
+                  }}
+                  style={{
+                    position: "absolute",
+                    right: 60,
+                    top: 20,
+                    backgroundColor: Colors[theme].surface,
+                    borderColor: Colors[theme].border,
+                    borderWidth: 2,
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Feather name="edit" size={16} color="#fff" />
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontFamily: "NunitoBold",
+                      fontSize: 12,
+                    }}
+                  >
+                    Edit habit
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             {/* Icon and Color */}
@@ -292,7 +341,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                               height: 12,
                               borderRadius: 2,
                               backgroundColor: day.completed
-                                ? Colors[theme].accent1
+                                ? habit.themeColor + "cc"
                                 : Colors[theme].border,
                             }}
                           />
@@ -343,7 +392,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             <Pressable
               onPress={handleStart}
               style={{
-                backgroundColor: Colors[theme].primary,
+                backgroundColor: habit.themeColor,
                 paddingVertical: 16,
                 borderRadius: 50,
                 alignItems: "center",
@@ -374,6 +423,14 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             setVisible={setTimerModalVisible}
             duration={habit.duration}
             habitTitle={habit.title}
+          />
+          <EditHabitModal
+            visible={editModalVisible}
+            setVisible={setEditModalVisible}
+            habitTitle={habit.title}
+            habitDuration={habit.duration}
+            habitIcon={habitIcons[habit.habitType]}
+            habitColor={habit.themeColor}
           />
         </View>
       </BottomSheetView>
