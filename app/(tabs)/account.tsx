@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
+import DeleteAccountModal from "@/components/account/DeleteAccountModal";
 import { useState } from "react";
 import { router } from "expo-router";
 
@@ -23,6 +24,8 @@ export default function Account() {
   const theme = useColorScheme();
 
   const [openAccountInfoModal, setOpenAccountInfoModal] =
+    useState<boolean>(false);
+  const [openDeleteAccountModal, setOpenDeleteAccountModal] =
     useState<boolean>(false);
 
   return (
@@ -199,9 +202,10 @@ export default function Account() {
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setOpenDeleteAccountModal(true);
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
@@ -463,6 +467,10 @@ export default function Account() {
       <AccountInfoModal
         visible={openAccountInfoModal}
         setVisible={setOpenAccountInfoModal}
+      />
+      <DeleteAccountModal
+        visible={openDeleteAccountModal}
+        setVisible={setOpenDeleteAccountModal}
       />
     </>
   );
