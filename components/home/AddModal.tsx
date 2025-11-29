@@ -37,146 +37,95 @@ const AddModal: React.FC<{
   };
 
   return (
-    <Modal transparent visible={visible} animationType="slide">
-      <ThemedView
-        style={{
-          flex: 1,
-          paddingTop: insets.top,
-          paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 50,
-        }}
-      >
-        <Pressable
+    <>
+      <Modal transparent visible={visible} animationType="slide">
+        <ThemedView
           style={{
-            marginTop: 20,
-            backgroundColor: Colors[theme].surface,
-            alignSelf: "flex-end",
-            padding: 7,
-            borderWidth: 3,
-            borderColor: Colors[theme].border,
-            borderRadius: 50,
-          }}
-          onPress={close}
-        >
-          <Feather
-            name="x"
-            color={Colors[theme].text}
-            size={25}
-            style={{ textAlign: "right" }}
-          />
-        </Pressable>
-        <Text
-          style={{
-            color: Colors[theme].text,
-            fontFamily: "NunitoExtraBold",
-            fontSize: 26,
+            flex: 1,
+            paddingTop: insets.top,
+            paddingHorizontal: 20,
+            paddingBottom: insets.bottom + 50,
           }}
         >
-          New habit
-        </Text>
-
-        <View style={{ flex: 1 }}>
-          {/* Pick icon */}
-          <View
+          <Pressable
             style={{
               marginTop: 20,
-              flexDirection: "row",
-              justifyContent: "center",
+              backgroundColor: Colors[theme].surface,
+              alignSelf: "flex-end",
+              padding: 7,
               borderWidth: 3,
               borderColor: Colors[theme].border,
-              backgroundColor: Colors[theme].surface,
-              alignSelf: "center",
-              padding: 30,
-              borderRadius: 999,
+              borderRadius: 50,
+            }}
+            onPress={close}
+          >
+            <Feather
+              name="x"
+              color={Colors[theme].text}
+              size={25}
+              style={{ textAlign: "right" }}
+            />
+          </Pressable>
+          <Text
+            style={{
+              color: Colors[theme].text,
+              fontFamily: "NunitoExtraBold",
+              fontSize: 26,
             }}
           >
-            <Image
-              source={selectedIcon || require("@/assets/icons/habit/emoji.png")}
-              style={{
-                width: 50,
-                height: 50,
-                tintColor: selectedColor || Colors[theme].text_secondary,
-              }}
-            />
+            New habit
+          </Text>
+
+          <View style={{ flex: 1 }}>
+            {/* Pick icon */}
             <Pressable
-              onPress={() => setIconPickerVisible(true)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setIconPickerVisible(true);
+              }}
               style={{
-                position: "absolute",
-                right: 4,
-                bottom: 4,
-                width: 28,
-                height: 28,
-                borderRadius: 18,
-                backgroundColor: Colors[theme].text_secondary,
+                marginTop: 20,
+                flexDirection: "row",
                 justifyContent: "center",
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: "#ccc",
+                borderWidth: 2,
+                borderColor: selectedColor,
+                backgroundColor: selectedColor + 20,
+                alignSelf: "center",
+                padding: 30,
+                borderRadius: 999,
               }}
             >
-              <Feather name="plus" size={16} color="#121212" />
-            </Pressable>
-          </View>
-
-          <IconColorPicker
-            visible={iconPickerVisible}
-            icons={Object.values(habitIcons)}
-            selectedColor={selectedColor}
-            onClose={() => setIconPickerVisible(false)}
-            onSelect={(icon, color) => {
-              setSelectedIcon(icon);
-              setSelectedColor(color);
-            }}
-          />
-
-          {/* Form */}
-          <View style={{ marginTop: 30 }}>
-            <View style={{ marginBottom: 20 }}>
-              <Text
+              <Image
+                source={
+                  selectedIcon || require("@/assets/icons/habit/emoji.png")
+                }
                 style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                  color: Colors[theme].text_secondary,
+                  width: 50,
+                  height: 50,
+                  tintColor: selectedColor || Colors[theme].text_secondary,
+                }}
+              />
+              <Pressable
+                onPress={() => setIconPickerVisible(true)}
+                style={{
+                  position: "absolute",
+                  right: 4,
+                  bottom: 4,
+                  width: 25,
+                  height: 25,
+                  borderRadius: 18,
+                  backgroundColor: selectedColor,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                Name ur habit
-              </Text>
-              <View
-                style={[
-                  {
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                  },
-                  styles.text_input_container,
-                ]}
-              >
-                <Image
-                  source={require("@/assets/icons/fire.png")}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    tintColor: Colors[theme].text_secondary,
-                    marginRight: 10,
-                  }}
-                />
-                <TextInput
-                  style={{ width: "90%", fontFamily: "NunitoMedium" }}
-                  placeholder="Habit"
-                />
-              </View>
-            </View>
+                <Feather name="plus" size={16} color="transparent" />
+              </Pressable>
+            </Pressable>
 
-            {/* Duration & goal */}
-            <View
-              style={{
-                marginBottom: 20,
-                marginTop: 10,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                gap: 10,
-              }}
-            >
-              <View style={{ flex: 1 }}>
+            {/* Form */}
+            <View style={{ marginTop: 30 }}>
+              <View style={{ marginBottom: 20 }}>
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
@@ -184,7 +133,7 @@ const AddModal: React.FC<{
                     color: Colors[theme].text_secondary,
                   }}
                 >
-                  Duration
+                  Name ur habit
                 </Text>
                 <View
                   style={[
@@ -196,7 +145,7 @@ const AddModal: React.FC<{
                   ]}
                 >
                   <Image
-                    source={require("@/assets/icons/clock.png")}
+                    source={require("@/assets/icons/fire.png")}
                     style={{
                       width: 20,
                       height: 20,
@@ -205,100 +154,158 @@ const AddModal: React.FC<{
                     }}
                   />
                   <TextInput
-                    style={{ flex: 1, fontFamily: "NunitoMedium" }}
-                    placeholder="30 mins"
+                    style={{ width: "90%", fontFamily: "NunitoMedium" }}
+                    placeholder="Habit"
                   />
                 </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 16,
-                    color: Colors[theme].text_secondary,
-                  }}
-                >
-                  Goal
-                </Text>
-                <View
-                  style={[
-                    {
-                      backgroundColor: Colors[theme].surface,
-                      borderColor: Colors[theme].border,
-                    },
-                    styles.text_input_container,
-                  ]}
-                >
-                  <Image
-                    source={require("@/assets/icons/goal.png")}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      tintColor: Colors[theme].text_secondary,
-                      marginRight: 10,
-                    }}
-                  />
-                  <TextInput style={{ flex: 1, fontFamily: "NunitoMedium" }} />
+
+              {/* Duration & goal */}
+              <View
+                style={{
+                  marginBottom: 20,
+                  marginTop: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}
+              >
+                <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontFamily: "NunitoMedium",
+                      fontFamily: "NunitoBold",
+                      fontSize: 16,
                       color: Colors[theme].text_secondary,
                     }}
                   >
-                    days
+                    Duration
                   </Text>
+                  <View
+                    style={[
+                      {
+                        backgroundColor: Colors[theme].surface,
+                        borderColor: Colors[theme].border,
+                      },
+                      styles.text_input_container,
+                    ]}
+                  >
+                    <Image
+                      source={require("@/assets/icons/clock.png")}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: Colors[theme].text_secondary,
+                        marginRight: 10,
+                      }}
+                    />
+                    <TextInput
+                      style={{ flex: 1, fontFamily: "NunitoMedium" }}
+                      placeholder="30 mins"
+                    />
+                  </View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 16,
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    Goal
+                  </Text>
+                  <View
+                    style={[
+                      {
+                        backgroundColor: Colors[theme].surface,
+                        borderColor: Colors[theme].border,
+                      },
+                      styles.text_input_container,
+                    ]}
+                  >
+                    <Image
+                      source={require("@/assets/icons/goal.png")}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: Colors[theme].text_secondary,
+                        marginRight: 10,
+                      }}
+                    />
+                    <TextInput
+                      style={{ flex: 1, fontFamily: "NunitoMedium" }}
+                    />
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      days
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
 
-            {/* Toggle Button */}
-            <View
-              style={{
-                marginTop: 20,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Text
+              {/* Toggle Button */}
+              <View
                 style={{
-                  color: Colors[theme].text,
-                  fontFamily: "NunitoMedium",
-                  fontSize: 16,
+                  marginTop: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                Streak counts after timer ends
-              </Text>
-              <ToggleButton
-                isOn={isEnabled}
-                onToggle={() => setIsEnabled(!isEnabled)}
-              />
+                <Text
+                  style={{
+                    color: Colors[theme].text,
+                    fontFamily: "NunitoMedium",
+                    fontSize: 16,
+                  }}
+                >
+                  Streak counts after timer ends
+                </Text>
+                <ToggleButton
+                  isOn={isEnabled}
+                  onToggle={() => setIsEnabled(!isEnabled)}
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Save button - Fixed at bottom */}
-        <Pressable
-          style={{
-            width: "100%",
-            backgroundColor: Colors[theme].primary,
-            paddingVertical: 15,
-            borderRadius: 50,
-          }}
-        >
-          <Text
+          {/* Save button - Fixed at bottom */}
+          <Pressable
             style={{
-              fontFamily: "NunitoBold",
-              fontSize: 16,
-              color: "#eee",
-              textAlign: "center",
+              width: "100%",
+              backgroundColor: Colors[theme].primary,
+              paddingVertical: 15,
+              borderRadius: 50,
             }}
           >
-            Save Habit
-          </Text>
-        </Pressable>
-      </ThemedView>
-    </Modal>
+            <Text
+              style={{
+                fontFamily: "NunitoBold",
+                fontSize: 16,
+                color: "#eee",
+                textAlign: "center",
+              }}
+            >
+              Save Habit
+            </Text>
+          </Pressable>
+        </ThemedView>
+      </Modal>
+      <IconColorPicker
+        visible={iconPickerVisible}
+        icons={Object.values(habitIcons)}
+        selectedColor={selectedColor}
+        onClose={() => setIconPickerVisible(false)}
+        onSelect={(icon, color) => {
+          setSelectedIcon(icon);
+          setSelectedColor(color);
+        }}
+      />
+    </>
   );
 };
 

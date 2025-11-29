@@ -8,8 +8,12 @@ import {
   ScrollView,
   Text,
 } from "react-native";
+
+import * as Haptics from "expo-haptics";
+
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { Feather } from "@expo/vector-icons";
 
 type Props = {
   visible: boolean;
@@ -21,14 +25,11 @@ type Props = {
 
 const DEFAULT_COLORS = [
   "#c5c9cc",
-  "#FF6B6B",
-  "#FFB86B",
-  "#FFD36B",
-  "#6BFFB8",
-  "#6BCBFF",
-  "#8C6BFF",
-  "#FF6BE0",
-  "#6BFFDF",
+  "#9b59b6",
+  "#e74c3c",
+  "#3498db",
+  "#1abc9c",
+  "#e67e22",
 ];
 
 export default function IconColorPicker({
@@ -57,28 +58,48 @@ export default function IconColorPicker({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable
         style={[
           styles.backdrop,
-          { backgroundColor: Colors[theme].background + "CC" },
+          { backgroundColor: Colors[theme].background + "cc" },
         ]}
+        onPress={onClose}
       >
-        <View
+        <Pressable
           style={[
-            styles.sheet,
+            styles.centered,
             {
               backgroundColor: Colors[theme].surface,
               borderColor: Colors[theme].border,
             },
           ]}
+          onPress={() => {}}
         >
           <View style={styles.headerRow}>
-            <Text style={[styles.headerText, { color: Colors[theme].text }]}>
-              Choose icon
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 20,
+                color: Colors[theme].text,
+              }}
+            >
+              Choose icon...
             </Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
-              <Text style={{ color: Colors[theme].text_secondary }}>Close</Text>
+            <Pressable
+              style={{ padding: 10 }}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+                onClose();
+              }}
+            >
+              <Feather name="x" color={Colors[theme].text} size={24} />
             </Pressable>
           </View>
 
@@ -119,9 +140,21 @@ export default function IconColorPicker({
           <View style={styles.actionRow}>
             <Pressable
               onPress={onClose}
-              style={[styles.actionBtn, { borderColor: Colors[theme].border }]}
+              style={[
+                styles.actionBtn,
+                {
+                  borderColor: Colors[theme].border,
+                  backgroundColor: Colors[theme].surface,
+                  paddingHorizontal: 15,
+                },
+              ]}
             >
-              <Text style={{ color: Colors[theme].text_secondary }}>
+              <Text
+                style={{
+                  color: Colors[theme].text_secondary,
+                  fontFamily: "NunitoBold",
+                }}
+              >
                 Cancel
               </Text>
             </Pressable>
@@ -129,7 +162,10 @@ export default function IconColorPicker({
               onPress={pick}
               style={[
                 styles.actionBtn,
-                { backgroundColor: Colors[theme].primary },
+                {
+                  backgroundColor: Colors[theme].primary,
+                  flex: 1,
+                },
               ]}
             >
               <Text style={{ color: "#fff", fontFamily: "NunitoBold" }}>
@@ -137,8 +173,8 @@ export default function IconColorPicker({
               </Text>
             </Pressable>
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
@@ -146,14 +182,15 @@ export default function IconColorPicker({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  sheet: {
-    height: "60%",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+  centered: {
+    width: "90%",
+    maxHeight: "80%",
+    borderRadius: 16,
     padding: 16,
-    borderTopWidth: 1,
+    borderWidth: 2,
   },
   headerRow: {
     flexDirection: "row",
@@ -161,22 +198,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  headerText: {
-    fontFamily: "NunitoExtraBold",
-    fontSize: 18,
-  },
   closeBtn: {
     padding: 6,
   },
   iconGrid: {
     flexDirection: "row",
+    justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 6,
     paddingBottom: 12,
   },
   iconWrap: {
-    width: 64,
-    height: 64,
+    width: 50,
+    height: 50,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -185,33 +219,32 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   iconImage: {
-    width: 36,
-    height: 36,
+    width: 25,
+    height: 25,
     resizeMode: "contain",
   },
   colorRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 12,
+    paddingVertical: 10,
     paddingHorizontal: 8,
   },
   swatch: {
-    width: 36,
-    height: 36,
+    width: 35,
+    height: 35,
     borderRadius: 18,
     borderColor: "#fff",
   },
   actionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   actionBtn: {
-    flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
     marginHorizontal: 6,
-    borderWidth: 1,
   },
 });
