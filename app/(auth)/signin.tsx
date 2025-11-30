@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "react-native";
 
 import CustomInput from "@/components/auth/CustomInput";
+import { Link, router } from "expo-router";
 
 const SigninPage = () => {
   const theme = useColorScheme();
@@ -62,7 +63,7 @@ const SigninPage = () => {
         }}
       >
         {/* Continue with google */}
-        <View
+        <Pressable
           style={{
             backgroundColor: Colors[theme].text,
             paddingHorizontal: 20,
@@ -87,7 +88,7 @@ const SigninPage = () => {
           >
             Continue with google
           </Text>
-        </View>
+        </Pressable>
         {/* ---- OR ---- */}
         <View
           style={{
@@ -143,7 +144,7 @@ const SigninPage = () => {
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 7,
-              marginVertical: 20,
+              marginVertical: 15,
               width: "75%",
               alignSelf: "center",
               borderRadius: 7,
@@ -159,6 +160,33 @@ const SigninPage = () => {
               Signin
             </Text>
           </Pressable>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 10,
+              marginTop: 10,
+            }}
+          >
+            <Text
+              style={{
+                color: Colors[theme].text_secondary,
+                fontFamily: "NunitoRegular",
+              }}
+            >
+              Don't have an account?
+            </Text>
+            <Link
+              href={"/(auth)/signup"}
+              style={{
+                color: Colors[theme].accent1,
+                fontFamily: "NunitoRegular",
+              }}
+            >
+              Signup
+            </Link>
+          </View>
         </View>
       </View>
     </View>
@@ -166,5 +194,3 @@ const SigninPage = () => {
 };
 
 export default SigninPage;
-
-const styles = StyleSheet.create({});
