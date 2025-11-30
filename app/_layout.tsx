@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, Stack, useSegments } from "expo-router"; // Added useSegments
 import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
@@ -12,7 +12,6 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
-
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -22,11 +21,9 @@ export {
 } from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "(tabs)",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -40,24 +37,37 @@ export default function RootLayout() {
     NunitoExtraBold: require("../assets/fonts/Nunito/Nunito-ExtraBold.ttf"),
   });
 
-  const [showSplash, setShowSplash] = useState<boolean>(true);
+  // Track the current route segment to prevent infinite loops
+  const segments = useSegments();
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
     if (loaded) {
-      // keep splash for at least 2 seconds
       const timer = setTimeout(() => {
         SplashScreen.hideAsync();
         setShowSplash(false);
       }, 2000);
-
       return () => clearTimeout(timer);
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/signin");
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [isAuthenticated, segments, loaded]);
 
   if (!loaded || showSplash) {
     return <CustomSplash />;
