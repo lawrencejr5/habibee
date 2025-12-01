@@ -11,6 +11,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
+import DeviceThemeProvider, { useTheme } from "@/context/ThemeContext";
+
 import { useColorScheme } from "@/components/useColorScheme";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -79,21 +81,24 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  // const { theme } = useTheme();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <HapticsProvider>
-            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                presentation: "modal",
-                animation: "ios_from_right",
-              }}
-            />
-          </HapticsProvider>
+          <DeviceThemeProvider>
+            <HapticsProvider>
+              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "ios_from_right",
+                }}
+              />
+            </HapticsProvider>
+          </DeviceThemeProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

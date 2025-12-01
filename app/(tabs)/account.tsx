@@ -18,11 +18,12 @@ import DeleteAccountModal from "@/components/account/DeleteAccountModal";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
-  const theme = useColorScheme();
 
+  const { theme, toggleTheme } = useTheme();
   const haptics = useHapitcs();
 
   const [openAccountInfoModal, setOpenAccountInfoModal] =
@@ -279,6 +280,7 @@ export default function Account() {
                   <ToggleButton
                     isOn={theme === "dark"}
                     onToggle={() => {
+                      toggleTheme();
                       haptics.impact();
                     }}
                   />

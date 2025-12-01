@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text as ThemedText, View as ThemedView } from "@/components/Themed";
 
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 
 import AddButton from "@/components/AddButton";
@@ -17,6 +16,7 @@ import AddModal from "@/components/home/AddModal";
 import { usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const motivationalMessages = [
   "Your future self will thank you! Start building habits today 🚀",
@@ -29,7 +29,7 @@ const motivationalMessages = [
 
 const Home = () => {
   const insets = useSafeAreaInsets();
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const pathname = usePathname();
 
   const haptics = useHapitcs();
@@ -335,7 +335,7 @@ const Home = () => {
 };
 
 const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   return (
     <View
       style={{
@@ -388,7 +388,7 @@ const HabitCard: React.FC<{
   onFireIconPress,
   onCardPress,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
 
   const haptics = useHapitcs();
 

@@ -10,11 +10,11 @@ import {
 import { View as ThemedView } from "@/components/Themed";
 
 import SearchFriendsModal from "@/components/SearchFriendsModal";
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 // Dummy data for friends
 const myFriends = [
@@ -97,7 +97,7 @@ const suggestedFriends = [
 
 export default function ConnectPage() {
   const insets = useSafeAreaInsets();
-  const theme = useColorScheme();
+  const { theme } = useTheme();
 
   const haptics = useHapitcs();
 
@@ -232,7 +232,7 @@ const FriendStoryCircle: React.FC<{
   avatar: any;
   streak: number;
 }> = ({ name, avatar, streak }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   return (
@@ -308,7 +308,7 @@ const SuggestedFriendCard: React.FC<{
   isAdded: boolean;
   onAdd: () => void;
 }> = ({ name, username, avatar, mutualFriends, isAdded, onAdd }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
 
   return (
     <View

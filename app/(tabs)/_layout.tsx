@@ -6,10 +6,11 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Image } from "react-native";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const theme = useColorScheme() ?? "light";
+  const { theme } = useTheme();
 
   const haptics = useHapitcs();
 
