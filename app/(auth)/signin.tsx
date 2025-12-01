@@ -34,7 +34,11 @@ const SigninPage = () => {
         }}
       >
         <Image
-          source={require("@/assets/images/name-logo-black.png")}
+          source={
+            theme === "dark"
+              ? require("@/assets/images/name-logo-black.png")
+              : require("@/assets/images/name-logo-white.png")
+          }
           style={{
             width: 160,
             height: 40,
@@ -65,7 +69,9 @@ const SigninPage = () => {
         {/* Continue with google */}
         <Pressable
           style={{
-            backgroundColor: Colors[theme].text,
+            backgroundColor: "#fff",
+            borderWidth: theme === "dark" ? 3 : 2,
+            borderColor: Colors[theme].border,
             paddingHorizontal: 20,
             paddingVertical: 7,
             borderRadius: 7,
@@ -82,7 +88,7 @@ const SigninPage = () => {
           />
           <Text
             style={{
-              color: Colors[theme].background,
+              color: "#1f2428",
               fontFamily: "NunitoBold",
             }}
           >
@@ -100,7 +106,7 @@ const SigninPage = () => {
           <View
             style={{
               flex: 1,
-              height: 4,
+              height: theme === "dark" ? 4 : 2,
               backgroundColor: Colors[theme].border,
             }}
           />
@@ -117,7 +123,7 @@ const SigninPage = () => {
           <View
             style={{
               flex: 1,
-              height: 4,
+              height: theme === "dark" ? 4 : 2,
               backgroundColor: Colors[theme].border,
             }}
           />
@@ -128,12 +134,14 @@ const SigninPage = () => {
         <View>
           <CustomInput
             title="Email/Username:"
+            icon={require("@/assets/icons/user.png")}
             value={username}
             setValue={setUsername}
             placeHolder="Email or Username"
           />
           <CustomInput
             title="Password:"
+            icon={require("@/assets/icons/lock.png")}
             value={password}
             setValue={setPassword}
             placeHolder="Password"
@@ -152,7 +160,7 @@ const SigninPage = () => {
           >
             <Text
               style={{
-                color: Colors[theme].text,
+                color: "#fff",
                 textAlign: "center",
                 fontFamily: "NunitoBold",
               }}

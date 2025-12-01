@@ -34,7 +34,11 @@ const SignUpPage = () => {
         }}
       >
         <Image
-          source={require("@/assets/images/name-logo-black.png")}
+          source={
+            theme === "dark"
+              ? require("@/assets/images/name-logo-black.png")
+              : require("@/assets/images/name-logo-white.png")
+          }
           style={{
             width: 160,
             height: 40,
@@ -65,7 +69,9 @@ const SignUpPage = () => {
         {/* Continue with google */}
         <Pressable
           style={{
-            backgroundColor: Colors[theme].text,
+            backgroundColor: "#fff",
+            borderWidth: theme === "dark" ? 3 : 2,
+            borderColor: Colors[theme].border,
             paddingHorizontal: 20,
             paddingVertical: 7,
             borderRadius: 7,
@@ -82,7 +88,7 @@ const SignUpPage = () => {
           />
           <Text
             style={{
-              color: Colors[theme].background,
+              color: "#1f2428",
               fontFamily: "NunitoBold",
             }}
           >
@@ -100,7 +106,7 @@ const SignUpPage = () => {
           <View
             style={{
               flex: 1,
-              height: 4,
+              height: theme === "dark" ? 4 : 2,
               backgroundColor: Colors[theme].border,
             }}
           />
@@ -117,7 +123,7 @@ const SignUpPage = () => {
           <View
             style={{
               flex: 1,
-              height: 4,
+              height: theme === "dark" ? 4 : 2,
               backgroundColor: Colors[theme].border,
             }}
           />
@@ -128,18 +134,21 @@ const SignUpPage = () => {
         <View>
           <CustomInput
             title="Fullname:"
+            icon={require("@/assets/icons/user.png")}
             value={username}
             setValue={setUsername}
             placeHolder="Fullname"
           />
           <CustomInput
             title="Email:"
+            icon={require("@/assets/icons/envelope.png")}
             value={password}
             setValue={setPassword}
             placeHolder="Email"
           />
           <CustomInput
             title="Password:"
+            icon={require("@/assets/icons/lock.png")}
             value={password}
             setValue={setPassword}
             placeHolder="Password"
@@ -158,7 +167,7 @@ const SignUpPage = () => {
           >
             <Text
               style={{
-                color: Colors[theme].text,
+                color: "#fff",
                 textAlign: "center",
                 fontFamily: "NunitoBold",
               }}
@@ -183,7 +192,7 @@ const SignUpPage = () => {
               Already have an account?
             </Text>
             <Link
-              href={"/(auth)/signup"}
+              href={"/(auth)/signin"}
               style={{
                 color: Colors[theme].accent1,
                 fontFamily: "NunitoRegular",
