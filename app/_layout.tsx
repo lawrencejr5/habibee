@@ -72,33 +72,41 @@ export default function RootLayout() {
     }
   }, [isAuthenticated, segments, loaded]);
 
+  return (
+    <DeviceThemeProvider>
+      <HapticsProvider>
+        <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
+      </HapticsProvider>
+    </DeviceThemeProvider>
+  );
+}
+
+function NavigationWithTheme({
+  loaded,
+  showSplash,
+}: {
+  loaded: boolean;
+  showSplash: boolean;
+}) {
+  const { theme } = useTheme(); // NOW THIS WORKS
+
   if (!loaded || showSplash) {
     return <CustomSplash />;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  // const { theme } = useTheme();
-
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <DeviceThemeProvider>
-            <HapticsProvider>
-              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  presentation: "modal",
-                  animation: "ios_from_right",
-                }}
-              />
-            </HapticsProvider>
-          </DeviceThemeProvider>
+          <StatusBar style={theme === "dark" ? "light" : "dark"} />
+
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              presentation: "modal",
+              animation: "ios_from_right",
+            }}
+          />
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>
