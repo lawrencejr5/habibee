@@ -14,6 +14,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/components/useColorScheme";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import HapticsProvider from "@/context/HapticsContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -41,7 +42,7 @@ export default function RootLayout() {
   const segments = useSegments();
 
   const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   useEffect(() => {
     if (error) throw error;
@@ -83,14 +84,16 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              presentation: "modal",
-              animation: "ios_from_right",
-            }}
-          />
+          <HapticsProvider>
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                presentation: "modal",
+                animation: "ios_from_right",
+              }}
+            />
+          </HapticsProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

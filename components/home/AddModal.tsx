@@ -17,8 +17,8 @@ import { View as ThemedView } from "../Themed";
 import ToggleButton from "@/components/ToggleButton";
 import IconColorPicker from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
-import * as Haptics from "expo-haptics";
 import { useColorScheme } from "../useColorScheme";
+import { useHapitcs } from "@/context/HapticsContext";
 
 const AddModal: React.FC<{
   visible: boolean;
@@ -26,6 +26,8 @@ const AddModal: React.FC<{
 }> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const haptics = useHapitcs();
+
   const [isEnabled, setIsEnabled] = useState(true);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<any>(null);
@@ -33,7 +35,7 @@ const AddModal: React.FC<{
 
   const close = () => {
     setVisible(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
   };
 
   return (
@@ -80,7 +82,7 @@ const AddModal: React.FC<{
             {/* Pick icon */}
             <Pressable
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                haptics.impact();
                 setIconPickerVisible(true);
               }}
               style={{

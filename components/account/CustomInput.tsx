@@ -1,5 +1,5 @@
 import React, { Dispatch, FC, SetStateAction } from "react";
-import { StyleSheet, Text, View, TextInput } from "react-native";
+import { View, TextInput } from "react-native";
 
 import { View as ThemedView, Text as ThemedText } from "@/components/Themed";
 

@@ -1,22 +1,23 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
-import * as Haptics from "expo-haptics";
-
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Image } from "react-native";
+import { useHapitcs } from "@/context/HapticsContext";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const theme = useColorScheme() ?? "light";
 
+  const haptics = useHapitcs();
+
   return (
     <Tabs
       screenListeners={{
         tabPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          haptics.impact();
         },
       }}
       screenOptions={{

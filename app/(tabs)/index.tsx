@@ -1,7 +1,5 @@
 import { Image, Pressable, StyleSheet } from "react-native";
 
-import * as Haptics from "expo-haptics";
-
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,6 +16,7 @@ import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import AddModal from "@/components/home/AddModal";
 import { usePathname } from "expo-router";
 import { useEffect, useState } from "react";
+import { useHapitcs } from "@/context/HapticsContext";
 
 const motivationalMessages = [
   "Your future self will thank you! Start building habits today 🚀",
@@ -32,6 +31,8 @@ const Home = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
   const pathname = usePathname();
+
+  const haptics = useHapitcs();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
@@ -85,7 +86,7 @@ const Home = () => {
 
   const open = () => {
     setAddModalVisible(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
   };
 
   return (
@@ -305,7 +306,7 @@ const Home = () => {
                   setTimerModalVisible(true);
                 }}
                 onCardPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  haptics.impact();
                   setSelectedHabitId(habit.id);
                   setDetailsModalVisible(true);
                 }}
@@ -389,11 +390,13 @@ const HabitCard: React.FC<{
 }) => {
   const theme = useColorScheme();
 
+  const haptics = useHapitcs();
+
   return (
     <Pressable
       onPress={onCardPress}
       onLongPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        haptics.impact();
       }}
       style={{
         flexDirection: "row",
@@ -511,7 +514,7 @@ const HabitCard: React.FC<{
       </View>
       <Pressable
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          haptics.impact();
           onFireIconPress();
         }}
         style={{

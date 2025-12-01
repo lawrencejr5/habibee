@@ -9,11 +9,10 @@ import {
   Text,
 } from "react-native";
 
-import * as Haptics from "expo-haptics";
-
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
+import { useHapitcs } from "@/context/HapticsContext";
 
 type Props = {
   visible: boolean;
@@ -40,6 +39,8 @@ export default function IconColorPicker({
   onSelect,
 }: Props) {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const [color, setColor] = React.useState<string>(
     selectedColor || DEFAULT_COLORS[0]
   );
@@ -94,7 +95,7 @@ export default function IconColorPicker({
             <Pressable
               style={{ padding: 10 }}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                haptics.impact();
 
                 onClose();
               }}

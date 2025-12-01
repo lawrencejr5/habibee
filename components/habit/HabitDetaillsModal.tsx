@@ -8,8 +8,6 @@ import React, {
 } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import * as Haptics from "expo-haptics";
-
 import { Text as ThemedText } from "../Themed";
 
 import Colors from "@/constants/Colors";
@@ -23,6 +21,7 @@ import { useColorScheme } from "../useColorScheme";
 import { habitIcons, habitsData } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -37,6 +36,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 }) => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
 
@@ -71,7 +72,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [showEditButton, setShowEditButton] = useState<boolean>(false);
 
   const handleStart = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
     setTimerModalVisible(true);
   };
 
@@ -137,7 +138,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   padding: 8,
                 }}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  haptics.impact();
                   bottomSheetRef.current?.close();
                 }}
               >
@@ -162,7 +163,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               {showEditButton && (
                 <Pressable
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    haptics.impact();
                     setEditModalVisible(true);
                     setShowEditButton(false);
                   }}

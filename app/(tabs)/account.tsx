@@ -12,16 +12,18 @@ import ToggleButton from "@/components/ToggleButton";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import DeleteAccountModal from "@/components/account/DeleteAccountModal";
 import { useState } from "react";
 import { router } from "expo-router";
+import { useHapitcs } from "@/context/HapticsContext";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+
+  const haptics = useHapitcs();
 
   const [openAccountInfoModal, setOpenAccountInfoModal] =
     useState<boolean>(false);
@@ -38,7 +40,7 @@ export default function Account() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              haptics.impact();
               setOpenAccountInfoModal(true);
             }}
             style={{
@@ -154,7 +156,7 @@ export default function Account() {
               >
                 <Pressable
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    haptics.impact();
                     router.push("/account/personal_info");
                   }}
                   style={[styles.row]}
@@ -179,7 +181,7 @@ export default function Account() {
 
                 <Pressable
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    haptics.impact();
                     router.push("/account/update_password");
                   }}
                   style={[styles.row]}
@@ -203,7 +205,7 @@ export default function Account() {
                 </Pressable>
                 <Pressable
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    haptics.impact();
                     setOpenDeleteAccountModal(true);
                   }}
                   style={[styles.row]}
@@ -272,12 +274,12 @@ export default function Account() {
                   <ThemedText
                     style={[styles.rowText, { color: Colors[theme].text }]}
                   >
-                    Dark / Light Mode
+                    Dark Mode
                   </ThemedText>
                   <ToggleButton
                     isOn={theme === "dark"}
                     onToggle={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      haptics.impact();
                     }}
                   />
                 </View>
@@ -294,9 +296,10 @@ export default function Account() {
                     Haptic Feedback
                   </ThemedText>
                   <ToggleButton
-                    isOn={theme === "dark"}
+                    isOn={haptics.enabled}
                     onToggle={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      haptics.toggleHaptics();
+                      haptics.impact();
                     }}
                   />
                 </View>
@@ -335,7 +338,7 @@ export default function Account() {
               >
                 <Pressable
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    haptics.impact();
                     router.push("/account/feedback");
                   }}
                   style={[styles.row]}
@@ -391,9 +394,7 @@ export default function Account() {
                 ]}
               >
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => haptics.impact()}
                   style={[styles.row]}
                 >
                   <Feather
@@ -414,9 +415,7 @@ export default function Account() {
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => haptics.impact()}
                   style={[styles.row]}
                 >
                   <Feather
@@ -437,9 +436,7 @@ export default function Account() {
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() =>
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  }
+                  onPress={() => haptics.impact()}
                   style={[styles.row]}
                 >
                   <Feather

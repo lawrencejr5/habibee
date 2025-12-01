@@ -1,8 +1,8 @@
 import Colors from "@/constants/Colors";
-import * as Haptics from "expo-haptics";
 import React from "react";
 import { Animated, Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "./useColorScheme";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface ToggleButtonProps {
   isOn: boolean;
@@ -11,6 +11,8 @@ interface ToggleButtonProps {
 
 const ToggleButton: React.FC<ToggleButtonProps> = ({ isOn, onToggle }) => {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const animatedValue = React.useRef(new Animated.Value(isOn ? 1 : 0)).current;
 
   React.useEffect(() => {
@@ -31,7 +33,7 @@ const ToggleButton: React.FC<ToggleButtonProps> = ({ isOn, onToggle }) => {
     : Colors[theme].text_secondary;
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    haptics.impact("light");
     onToggle();
   };
 

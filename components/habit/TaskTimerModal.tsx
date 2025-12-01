@@ -15,8 +15,8 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import * as Haptics from "expo-haptics";
 import { useColorScheme } from "../useColorScheme";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface TaskTimerModalProps {
   visible: boolean;
@@ -33,6 +33,8 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 }) => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const [seconds, setSeconds] = useState(0);
@@ -78,7 +80,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   };
 
   const handleFinish = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    haptics.impact("success");
     setIsRunning(false);
     setVisible(false);
   };
@@ -194,7 +196,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           <Pressable
             onPress={() => {
               setIsRunning(!isRunning);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              haptics.impact("light");
             }}
             style={{
               backgroundColor: Colors[theme].surface,

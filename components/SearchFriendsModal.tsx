@@ -1,11 +1,11 @@
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { useHapitcs } from "@/context/HapticsContext";
 import { Entypo } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import * as Haptics from "expo-haptics";
 import {
   Dispatch,
   SetStateAction,
@@ -132,6 +132,8 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [addedFriends, setAddedFriends] = useState<string[]>([]);
@@ -147,7 +149,7 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
   }, [visible]);
 
   const handleAddFriend = (friendId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
     setAddedFriends([...addedFriends, friendId]);
   };
 
@@ -243,7 +245,7 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
 
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              haptics.impact("light");
               setVisible(false);
             }}
             style={{

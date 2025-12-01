@@ -12,9 +12,9 @@ import { View as ThemedView } from "@/components/Themed";
 import SearchFriendsModal from "@/components/SearchFriendsModal";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import * as Haptics from "expo-haptics";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHapitcs } from "@/context/HapticsContext";
 
 // Dummy data for friends
 const myFriends = [
@@ -98,11 +98,14 @@ const suggestedFriends = [
 export default function ConnectPage() {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+
+  const haptics = useHapitcs();
+
   const [addedFriends, setAddedFriends] = useState<string[]>([]);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   const handleAddFriend = (friendId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
     setAddedFriends([...addedFriends, friendId]);
   };
 
@@ -128,7 +131,7 @@ export default function ConnectPage() {
       {/* Search Bar */}
       <Pressable
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          haptics.impact("light");
           setSearchModalVisible(true);
         }}
         style={{ paddingHorizontal: 20, marginBottom: 20 }}
@@ -230,11 +233,12 @@ const FriendStoryCircle: React.FC<{
   streak: number;
 }> = ({ name, avatar, streak }) => {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
 
   return (
     <Pressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        haptics.impact("light");
       }}
       style={{ alignItems: "center", width: 75 }}
     >

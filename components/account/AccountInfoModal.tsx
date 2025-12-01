@@ -16,8 +16,8 @@ import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
 import { Feather } from "@expo/vector-icons";
 
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface AccountModalProps {
   visible: boolean;
@@ -26,6 +26,8 @@ interface AccountModalProps {
 
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["50%"], []);
 
@@ -158,7 +160,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             borderRadius: 50,
           }}
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            haptics.impact();
             router.push("/account/personal_info");
             setVisible(false);
           }}

@@ -14,7 +14,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
-import * as Haptics from "expo-haptics";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface DeleteAccountModalProps {
   visible: boolean;
@@ -26,6 +26,8 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
   setVisible,
 }) => {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["40%"], []);
 
@@ -45,7 +47,7 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
   );
 
   const handleDeletePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    haptics.impact("heavy");
     bottomSheetRef.current?.close();
   };
 
@@ -115,7 +117,7 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
         >
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              haptics.impact();
               bottomSheetRef.current?.close();
             }}
             style={{

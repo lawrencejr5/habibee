@@ -24,10 +24,10 @@ import BottomSheet, {
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import ToggleButton from "@/components/ToggleButton";
 import IconColorPicker from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
+import { useHapitcs } from "@/context/HapticsContext";
 
 interface EditHabitModalProps {
   visible: boolean;
@@ -47,6 +47,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   habitColor = "#e74c3c",
 }) => {
   const theme = useColorScheme();
+  const haptics = useHapitcs();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["95%"], []);
 
@@ -82,7 +84,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   );
 
   const handleSave = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
     console.log({
       habitName,
       duration,
@@ -136,7 +138,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
           {/* Pick icon */}
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              haptics.impact();
               setIconPickerVisible(true);
             }}
             style={{
@@ -358,7 +360,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         >
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              haptics.impact();
               setVisible(false);
             }}
             style={{
