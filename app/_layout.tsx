@@ -88,7 +88,7 @@ function NavigationWithTheme({
   loaded: boolean;
   showSplash: boolean;
 }) {
-  const { theme } = useTheme(); // NOW THIS WORKS
+  const { theme } = useTheme();
 
   if (!loaded || showSplash) {
     return <CustomSplash />;

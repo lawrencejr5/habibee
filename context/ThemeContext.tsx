@@ -38,12 +38,25 @@ const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     loadTheme();
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const newTheme = prev === "dark" ? "light" : "dark";
-      AsyncStorage.setItem("theme", newTheme);
-      return newTheme;
+  useEffect(() => {
+    const listener = Appearance.addChangeListener(({ colorScheme }) => {
+      toggleTheme(colorScheme as ThemeType);
     });
+
+    return () => listener.remove();
+  }, []);
+
+  const toggleTheme = (theme?: ThemeType) => {
+    if (theme) {
+      setTheme(theme);
+      AsyncStorage.setItem("theme", theme);
+    } else {
+      setTheme((prev) => {
+        const newTheme = prev === "dark" ? "light" : "dark";
+        AsyncStorage.setItem("theme", newTheme);
+        return newTheme;
+      });
+    }
   };
 
   if (loading) return null;
