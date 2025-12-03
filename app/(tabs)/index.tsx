@@ -20,22 +20,27 @@ import { useTheme } from "@/context/ThemeContext";
 
 import { api } from "@/convex/_generated/api";
 import { useStableQuery } from "@/components/convex/useStableQuery";
+import { useLoadingContext } from "@/context/LoadingContext";
+import { useMotivationalContext } from "@/context/MotivationContext";
 
-const motivationalMessages = [
-  "Your future self will thank you! Start building habits today 🚀",
-  "Small steps today lead to big changes tomorrow! 💪",
-  "Every habit is a vote for who you want to become ✨",
-  "Success is the sum of small efforts repeated daily 🌟",
-  "The best time to start is now! Let's get going ⏰",
-  "Transform your life one habit at a time! You've got this 🎯",
-];
+// const motivationalMessages = [
+//   "Your future self will thank you! Start building habits today 🚀",
+//   "Small steps today lead to big changes tomorrow! 💪",
+//   "Every habit is a vote for who you want to become ✨",
+//   "Success is the sum of small efforts repeated daily 🌟",
+//   "The best time to start is now! Let's get going ⏰",
+//   "Transform your life one habit at a time! You've got this 🎯",
+// ];
 
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const haptics = useHapitcs();
+
   const pathname = usePathname();
 
-  const haptics = useHapitcs();
+  const { appLoading } = useLoadingContext();
+  const { motivationalMsgs } = useMotivationalContext();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
@@ -54,16 +59,14 @@ const Home = () => {
   // Check if we're on the index page
   const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
 
-  const motivational_messages = useStableQuery(api.motivationa_messages.get);
-
   // Typing animation effect
   useEffect(() => {
     if (!isOnIndexPage) return;
 
-    const currentMessage = motivationalMessages![currentMessageIndex];
+    const currentMessage = motivationalMsgs?.[currentMessageIndex]?.text;
     let currentIndex = 0;
 
-    if (isTyping) {
+    if (isTyping && currentMessage) {
       const typingInterval = setInterval(() => {
         if (currentIndex <= currentMessage.length) {
           setDisplayedText(currentMessage.slice(0, currentIndex));
@@ -78,7 +81,7 @@ const Home = () => {
           // Wait 3 seconds before moving to next message
           setTimeout(() => {
             setCurrentMessageIndex(
-              (prevIndex) => (prevIndex + 1) % motivationalMessages.length
+              (prevIndex) => (prevIndex + 1) % motivationalMsgs!.length
             );
             setIsTyping(true);
           }, 3000);
@@ -93,6 +96,15 @@ const Home = () => {
     setAddModalVisible(true);
     haptics.impact();
   };
+
+  if (appLoading)
+    return (
+      <ThemedView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
+    );
 
   return (
     <View style={{ flex: 1 }}>
@@ -230,7 +242,7 @@ const Home = () => {
               {displayedText}
               {isTyping &&
                 displayedText.length <
-                  motivationalMessages[currentMessageIndex].length && (
+                  motivationalMsgs![currentMessageIndex].text.length && (
                   <Text style={{ color: Colors[theme].primary }}>|</Text>
                 )}
             </Text>

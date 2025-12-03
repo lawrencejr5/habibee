@@ -18,6 +18,8 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import HapticsProvider from "@/context/HapticsContext";
+import LoadingProvider from "@/context/LoadingContext";
+import MotivationMsgProvider from "@/context/MotivationContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -81,7 +83,11 @@ export default function RootLayout() {
     <ConvexProvider client={convex}>
       <DeviceThemeProvider>
         <HapticsProvider>
-          <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
+          <LoadingProvider>
+            <MotivationMsgProvider>
+              <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
+            </MotivationMsgProvider>
+          </LoadingProvider>
         </HapticsProvider>
       </DeviceThemeProvider>
     </ConvexProvider>
