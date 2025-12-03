@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 
+import { api } from "@/convex/_generated/api";
+import { useStableQuery } from "@/components/convex/useStableQuery";
+
 const motivationalMessages = [
   "Your future self will thank you! Start building habits today 🚀",
   "Small steps today lead to big changes tomorrow! 💪",
@@ -51,11 +54,13 @@ const Home = () => {
   // Check if we're on the index page
   const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
 
+  const motivational_messages = useStableQuery(api.motivationa_messages.get);
+
   // Typing animation effect
   useEffect(() => {
     if (!isOnIndexPage) return;
 
-    const currentMessage = motivationalMessages[currentMessageIndex];
+    const currentMessage = motivationalMessages![currentMessageIndex];
     let currentIndex = 0;
 
     if (isTyping) {
@@ -64,7 +69,7 @@ const Home = () => {
           setDisplayedText(currentMessage.slice(0, currentIndex));
           // Add haptic feedback for each character typed only when on index page
           // if (currentIndex > 0 && isOnIndexPage) {
-          //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          //   haptics.impact("rigid");
           // }
           currentIndex++;
         } else {

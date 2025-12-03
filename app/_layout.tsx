@@ -9,7 +9,8 @@ import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import "react-native-reanimated";
+
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 import DeviceThemeProvider, { useTheme } from "@/context/ThemeContext";
 
@@ -26,6 +27,10 @@ export {
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+  unsavedChangesWarning: false,
+});
 
 SplashScreen.preventAutoHideAsync();
 
@@ -73,11 +78,13 @@ export default function RootLayout() {
   }, [isAuthenticated, segments, loaded]);
 
   return (
-    <DeviceThemeProvider>
-      <HapticsProvider>
-        <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
-      </HapticsProvider>
-    </DeviceThemeProvider>
+    <ConvexProvider client={convex}>
+      <DeviceThemeProvider>
+        <HapticsProvider>
+          <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
+        </HapticsProvider>
+      </DeviceThemeProvider>
+    </ConvexProvider>
   );
 }
 
