@@ -7,7 +7,6 @@ import React, {
   ReactNode,
   useContext,
   useEffect,
-  useState,
 } from "react";
 
 import { useLoadingContext } from "@/context/LoadingContext";
@@ -29,21 +28,14 @@ const MotivationMsgContext = createContext<MotivationMsgContextType | null>(
 const MotivationMsgProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { setAppLoading } = useLoadingContext();
 
-  const [motivationalMsgs, setMotivationalMsgs] = useState<
-    MotivationType[] | null
-  >(null);
+  const msgs = useQuery(api.motivationa_messages.get);
 
   useEffect(() => {
-    const msgs = useQuery(api.motivationa_messages.get);
-    if (msgs === undefined) {
-      setAppLoading(true);
-    } else {
-      setMotivationalMsgs(msgs);
-    }
-  }, []);
+    setAppLoading(msgs === undefined);
+  }, [msgs]);
 
   return (
-    <MotivationMsgContext.Provider value={{ motivationalMsgs }}>
+    <MotivationMsgContext.Provider value={{ motivationalMsgs: msgs as any }}>
       {children}
     </MotivationMsgContext.Provider>
   );

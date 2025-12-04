@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet } from "react-native";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,19 +18,9 @@ import { useEffect, useState } from "react";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 
-import { api } from "@/convex/_generated/api";
-import { useStableQuery } from "@/components/convex/useStableQuery";
 import { useLoadingContext } from "@/context/LoadingContext";
 import { useMotivationalContext } from "@/context/MotivationContext";
-
-// const motivationalMessages = [
-//   "Your future self will thank you! Start building habits today 🚀",
-//   "Small steps today lead to big changes tomorrow! 💪",
-//   "Every habit is a vote for who you want to become ✨",
-//   "Success is the sum of small efforts repeated daily 🌟",
-//   "The best time to start is now! Let's get going ⏰",
-//   "Transform your life one habit at a time! You've got this 🎯",
-// ];
+import Loading from "@/components/Loading";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -97,14 +87,7 @@ const Home = () => {
     haptics.impact();
   };
 
-  if (appLoading)
-    return (
-      <ThemedView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <ThemedText>Loading...</ThemedText>
-      </ThemedView>
-    );
+  if (appLoading) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
