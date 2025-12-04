@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import React, { useState } from "react";
 
+import { useAuthActions } from "@convex-dev/auth/react";
+
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,8 +15,26 @@ const SignUpPage = () => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
 
-  const [username, setUsername] = useState<string>("");
+  const { signIn } = useAuthActions();
+
+  const [fullname, setFullname] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
+
+  const handleSubmit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("fullname", fullname);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("flow", flow);
+
+      await signIn("password", formData);
+    } catch (err) {
+      console.log("auth failed");
+    }
+  };
 
   return (
     <View
@@ -135,15 +155,15 @@ const SignUpPage = () => {
           <CustomInput
             title="Fullname:"
             icon={require("@/assets/icons/user.png")}
-            value={username}
-            setValue={setUsername}
+            value={fullname}
+            setValue={setFullname}
             placeHolder="Fullname"
           />
           <CustomInput
             title="Email:"
             icon={require("@/assets/icons/envelope.png")}
-            value={password}
-            setValue={setPassword}
+            value={email}
+            setValue={setEmail}
             placeHolder="Email"
           />
           <CustomInput
@@ -156,6 +176,7 @@ const SignUpPage = () => {
           />
 
           <Pressable
+            onPress={handleSubmit}
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 7,

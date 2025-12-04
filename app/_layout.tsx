@@ -20,6 +20,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import HapticsProvider from "@/context/HapticsContext";
 import LoadingProvider from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -51,7 +54,7 @@ export default function RootLayout() {
   const segments = useSegments();
 
   const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     if (error) throw error;
@@ -81,15 +84,17 @@ export default function RootLayout() {
 
   return (
     <ConvexProvider client={convex}>
-      <DeviceThemeProvider>
-        <HapticsProvider>
-          <LoadingProvider>
-            <MotivationMsgProvider>
-              <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
-            </MotivationMsgProvider>
-          </LoadingProvider>
-        </HapticsProvider>
-      </DeviceThemeProvider>
+      <ConvexAuthProvider client={convex} storage={AsyncStorage}>
+        <DeviceThemeProvider>
+          <HapticsProvider>
+            <LoadingProvider>
+              <MotivationMsgProvider>
+                <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
+              </MotivationMsgProvider>
+            </LoadingProvider>
+          </HapticsProvider>
+        </DeviceThemeProvider>
+      </ConvexAuthProvider>
     </ConvexProvider>
   );
 }
