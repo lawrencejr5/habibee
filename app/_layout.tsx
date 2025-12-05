@@ -4,30 +4,25 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { router, Stack, useSegments } from "expo-router"; // Added useSegments
+import { router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+// 1. Remove ConvexProvider, keep only ConvexAuthProvider and useConvexAuth
+import { ConvexReactClient, useConvexAuth } from "convex/react";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import DeviceThemeProvider, { useTheme } from "@/context/ThemeContext";
-
-import { useColorScheme } from "@/components/useColorScheme";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import HapticsProvider from "@/context/HapticsContext";
 import LoadingProvider from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from "expo-router";
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -50,28 +45,49 @@ export default function RootLayout() {
     NunitoExtraBold: require("../assets/fonts/Nunito/Nunito-ExtraBold.ttf"),
   });
 
-  // Track the current route segment to prevent infinite loops
-  const segments = useSegments();
-
-  const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
+  return (
+    <ConvexAuthProvider client={convex} storage={AsyncStorage}>
+      <DeviceThemeProvider>
+        <HapticsProvider>
+          <LoadingProvider>
+            <MotivationMsgProvider>
+              <NavigationWithTheme loaded={loaded} />
+            </MotivationMsgProvider>
+          </LoadingProvider>
+        </HapticsProvider>
+      </DeviceThemeProvider>
+    </ConvexAuthProvider>
+  );
+}
+
+function NavigationWithTheme({ loaded }: { loaded: boolean }) {
+  const { theme } = useTheme();
+  const segments = useSegments();
+
+  // 4. Move useConvexAuth HERE (Child of Provider)
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
+  // Handle Splash Screen hiding
   useEffect(() => {
-    if (loaded) {
+    if (loaded && !isLoading) {
+      // Wait a tiny bit to ensure smooth transition
       const timer = setTimeout(() => {
         SplashScreen.hideAsync();
         setShowSplash(false);
-      }, 2000);
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [loaded]);
+  }, [loaded, isLoading]);
 
+  // 5. Handle Auth Navigation Logic HERE
   useEffect(() => {
-    if (!loaded) return;
+    // Wait until fonts are loaded and auth is done loading
+    if (!loaded || isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
@@ -80,34 +96,9 @@ export default function RootLayout() {
     } else if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, segments, loaded]);
+  }, [isAuthenticated, segments, loaded, isLoading]);
 
-  return (
-    <ConvexProvider client={convex}>
-      <ConvexAuthProvider client={convex} storage={AsyncStorage}>
-        <DeviceThemeProvider>
-          <HapticsProvider>
-            <LoadingProvider>
-              <MotivationMsgProvider>
-                <NavigationWithTheme loaded={loaded} showSplash={showSplash} />
-              </MotivationMsgProvider>
-            </LoadingProvider>
-          </HapticsProvider>
-        </DeviceThemeProvider>
-      </ConvexAuthProvider>
-    </ConvexProvider>
-  );
-}
-
-function NavigationWithTheme({
-  loaded,
-  showSplash,
-}: {
-  loaded: boolean;
-  showSplash: boolean;
-}) {
-  const { theme } = useTheme();
-
+  // Show Custom Splash until fonts load AND Auth determines state
   if (!loaded || showSplash) {
     return <CustomSplash />;
   }
@@ -117,7 +108,6 @@ function NavigationWithTheme({
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <StatusBar style={theme === "dark" ? "light" : "dark"} />
-
           <Stack
             screenOptions={{
               headerShown: false,

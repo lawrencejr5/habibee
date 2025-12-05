@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 
 import Colors from "@/constants/Colors";
@@ -9,12 +16,35 @@ import { Image } from "react-native";
 import CustomInput from "@/components/auth/CustomInput";
 import { Link, router } from "expo-router";
 
+import { useAuthActions } from "@convex-dev/auth/react";
+
 const SigninPage = () => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
 
+  const { signIn } = useAuthActions();
+
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
+
+  const handleSubmit = async () => {
+    setBtnLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("email", username);
+      formData.append("password", password);
+      formData.append("flow", "signIn");
+
+      await signIn("password", formData);
+      console.log("signed in");
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
 
   return (
     <View
@@ -149,6 +179,8 @@ const SigninPage = () => {
           />
 
           <Pressable
+            onPress={handleSubmit}
+            disabled={btnLoading}
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 7,
@@ -156,17 +188,22 @@ const SigninPage = () => {
               width: "75%",
               alignSelf: "center",
               borderRadius: 7,
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
-            <Text
-              style={{
-                color: "#fff",
-                textAlign: "center",
-                fontFamily: "NunitoBold",
-              }}
-            >
-              Signin
-            </Text>
+            {btnLoading ? (
+              <ActivityIndicator color={"#fff"} />
+            ) : (
+              <Text
+                style={{
+                  color: "#fff",
+                  textAlign: "center", // This is optional since the Pressable is centering it
+                  fontFamily: "NunitoBold",
+                }}
+              >
+                Signin
+              </Text>
+            )}
           </Pressable>
 
           <View

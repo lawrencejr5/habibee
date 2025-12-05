@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -21,8 +28,10 @@ const SignUpPage = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
   const handleSubmit = async () => {
+    setBtnLoading(true);
     try {
       const formData = new FormData();
       formData.append("fullname", fullname);
@@ -31,8 +40,11 @@ const SignUpPage = () => {
       formData.append("flow", flow);
 
       await signIn("password", formData);
+      console.log("signed up");
     } catch (err) {
       console.log("auth failed");
+    } finally {
+      setBtnLoading(false);
     }
   };
 
@@ -177,6 +189,7 @@ const SignUpPage = () => {
 
           <Pressable
             onPress={handleSubmit}
+            disabled={btnLoading}
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 7,
@@ -184,17 +197,22 @@ const SignUpPage = () => {
               width: "75%",
               alignSelf: "center",
               borderRadius: 7,
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
-            <Text
-              style={{
-                color: "#fff",
-                textAlign: "center",
-                fontFamily: "NunitoBold",
-              }}
-            >
-              Signup
-            </Text>
+            {btnLoading ? (
+              <ActivityIndicator color={"#fff"} />
+            ) : (
+              <Text
+                style={{
+                  color: "#fff",
+                  textAlign: "center", // This is optional since the Pressable is centering it
+                  fontFamily: "NunitoBold",
+                }}
+              >
+                Signup
+              </Text>
+            )}
           </Pressable>
           <View
             style={{

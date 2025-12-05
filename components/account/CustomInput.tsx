@@ -56,6 +56,7 @@ const CustomInput: FC<CustomInputProps> = ({
             fontFamily: "NunitoMedium",
             color: Colors[theme].text,
             minHeight: big ? 200 : 0,
+            width: "100%",
           }}
         />
       </View>
