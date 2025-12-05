@@ -74,7 +74,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // Handle Splash Screen hiding
   useEffect(() => {
-    if (loaded && !isLoading) {
+    if (loaded) {
       // Wait a tiny bit to ensure smooth transition
       const timer = setTimeout(() => {
         SplashScreen.hideAsync();
@@ -82,7 +82,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [loaded, isLoading]);
+  }, [loaded]);
 
   // 5. Handle Auth Navigation Logic HERE
   useEffect(() => {

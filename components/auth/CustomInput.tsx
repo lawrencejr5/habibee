@@ -47,6 +47,7 @@ const CustomInput: FC<CustomInputProps> = ({
         <TextInput
           placeholder={placeHolder}
           secureTextEntry={password}
+          autoCapitalize="none"
           value={value}
           onChangeText={setValue}
           style={{

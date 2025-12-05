@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import BottomSheet, {
@@ -14,10 +15,13 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
-import { Feather } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
+
+import { useAuthActions } from "@convex-dev/auth/react";
+import { ActivityIndicator } from "react-native";
 
 interface AccountModalProps {
   visible: boolean;
@@ -27,6 +31,21 @@ interface AccountModalProps {
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
   const haptics = useHapitcs();
+
+  const { signOut } = useAuthActions();
+  const [signingOut, setSigninOut] = useState<boolean>(false);
+
+  const handleSignout = async () => {
+    setSigninOut(true);
+    try {
+      haptics.impact();
+      await signOut();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSigninOut(false);
+    }
+  };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["50%"], []);
@@ -152,30 +171,81 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
           </View>
         </View>
 
-        <Pressable
+        <View
           style={{
-            width: "100%",
-            backgroundColor: Colors[theme].primary,
-            paddingVertical: 10,
-            borderRadius: 50,
-          }}
-          onPress={() => {
-            haptics.impact();
-            router.push("/account/personal_info");
-            setVisible(false);
+            flexDirection: "row",
+            justifyContent: "space-between",
+            gap: 10,
           }}
         >
-          <Text
+          <Pressable
             style={{
-              fontFamily: "NunitoBold",
-              fontSize: 16,
-              color: "#eee",
-              textAlign: "center",
+              flex: 1,
+              backgroundColor: Colors[theme].primary,
+              paddingVertical: 10,
+              borderRadius: 50,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+            }}
+            onPress={() => {
+              haptics.impact();
+              router.push("/account/personal_info");
+              setVisible(false);
             }}
           >
-            Edit Details
-          </Text>
-        </Pressable>
+            <Text
+              style={{
+                fontFamily: "NunitoBold",
+                fontSize: 16,
+                color: "#eee",
+                textAlign: "center",
+              }}
+            >
+              Edit Details
+            </Text>
+            <Feather name="edit" size={16} color={Colors[theme].text} />
+          </Pressable>
+          <Pressable
+            disabled={signingOut}
+            style={{
+              borderColor: Colors[theme].text_secondary,
+              borderWidth: 0.5,
+              paddingVertical: 10,
+              paddingHorizontal: 15,
+              borderRadius: 50,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              opacity: signingOut ? 0.5 : 1,
+            }}
+            onPress={handleSignout}
+          >
+            {signingOut ? (
+              <ActivityIndicator color={Colors[theme].text_secondary} />
+            ) : (
+              <>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 14,
+                    color: Colors[theme].text_secondary,
+                    textAlign: "center",
+                  }}
+                >
+                  Logout
+                </Text>
+                <AntDesign
+                  name="poweroff"
+                  size={14}
+                  color={Colors[theme].text_secondary}
+                />
+              </>
+            )}
+          </Pressable>
+        </View>
       </BottomSheetView>
     </BottomSheet>
   );

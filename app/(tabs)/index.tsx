@@ -21,6 +21,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLoadingContext } from "@/context/LoadingContext";
 import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
+import { useConvexAuth } from "convex/react";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -30,6 +31,7 @@ const Home = () => {
   const pathname = usePathname();
 
   const { appLoading } = useLoadingContext();
+  const { isLoading: authLoading } = useConvexAuth();
   const { motivationalMsgs } = useMotivationalContext();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
@@ -87,7 +89,7 @@ const Home = () => {
     haptics.impact();
   };
 
-  if (appLoading) return <Loading />;
+  if (appLoading || authLoading) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
