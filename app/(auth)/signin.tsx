@@ -1,9 +1,8 @@
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
-  TextInput,
+  KeyboardAvoidingView,
   View,
 } from "react-native";
 import React, { useState } from "react";
@@ -14,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "react-native";
 
 import CustomInput from "@/components/auth/CustomInput";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 
 import { useAuthActions } from "@convex-dev/auth/react";
 
@@ -33,7 +32,7 @@ const SigninPage = () => {
     setBtnLoading(true);
     try {
       const formData = new FormData();
-      formData.append("email", username);
+      formData.append("email", username.trim());
       formData.append("password", password);
       formData.append("flow", "signIn");
 

@@ -34,8 +34,8 @@ const SignUpPage = () => {
     setBtnLoading(true);
     try {
       const formData = new FormData();
-      formData.append("fullname", fullname);
-      formData.append("email", email);
+      formData.append("fullname", fullname.trim());
+      formData.append("email", email.trim());
       formData.append("password", password);
       formData.append("flow", flow);
 
@@ -231,7 +231,7 @@ const SignUpPage = () => {
               Already have an account?
             </Text>
             <Link
-              href={"/(auth)/signin"}
+              href={"/(auth)/addUsername"}
               style={{
                 color: Colors[theme].accent1,
                 fontFamily: "NunitoRegular",

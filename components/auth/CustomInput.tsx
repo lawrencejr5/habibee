@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
 import React, { Dispatch, FC, SetStateAction } from "react";
 
 import Colors from "@/constants/Colors";

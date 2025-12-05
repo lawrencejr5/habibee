@@ -23,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.lawrencejr.habibee"
+      "package": "com.lawrencejr.habibee",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
