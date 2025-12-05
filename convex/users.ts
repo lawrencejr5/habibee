@@ -19,7 +19,7 @@ export const get_current_user = query({
   args: {},
   handler: async (ctx) => {
     const user_id = await getAuthUserId(ctx);
-    if (user_id === null) throw new Error("User not authenticated");
+    if (user_id === null) return null;
 
     const user = await ctx.db.get(user_id);
     return user;

@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   StyleSheet,
@@ -16,12 +17,32 @@ import { router } from "expo-router";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useHapitcs } from "@/context/HapticsContext";
 
+import { api } from "@/convex/_generated/api";
+import { useMutation } from "convex/react";
+
 const AddUsername = () => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { theme } = useTheme();
 
   const [username, setUsername] = useState<string>("");
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
+  const add_username = useMutation(api.users.update_username);
+
+  const handleSubmit = async () => {
+    setBtnLoading(true);
+    try {
+      if (username.trim().length === 0) {
+        console.log("Username cannot be empty!");
+      }
+      await add_username({ username: username.trim() });
+      router.replace("/(tabs)");
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
 
   return (
     <ThemedView
@@ -101,21 +122,28 @@ const AddUsername = () => {
       </View>
 
       <Pressable
+        disabled={btnLoading}
+        onPress={handleSubmit}
         style={{
           backgroundColor: Colors[theme].primary,
           padding: 15,
           borderRadius: 50,
+          opacity: btnLoading ? 0.5 : 1,
         }}
       >
-        <Text
-          style={{
-            textAlign: "center",
-            color: "#eee",
-            fontFamily: "NunitoBold",
-          }}
-        >
-          Continue
-        </Text>
+        {btnLoading ? (
+          <ActivityIndicator color={"#fff"} />
+        ) : (
+          <Text
+            style={{
+              textAlign: "center",
+              color: "#eee",
+              fontFamily: "NunitoBold",
+            }}
+          >
+            Continue
+          </Text>
+        )}
       </Pressable>
     </ThemedView>
   );

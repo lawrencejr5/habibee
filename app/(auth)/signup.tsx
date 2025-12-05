@@ -231,7 +231,7 @@ const SignUpPage = () => {
               Already have an account?
             </Text>
             <Link
-              href={"/(auth)/addUsername"}
+              href={"/(auth)/signin"}
               style={{
                 color: Colors[theme].accent1,
                 fontFamily: "NunitoRegular",

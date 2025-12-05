@@ -23,7 +23,7 @@ const SigninPage = () => {
 
   const { signIn } = useAuthActions();
 
-  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
@@ -32,7 +32,7 @@ const SigninPage = () => {
     setBtnLoading(true);
     try {
       const formData = new FormData();
-      formData.append("email", username.trim());
+      formData.append("email", email.trim());
       formData.append("password", password);
       formData.append("flow", "signIn");
 
@@ -164,8 +164,8 @@ const SigninPage = () => {
           <CustomInput
             title="Email/Username:"
             icon={require("@/assets/icons/user.png")}
-            value={username}
-            setValue={setUsername}
+            value={email}
+            setValue={setEmail}
             placeHolder="Email or Username"
           />
           <CustomInput

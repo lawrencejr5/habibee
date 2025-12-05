@@ -22,6 +22,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import HapticsProvider from "@/context/HapticsContext";
 import LoadingProvider from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
+import UserProvider, { useUser } from "@/context/UserContext";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -55,9 +56,11 @@ export default function RootLayout() {
       <DeviceThemeProvider>
         <HapticsProvider>
           <LoadingProvider>
-            <MotivationMsgProvider>
-              <NavigationWithTheme loaded={loaded} />
-            </MotivationMsgProvider>
+            <UserProvider>
+              <MotivationMsgProvider>
+                <NavigationWithTheme loaded={loaded} />
+              </MotivationMsgProvider>
+            </UserProvider>
           </LoadingProvider>
         </HapticsProvider>
       </DeviceThemeProvider>
@@ -71,6 +74,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // 4. Move useConvexAuth HERE (Child of Provider)
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const { currentUser } = useUser();
   const [showSplash, setShowSplash] = useState<boolean>(true);
 
   // Handle Splash Screen hiding
@@ -94,8 +98,12 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/signin");
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
+    } else if (isAuthenticated) {
+      if (currentUser?.username === undefined) {
+        router.replace("/(auth)/addUsername");
+      } else {
+        router.replace("/(tabs)");
+      }
     }
   }, [isAuthenticated, segments, loaded, isLoading]);
 
