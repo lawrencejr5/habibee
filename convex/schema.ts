@@ -10,7 +10,7 @@ const schema = defineSchema({
     email: v.string(),
     username: v.optional(v.string()),
     profile_pic: v.optional(v.string()),
-  }).index("for_email", ["email"]),
+  }).index("by_email", ["email"]),
 
   tasks: defineTable({
     text: v.string(),

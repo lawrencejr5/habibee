@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 // 1. Remove ConvexProvider, keep only ConvexAuthProvider and useConvexAuth
 import { ConvexReactClient, useConvexAuth } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import DeviceThemeProvider, { useTheme } from "@/context/ThemeContext";
