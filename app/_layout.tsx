@@ -74,7 +74,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // 4. Move useConvexAuth HERE (Child of Provider)
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { currentUser } = useUser();
+  const { signedIn } = useUser();
   const [showSplash, setShowSplash] = useState<boolean>(true);
 
   // Handle Splash Screen hiding
@@ -98,8 +98,8 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/signin");
-    } else if (isAuthenticated) {
-      if (currentUser?.username === undefined) {
+    } else if (isAuthenticated && inAuthGroup) {
+      if (signedIn?.username === undefined) {
         router.replace("/(auth)/addUsername");
       } else {
         router.replace("/(tabs)");
@@ -120,7 +120,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
           <Stack
             screenOptions={{
               headerShown: false,
-              presentation: "modal",
+              presentation: "card",
               animation: "ios_from_right",
             }}
           />

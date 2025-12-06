@@ -82,7 +82,7 @@ const Home = () => {
 
       return () => clearInterval(typingInterval);
     }
-  }, [currentMessageIndex, isTyping, isOnIndexPage]);
+  }, [currentMessageIndex, isTyping, motivationalMsgs]);
 
   const open = () => {
     setAddModalVisible(true);
