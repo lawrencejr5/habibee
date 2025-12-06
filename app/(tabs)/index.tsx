@@ -21,12 +21,16 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLoadingContext } from "@/context/LoadingContext";
 import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
+import { useUser } from "@/context/UserContext";
+
 import { useConvexAuth } from "convex/react";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const haptics = useHapitcs();
+
+  const { signedIn } = useUser();
 
   const pathname = usePathname();
 
@@ -89,7 +93,7 @@ const Home = () => {
     haptics.impact();
   };
 
-  if (appLoading || authLoading) return <Loading />;
+  if (appLoading || authLoading || !signedIn) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
@@ -114,7 +118,7 @@ const Home = () => {
           />
           <View>
             <ThemedText style={styles.greeting_user}>
-              Morning, Lawrencejr
+              Morning, {signedIn.username}
             </ThemedText>
             <Text
               style={[
@@ -187,7 +191,6 @@ const Home = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero card */}
-
         <View
           style={{
             backgroundColor: Colors[theme].surface,
@@ -212,8 +215,14 @@ const Home = () => {
             style={{ width: 80, height: 80, marginTop: 10 }}
           />
           <View style={{ flex: 1 }}>
-            <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 18 }}>
-              Hello Lawrencejr! 👋
+            <ThemedText
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 18,
+                textTransform: "capitalize",
+              }}
+            >
+              Hello {signedIn.username}! 👋
             </ThemedText>
             <Text
               style={{
@@ -559,6 +568,8 @@ const styles = StyleSheet.create({
   greeting_user: {
     fontSize: 16,
     fontFamily: "NunitoExtraBold",
+    textTransform: "capitalize",
+    width: "100%",
   },
   date_time: {
     fontFamily: "NunitoRegular",
