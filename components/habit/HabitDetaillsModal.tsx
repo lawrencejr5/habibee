@@ -18,10 +18,12 @@ import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "../useColorScheme";
 
-import { habitIcons, habitsData } from "@/data/habits";
+import { habitIcons } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -37,6 +39,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+
+  const habitsData = useQuery(api.habits.get_user_habits);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
@@ -80,7 +84,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   if (!visible) return null;
 
   // Find the habit by id
-  const habit = habitsData.find((h) => h.id === habit_id);
+  const habit = habitsData?.find((h) => h._id === habit_id);
 
   if (!habit) {
     return (
@@ -203,19 +207,19 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   width: 100,
                   height: 100,
                   borderRadius: 50,
-                  backgroundColor: habit.themeColor + "20",
+                  backgroundColor: habit.theme + "20",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 3,
-                  borderColor: habit.themeColor,
+                  borderColor: habit.theme,
                 }}
               >
                 <Image
-                  source={habitIcons[habit.habitType]}
+                  source={habitIcons[habit.icon ?? "default"]}
                   style={{
                     width: 50,
                     height: 50,
-                    tintColor: habit.themeColor,
+                    tintColor: habit.theme,
                   }}
                 />
               </View>
@@ -227,7 +231,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   marginTop: 20,
                 }}
               >
-                {habit.title}
+                {habit.habit}
               </ThemedText>
 
               <Text
@@ -238,7 +242,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   marginTop: 5,
                 }}
               >
-                {habit.duration} daily
+                {String(habit.duration)} daily
               </Text>
             </View>
 
@@ -285,7 +289,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                         fontSize: 32,
                       }}
                     >
-                      {habit.streak}
+                      {habit.current_streak}
                     </ThemedText>
                     <Image
                       source={require("@/assets/icons/fire.png")}
@@ -311,7 +315,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       marginTop: 5,
                     }}
                   >
-                    {Math.floor((habit.streak / 365) * 100)}%
+                    {Math.floor((habit.current_streak / 365) * 100)}%
                   </ThemedText>
                 </View>
               </View>
@@ -342,7 +346,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                               height: 12,
                               borderRadius: 2,
                               backgroundColor: day.completed
-                                ? habit.themeColor + "cc"
+                                ? habit.theme + "cc"
                                 : Colors[theme].border,
                             }}
                           />
@@ -393,7 +397,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             <Pressable
               onPress={handleStart}
               style={{
-                backgroundColor: habit.themeColor,
+                backgroundColor: habit.theme,
                 paddingVertical: 16,
                 borderRadius: 50,
                 alignItems: "center",
@@ -422,16 +426,16 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           <TaskTimerModal
             visible={timerModalVisible}
             setVisible={setTimerModalVisible}
-            duration={habit.duration}
-            habitTitle={habit.title}
+            duration={String(habit.duration)}
+            habitTitle={habit.habit}
           />
           <EditHabitModal
             visible={editModalVisible}
             setVisible={setEditModalVisible}
-            habitTitle={habit.title}
-            habitDuration={habit.duration}
-            habitIcon={habitIcons[habit.habitType]}
-            habitColor={habit.themeColor}
+            habitTitle={habit.habit}
+            habitDuration={String(habit.duration)}
+            habitIcon={habitIcons[habit.icon ?? "default"]}
+            habitColor={habit.theme}
           />
         </View>
       </BottomSheetView>

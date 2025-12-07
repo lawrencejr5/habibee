@@ -23,7 +23,8 @@ import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
 import { useUser } from "@/context/UserContext";
 
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -31,6 +32,8 @@ const Home = () => {
   const haptics = useHapitcs();
 
   const { signedIn } = useUser();
+
+  const habitData = useQuery(api.habits.get_user_habits);
 
   const pathname = usePathname();
 
@@ -68,7 +71,7 @@ const Home = () => {
           setDisplayedText(currentMessage.slice(0, currentIndex));
           // Add haptic feedback for each character typed only when on index page
           // if (currentIndex > 0 && isOnIndexPage) {
-          //   haptics.impact("rigid");
+          //   haptics.impact("soft");
           // }
           currentIndex++;
         } else {
@@ -93,7 +96,7 @@ const Home = () => {
     haptics.impact();
   };
 
-  if (appLoading || authLoading || !signedIn) return <Loading />;
+  if (appLoading || authLoading || !habitData || !signedIn) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
@@ -299,26 +302,28 @@ const Home = () => {
             </Pressable>
           </View>
           <View>
-            {habitsData.map((habit) => (
+            {habitData?.map((habit) => (
               <HabitCard
-                key={habit.id}
-                id={habit.id}
-                duration={habit.duration}
-                title={habit.title}
-                done={habit.done}
-                streak={habit.streak}
-                habitType={habit.habitType}
-                themeColor={habit.themeColor}
+                key={habit._id}
+                id={habit._id}
+                duration={String(habit.duration)}
+                title={habit.habit}
+                done={
+                  habit.lastCompleted === new Date().toISOString().split("T")[0]
+                }
+                streak={habit.current_streak}
+                habitType={habit.icon ?? "default"}
+                themeColor={habit.theme ?? "#eee"}
                 onFireIconPress={() => {
                   setSelectedHabit({
-                    title: habit.title,
-                    duration: habit.duration,
+                    title: habit.habit,
+                    duration: String(habit.duration),
                   });
                   setTimerModalVisible(true);
                 }}
                 onCardPress={() => {
                   haptics.impact();
-                  setSelectedHabitId(habit.id);
+                  setSelectedHabitId(habit._id);
                   setDetailsModalVisible(true);
                 }}
               />

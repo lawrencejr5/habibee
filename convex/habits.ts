@@ -11,6 +11,7 @@ export const get_user_habits = query({
     const user_habits = await ctx.db
       .query("habits")
       .withIndex("by_user", (q) => q.eq("user", user))
+      .order("desc")
       .collect();
     return user_habits;
   },
