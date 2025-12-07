@@ -13,6 +13,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useHapitcs } from "@/context/HapticsContext";
+import { habitIcons } from "@/data/habits";
 
 type Props = {
   visible: boolean;
@@ -105,20 +106,20 @@ export default function IconColorPicker({
           </View>
 
           <ScrollView contentContainerStyle={styles.iconGrid}>
-            {icons.map((src, idx) => (
+            {icons.map((src, i) => (
               <Pressable
-                key={idx}
-                onPress={() => setSelectedIconIndex(idx)}
+                key={i}
+                onPress={() => setSelectedIconIndex(i)}
                 style={[
                   styles.iconWrap,
-                  selectedIconIndex === idx && {
+                  selectedIconIndex === i && {
                     borderColor: color,
                     borderWidth: 2,
                   },
                 ]}
               >
                 <Image
-                  source={src}
+                  source={habitIcons[src]}
                   style={[styles.iconImage, { tintColor: color }]}
                 />
               </Pressable>

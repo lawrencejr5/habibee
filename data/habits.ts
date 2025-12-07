@@ -16,6 +16,14 @@ export type HabitType =
   | "default"
   | "flower";
 
+export type ThemeType =
+  | "#c5c9cc"
+  | "#9b59b6"
+  | "#e74c3c"
+  | "#3498db"
+  | "#1abc9c"
+  | "#e67e22";
+
 export interface Habit {
   id: string;
   title: string;
@@ -23,7 +31,7 @@ export interface Habit {
   streak: number;
   done: boolean;
   habitType: HabitType;
-  themeColor: string;
+  themeColor: ThemeType;
 }
 
 export const habitIcons: Record<string, any> = {
@@ -41,7 +49,7 @@ export const habitIcons: Record<string, any> = {
   note: require("@/assets/icons/habit/note.png"),
   save: require("@/assets/icons/habit/save.png"),
   money: require("@/assets/icons/habit/dollar-rise.png"),
-  default: require("@/assets/icons/habit/fire-door.png"),
+  default: require("@/assets/icons/habit/emoji.png"),
   flower: require("@/assets/icons/habit/flower.png"),
 };
 
@@ -80,7 +88,7 @@ export const habitsData: Habit[] = [
     streak: 102,
     done: true,
     habitType: "code",
-    themeColor: "#2ecc71",
+    themeColor: "#1abc9c",
   },
   {
     id: "5",
@@ -98,7 +106,7 @@ export const habitsData: Habit[] = [
     streak: 56,
     done: true,
     habitType: "write",
-    themeColor: "#f39c12",
+    themeColor: "#e67e22",
   },
   {
     id: "7",

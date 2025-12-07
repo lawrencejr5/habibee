@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -19,6 +20,8 @@ import IconColorPicker from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
 import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const AddModal: React.FC<{
   visible: boolean;
@@ -28,14 +31,54 @@ const AddModal: React.FC<{
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
 
-  const [isEnabled, setIsEnabled] = useState(true);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<any>(null);
+  const [selectedIcon, setSelectedIcon] = useState<string>("default");
   const [selectedColor, setSelectedColor] = useState<string>("#c5c9cc");
 
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
+
+  const [habit, setHabit] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [goal, setGoal] = useState<string>("");
+  const [strict, setStrict] = useState<boolean>(true);
+
   const close = () => {
-    setVisible(false);
     haptics.impact();
+    resetForm();
+  };
+
+  const add_habit = useMutation(api.habits.add_habit);
+
+  const resetForm = () => {
+    setVisible(false);
+    setHabit("");
+    setDuration("");
+    setGoal("");
+    setStrict(true);
+    setSelectedColor("#c5c9cc");
+    setSelectedIcon("default");
+  };
+
+  const handleSubmit = async () => {
+    setBtnLoading(true);
+    try {
+      if (!habit || !duration || !goal) {
+        console.log("Fill in the details for this habit");
+      }
+      await add_habit({
+        habit,
+        icon: (selectedIcon as string) ?? "default",
+        theme: (selectedColor as string) ?? "#c5c9cc",
+        strict,
+        goal: Number(goal),
+        duration: Number(duration),
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setBtnLoading(false);
+      resetForm();
+    }
   };
 
   return (
@@ -99,7 +142,8 @@ const AddModal: React.FC<{
             >
               <Image
                 source={
-                  selectedIcon || require("@/assets/icons/habit/emoji.png")
+                  habitIcons[selectedIcon] ||
+                  require("@/assets/icons/habit/emoji.png")
                 }
                 style={{
                   width: 50,
@@ -156,8 +200,14 @@ const AddModal: React.FC<{
                     }}
                   />
                   <TextInput
-                    style={{ width: "90%", fontFamily: "NunitoMedium" }}
+                    style={{
+                      width: "90%",
+                      fontFamily: "NunitoMedium",
+                      color: Colors[theme].text,
+                    }}
                     placeholder="Habit"
+                    value={habit}
+                    onChangeText={setHabit}
                   />
                 </View>
               </View>
@@ -201,8 +251,14 @@ const AddModal: React.FC<{
                       }}
                     />
                     <TextInput
-                      style={{ flex: 1, fontFamily: "NunitoMedium" }}
+                      style={{
+                        flex: 1,
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text,
+                      }}
                       placeholder="30 mins"
+                      value={duration}
+                      onChangeText={setDuration}
                     />
                   </View>
                 </View>
@@ -235,7 +291,13 @@ const AddModal: React.FC<{
                       }}
                     />
                     <TextInput
-                      style={{ flex: 1, fontFamily: "NunitoMedium" }}
+                      style={{
+                        flex: 1,
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text,
+                      }}
+                      value={goal}
+                      onChangeText={setGoal}
                     />
                     <Text
                       style={{
@@ -268,8 +330,10 @@ const AddModal: React.FC<{
                   Streak counts after timer ends
                 </Text>
                 <ToggleButton
-                  isOn={isEnabled}
-                  onToggle={() => setIsEnabled(!isEnabled)}
+                  isOn={strict}
+                  onToggle={() => {
+                    setStrict((prev) => !prev);
+                  }}
                 />
               </View>
             </View>
@@ -277,29 +341,36 @@ const AddModal: React.FC<{
 
           {/* Save button - Fixed at bottom */}
           <Pressable
+            onPress={handleSubmit}
+            disabled={btnLoading}
             style={{
               width: "100%",
               backgroundColor: Colors[theme].primary,
               paddingVertical: 15,
               borderRadius: 50,
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "NunitoBold",
-                fontSize: 16,
-                color: "#eee",
-                textAlign: "center",
-              }}
-            >
-              Save Habit
-            </Text>
+            {btnLoading ? (
+              <ActivityIndicator color={"#eee"} size={"small"} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 16,
+                  color: "#eee",
+                  textAlign: "center",
+                }}
+              >
+                Save Habit
+              </Text>
+            )}
           </Pressable>
         </ThemedView>
       </Modal>
       <IconColorPicker
         visible={iconPickerVisible}
-        icons={Object.values(habitIcons)}
+        icons={Object.keys(habitIcons)}
         selectedColor={selectedColor}
         onClose={() => setIconPickerVisible(false)}
         onSelect={(icon, color) => {
