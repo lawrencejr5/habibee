@@ -242,7 +242,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   marginTop: 5,
                 }}
               >
-                {String(habit.duration)} daily
+                {String(habit.duration)} min(s) daily
               </Text>
             </View>
 

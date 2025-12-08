@@ -496,7 +496,7 @@ const HabitCard: React.FC<{
                   color: Colors[theme].text_secondary,
                 }}
               >
-                {duration}
+                {duration} min(s)
               </ThemedText>
             </View>
             <View

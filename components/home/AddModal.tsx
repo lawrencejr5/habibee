@@ -256,10 +256,19 @@ const AddModal: React.FC<{
                         fontFamily: "NunitoMedium",
                         color: Colors[theme].text,
                       }}
-                      placeholder="30 mins"
+                      placeholder="30"
+                      keyboardType="numeric"
                       value={duration}
                       onChangeText={setDuration}
                     />
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      mins
+                    </Text>
                   </View>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -297,6 +306,7 @@ const AddModal: React.FC<{
                         color: Colors[theme].text,
                       }}
                       value={goal}
+                      keyboardType="numeric"
                       onChangeText={setGoal}
                     />
                     <Text
