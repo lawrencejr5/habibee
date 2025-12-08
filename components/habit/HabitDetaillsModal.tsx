@@ -426,8 +426,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           <TaskTimerModal
             visible={timerModalVisible}
             setVisible={setTimerModalVisible}
-            duration={String(habit.duration)}
-            habitTitle={habit.habit}
+            habit={habit}
           />
           <EditHabitModal
             visible={editModalVisible}

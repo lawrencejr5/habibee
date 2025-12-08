@@ -338,8 +338,7 @@ const Home = () => {
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
-        duration={selectedHabit?.duration || "30 mins"}
-        habitTitle={selectedHabit?.title || ""}
+        habit={habitData.find((habit) => habit._id === selectedHabitId)}
       />
       <HabitDetaillsModal
         visible={detailsModalVisible}
@@ -509,7 +508,7 @@ const HabitCard: React.FC<{
               <Image
                 source={require("../../assets/icons/fire.png")}
                 style={{
-                  tintColor: !done ? Colors[theme].text_secondary : "",
+                  tintColor: !done ? Colors[theme].text_secondary : undefined,
                   width: 14,
                   height: 14,
                 }}
@@ -547,7 +546,7 @@ const HabitCard: React.FC<{
         <Image
           source={require("../../assets/icons/fire.png")}
           style={{
-            tintColor: !done ? Colors[theme].text_secondary : "",
+            tintColor: !done ? Colors[theme].text_secondary : undefined,
             width: 30,
             height: 30,
           }}

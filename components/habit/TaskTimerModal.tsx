@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,19 +17,19 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface TaskTimerModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  duration: string;
-  habitTitle: string;
+  habit: any;
 }
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   visible,
   setVisible,
-  duration,
-  habitTitle,
+  habit,
 }) => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
@@ -39,6 +39,10 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
+
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
+
+  const record_streak = useMutation(api.habits.record_streak);
 
   const snapPoints = useMemo(() => ["90%"], []);
 
@@ -79,10 +83,18 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     )}`;
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     haptics.impact("success");
-    setIsRunning(false);
-    setVisible(false);
+    setBtnLoading(true);
+    try {
+      await record_streak({ habit_id: habit._id });
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setBtnLoading(false);
+      setIsRunning(false);
+      // setVisible(false);
+    }
   };
 
   const renderBackdrop = (props: any) => (
@@ -135,7 +147,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
               color: Colors[theme].text,
             }}
           >
-            {habitTitle}
+            {habit.habit}
           </Text>
           <Text
             style={{
@@ -145,7 +157,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
               marginTop: 5,
             }}
           >
-            Target: {duration}
+            Target: {habit.duration} min(s)
           </Text>
         </View>
 
@@ -220,22 +232,28 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
           <Pressable
             onPress={handleFinish}
+            disabled={btnLoading}
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 15,
               borderRadius: 50,
               alignItems: "center",
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 16,
-                color: "#fff",
-              }}
-            >
-              Finished Task
-            </Text>
+            {btnLoading ? (
+              <ActivityIndicator color={"#eee"} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 16,
+                  color: "#fff",
+                }}
+              >
+                Finished Task
+              </Text>
+            )}
           </Pressable>
         </View>
       </BottomSheetView>
