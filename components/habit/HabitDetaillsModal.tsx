@@ -85,6 +85,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   // Find the habit by id
   const habit = habitsData?.find((h) => h._id === habit_id);
+  const isDone =
+    habit?.lastCompleted === new Date().toISOString().split("T")[0];
 
   if (!habit) {
     return (
@@ -396,6 +398,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           >
             <Pressable
               onPress={handleStart}
+              disabled={isDone}
               style={{
                 backgroundColor: habit.theme,
                 paddingVertical: 16,
@@ -409,6 +412,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 shadowOpacity: 0.3,
                 shadowRadius: 4.65,
                 elevation: 8,
+                opacity: isDone ? 0.5 : 1,
               }}
             >
               <Text
@@ -418,7 +422,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   color: "#fff",
                 }}
               >
-                Start Task
+                {isDone ? "Completed for today" : "Start task"}
               </Text>
             </Pressable>
           </View>

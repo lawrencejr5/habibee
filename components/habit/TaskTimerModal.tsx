@@ -41,6 +41,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const [isRunning, setIsRunning] = useState(true);
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
+  const [isStrict, setIsStrict] = useState(habit ? habit.strict : false);
 
   const record_streak = useMutation(api.habits.record_streak);
 
@@ -60,7 +61,17 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     let interval: any;
     if (isRunning && visible) {
       interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
+        setSeconds((prev) => {
+          const duration = habit.duration * 60;
+          const new_second = prev + 1;
+
+          if (new_second >= duration) {
+            clearInterval(interval);
+            setIsStrict(false);
+          }
+
+          return new_second;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -232,13 +243,13 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
           <Pressable
             onPress={handleFinish}
-            disabled={btnLoading}
+            disabled={btnLoading || isStrict}
             style={{
               backgroundColor: Colors[theme].primary,
               paddingVertical: 15,
               borderRadius: 50,
               alignItems: "center",
-              opacity: btnLoading ? 0.5 : 1,
+              opacity: btnLoading || isStrict ? 0.5 : 1,
             }}
           >
             {btnLoading ? (
