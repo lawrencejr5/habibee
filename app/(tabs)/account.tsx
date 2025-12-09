@@ -19,6 +19,10 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useLoadingContext } from "@/context/LoadingContext";
+import { useUser } from "@/context/UserContext";
+import { useConvexAuth } from "convex/react";
+import Loading from "@/components/Loading";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
@@ -26,10 +30,17 @@ export default function Account() {
   const { theme, toggleTheme } = useTheme();
   const haptics = useHapitcs();
 
+  const { appLoading } = useLoadingContext();
+  const { signedIn } = useUser();
+  const { isLoading: authLoading } = useConvexAuth();
+  const today = new Date().toISOString().split("T")[0];
+
   const [openAccountInfoModal, setOpenAccountInfoModal] =
     useState<boolean>(false);
   const [openDeleteAccountModal, setOpenDeleteAccountModal] =
     useState<boolean>(false);
+
+  if (appLoading || authLoading || !signedIn) return <Loading />;
 
   return (
     <>
@@ -64,9 +75,10 @@ export default function Account() {
                   fontFamily: "NunitoExtraBold",
                   color: Colors[theme].text,
                   fontSize: 22,
+                  textTransform: "capitalize",
                 }}
               >
-                Oputa Lawrence
+                {signedIn.fullname}
               </Text>
               <View
                 style={{
@@ -94,9 +106,10 @@ export default function Account() {
                       fontFamily: "NunitoMedium",
                       color: Colors[theme].text_secondary,
                       fontSize: 13,
+                      textTransform: "lowercase",
                     }}
                   >
-                    lawrencejr
+                    {signedIn.username}
                   </Text>
                 </View>
                 <View
@@ -108,16 +121,26 @@ export default function Account() {
                 >
                   <Image
                     source={require("@/assets/icons/fire.png")}
-                    style={{ height: 14, width: 14 }}
+                    style={{
+                      height: 14,
+                      width: 14,
+                      tintColor:
+                        signedIn.last_streak_date === today
+                          ? undefined
+                          : Colors[theme].text_secondary,
+                    }}
                   />
                   <Text
                     style={{
                       fontFamily: "NunitoBold",
-                      color: Colors[theme].accent1,
+                      color:
+                        signedIn.last_streak_date === today
+                          ? Colors[theme].accent1
+                          : Colors[theme].text_secondary,
                       fontSize: 12,
                     }}
                   >
-                    365
+                    {signedIn.streak ?? 0}
                   </Text>
                 </View>
               </View>

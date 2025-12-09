@@ -22,6 +22,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { ActivityIndicator } from "react-native";
+import { useUser } from "@/context/UserContext";
 
 interface AccountModalProps {
   visible: boolean;
@@ -31,6 +32,9 @@ interface AccountModalProps {
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
   const haptics = useHapitcs();
+
+  const { signedIn } = useUser();
+  const today = new Date().toISOString().split("T")[0];
 
   const { signOut } = useAuthActions();
   const [signingOut, setSigninOut] = useState<boolean>(false);
@@ -112,9 +116,10 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
               color: Colors[theme].text,
               fontSize: 25,
               marginTop: 20,
+              textTransform: "capitalize",
             }}
           >
-            Oputa Lawrence
+            {signedIn?.fullname}
           </Text>
           <View
             style={{
@@ -142,9 +147,10 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
                   fontFamily: "NunitoMedium",
                   color: Colors[theme].text_secondary,
                   fontSize: 14,
+                  textTransform: "lowercase",
                 }}
               >
-                lawrencejr
+                {signedIn?.username}
               </Text>
             </View>
             <View
@@ -156,16 +162,26 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             >
               <Image
                 source={require("@/assets/icons/fire.png")}
-                style={{ height: 16, width: 16 }}
+                style={{
+                  height: 16,
+                  width: 16,
+                  tintColor:
+                    signedIn?.last_streak_date === today
+                      ? undefined
+                      : Colors[theme].text_secondary,
+                }}
               />
               <Text
                 style={{
                   fontFamily: "NunitoBold",
-                  color: Colors[theme].accent1,
+                  color:
+                    signedIn?.last_streak_date === today
+                      ? Colors[theme].accent1
+                      : Colors[theme].text_secondary,
                   fontSize: 14,
                 }}
               >
-                365
+                {signedIn?.streak ?? 0}
               </Text>
             </View>
           </View>
@@ -183,7 +199,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
               flex: 1,
               backgroundColor: Colors[theme].primary,
               paddingVertical: 10,
-              borderRadius: 50,
+              borderRadius: 10,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
@@ -210,8 +226,6 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
           <Pressable
             disabled={signingOut}
             style={{
-              borderColor: Colors[theme].text_secondary,
-              borderWidth: 0.5,
               paddingVertical: 10,
               paddingHorizontal: 15,
               borderRadius: 50,
