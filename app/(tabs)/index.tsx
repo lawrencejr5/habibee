@@ -319,32 +319,82 @@ const Home = () => {
             </Pressable>
           </View>
           <View>
-            {habitData?.map((habit) => (
-              <HabitCard
-                key={habit._id}
-                id={habit._id}
-                duration={String(habit.duration)}
-                title={habit.habit}
-                done={
-                  habit.lastCompleted === new Date().toISOString().split("T")[0]
-                }
-                streak={habit.current_streak}
-                habitType={habit.icon ?? "default"}
-                themeColor={habit.theme ?? "#eee"}
-                onFireIconPress={() => {
-                  setSelectedHabit({
-                    title: habit.habit,
-                    duration: String(habit.duration),
-                  });
-                  setTimerModalVisible(true);
+            {habitData.length > 0 ? (
+              habitData?.map((habit) => (
+                <HabitCard
+                  key={habit._id}
+                  id={habit._id}
+                  duration={String(habit.duration)}
+                  title={habit.habit}
+                  done={
+                    habit.lastCompleted ===
+                    new Date().toISOString().split("T")[0]
+                  }
+                  streak={habit.current_streak}
+                  habitType={habit.icon ?? "default"}
+                  themeColor={habit.theme ?? "#eee"}
+                  onFireIconPress={() => {
+                    setSelectedHabit({
+                      title: habit.habit,
+                      duration: String(habit.duration),
+                    });
+                    setTimerModalVisible(true);
+                  }}
+                  onCardPress={() => {
+                    haptics.impact();
+                    setSelectedHabitId(habit._id);
+                    setDetailsModalVisible(true);
+                  }}
+                />
+              ))
+            ) : (
+              <View
+                style={{
+                  backgroundColor: Colors[theme].surface,
+                  borderColor: Colors[theme].border,
+                  borderWidth: 3,
+                  borderRadius: 20,
+                  height: 250,
+                  width: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop: 20,
+                  paddingHorizontal: 20,
                 }}
-                onCardPress={() => {
-                  haptics.impact();
-                  setSelectedHabitId(habit._id);
-                  setDetailsModalVisible(true);
-                }}
-              />
-            ))}
+              >
+                <Image
+                  source={require("../../assets/icons/empty.png")}
+                  style={{
+                    width: 70,
+                    height: 70,
+                    tintColor: Colors[theme].text_secondary,
+                  }}
+                />
+
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 20,
+                    color: Colors[theme].text,
+                    marginTop: 20,
+                  }}
+                >
+                  No habits yet!
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    fontSize: 14,
+                    color: Colors[theme].text_secondary,
+                    textAlign: "center",
+                    marginTop: 10,
+                  }}
+                >
+                  Let's get started with a new habit and bring out the best
+                  verion of you.
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
