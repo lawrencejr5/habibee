@@ -11,6 +11,7 @@ const schema = defineSchema({
     username: v.optional(v.string()),
     profile_pic: v.optional(v.string()),
     streak: v.optional(v.number()),
+    last_streak_date: v.optional(v.string()),
   }).index("by_email", ["email"]),
 
   motivational_messages: defineTable({

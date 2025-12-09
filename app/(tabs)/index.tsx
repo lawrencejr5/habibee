@@ -1,4 +1,4 @@
-import { ActivityIndicator, Image, Pressable, StyleSheet } from "react-native";
+import { Image, Pressable, StyleSheet } from "react-native";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,6 +32,7 @@ const Home = () => {
   const haptics = useHapitcs();
 
   const { signedIn } = useUser();
+  const today = new Date().toISOString().split("T")[0];
 
   const habitData = useQuery(api.habits.get_user_habits);
 
@@ -146,16 +147,23 @@ const Home = () => {
             style={{
               fontFamily: "NunitoExtraBold",
               fontSize: 16,
-              color: Colors[theme].accent1,
+              color:
+                signedIn.last_streak_date === today
+                  ? Colors[theme].accent1
+                  : Colors[theme].text_secondary,
             }}
           >
-            365
+            {signedIn.streak ?? 0}
           </Text>
           <Image
             source={require("../../assets/icons/fire.png")}
             style={{
               width: 20,
               height: 20,
+              tintColor:
+                signedIn.last_streak_date === today
+                  ? undefined
+                  : Colors[theme].text_secondary,
             }}
           />
         </View>

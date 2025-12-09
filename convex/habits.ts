@@ -74,13 +74,24 @@ export const record_streak = mutation({
       date: current_date,
     });
 
-    let newStreak = (habit.current_streak ?? 0) + 1;
-    let newHighestStreak = Math.max(newStreak, habit.highest_streak ?? 0);
+    const newStreak = (habit.current_streak ?? 0) + 1;
+    const newHighestStreak = Math.max(newStreak, habit.highest_streak ?? 0);
 
     await ctx.db.patch(args.habit_id, {
       current_streak: newStreak,
       highest_streak: newHighestStreak,
       lastCompleted: current_date,
     });
+
+    const user = await ctx.db.get(user_id);
+    if (!user) throw new Error("User not found");
+
+    if (user.last_streak_date !== current_date) {
+      const newUserStreak = (user.streak ?? 0) + 1;
+      await ctx.db.patch(user_id, {
+        streak: newUserStreak,
+        last_streak_date: current_date,
+      });
+    }
   },
 });
