@@ -35,6 +35,7 @@ const Home = () => {
   const today = new Date().toISOString().split("T")[0];
 
   const habitData = useQuery(api.habits.get_user_habits);
+  const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
 
   const pathname = usePathname();
 
@@ -97,7 +98,10 @@ const Home = () => {
     haptics.impact();
   };
 
-  if (appLoading || authLoading || !habitData || !signedIn) return <Loading />;
+  const loading =
+    appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
+
+  if (loading) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
@@ -130,7 +134,12 @@ const Home = () => {
                 { color: Colors[theme].text_secondary },
               ]}
             >
-              Thur, 10 March 2025
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                day: "2-digit", // '10' (Day of the month)
+                month: "short", // 'March' (Full month name)
+                year: "numeric",
+              })}
             </Text>
           </View>
         </View>
@@ -179,13 +188,13 @@ const Home = () => {
             gap: 10,
           }}
         >
-          <StreakDay day="Sun" done={true} />
-          <StreakDay day="Mon" done={true} />
-          <StreakDay day="Tue" done={true} />
-          <StreakDay day="Wed" done={false} />
-          <StreakDay day="Thu" done={false} />
-          <StreakDay day="Fri" done={false} />
-          <StreakDay day="Sat" done={false} />
+          <StreakDay day="Sun" />
+          <StreakDay day="Mon" />
+          <StreakDay day="Tue" />
+          <StreakDay day="Wed" />
+          <StreakDay day="Thur" />
+          <StreakDay day="Fri" />
+          <StreakDay day="Sat" />
         </View>
       </ThemedView>
 
@@ -357,8 +366,13 @@ const Home = () => {
   );
 };
 
-const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
+const StreakDay: React.FC<{ day: string }> = ({ day }) => {
   const { theme } = useTheme();
+  const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
+  const week_done = weekly_stats?.map((stat) => {
+    return stat.week_day;
+  });
+
   return (
     <View
       style={{
@@ -375,7 +389,7 @@ const StreakDay: React.FC<{ day: string; done: boolean }> = ({ day, done }) => {
       </ThemedText>
       <Image
         source={
-          done
+          week_done?.includes(day)
             ? require("../../assets/icons/check-fill.png")
             : require("../../assets/icons/check-outline.png")
         }

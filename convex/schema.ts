@@ -14,6 +14,12 @@ const schema = defineSchema({
     last_streak_date: v.optional(v.string()),
   }).index("by_email", ["email"]),
 
+  weekly_stats: defineTable({
+    user: v.id("users"),
+    week_day: v.string(),
+    date: v.string(),
+  }).index("by_user", ["user"]),
+
   motivational_messages: defineTable({
     text: v.string(),
     visible: v.boolean(),

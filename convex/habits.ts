@@ -92,6 +92,15 @@ export const record_streak = mutation({
         streak: newUserStreak,
         last_streak_date: current_date,
       });
+
+      const week_day = new Date().toLocaleDateString("en-US", {
+        weekday: "short",
+      });
+      await ctx.db.insert("weekly_stats", {
+        user: user_id,
+        week_day,
+        date: current_date,
+      });
     }
   },
 });
