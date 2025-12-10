@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 
 import BottomSheet, {
@@ -28,50 +29,71 @@ import ToggleButton from "@/components/ToggleButton";
 import IconColorPicker from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { HabitType } from "@/constants/Types";
 
 interface EditHabitModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  habitTitle?: string;
-  habitDuration?: string;
-  habitIcon?: any;
-  habitColor?: string;
+  habit: HabitType;
 }
 
 const EditHabitModal: FC<EditHabitModalProps> = ({
   visible,
   setVisible,
-  habitTitle = "Meditation",
-  habitDuration = "30 mins",
-  habitIcon = null,
-  habitColor = "#e74c3c",
+  habit,
 }) => {
   const theme = useColorScheme();
   const haptics = useHapitcs();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["95%"], []);
+  const snapPoints = useMemo(() => ["100%"], []);
 
-  const [habitName, setHabitName] = useState(habitTitle);
-  const [duration, setDuration] = useState(habitDuration);
-  const [goal, setGoal] = useState("365");
-  const [isEnabled, setIsEnabled] = useState(true);
+  const update_habit = useMutation(api.habits.update_habit);
+
+  const [habitName, setHabitName] = useState(habit.habit);
+  const [duration, setDuration] = useState<string>(String(habit.duration));
+  const [goal, setGoal] = useState<string>(String(habit.goal));
+  const [strict, setStrict] = useState<boolean>(habit.strict);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<any>(habitIcon);
-  const [selectedColor, setSelectedColor] = useState<string>(habitColor);
+  const [selectedIcon, setSelectedIcon] = useState<string>(habit.icon);
+  const [selectedColor, setSelectedColor] = useState<string>(habit.theme);
+
+  const [btnLoading, setBtnLoading] = useState<boolean>(false);
+
+  const handle_submit = async () => {
+    setBtnLoading(true);
+    try {
+      await update_habit({
+        habit_id: habit._id,
+        habit: habitName,
+        icon: selectedIcon,
+        theme: selectedColor,
+        duration: Number(duration),
+        goal: Number(goal),
+        strict,
+      });
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (visible) bottomSheetRef.current?.expand();
+    if (visible) bottomSheetRef.current?.snapToIndex(0);
     else bottomSheetRef.current?.close();
   }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
-    setHabitName(habitTitle);
-    setDuration(habitDuration);
-    setSelectedIcon(habitIcon);
-    setSelectedColor(habitColor);
-  }, [visible, habitTitle, habitDuration, habitIcon, habitColor]);
+    setHabitName(habit.habit);
+    setDuration(String(habit.duration));
+    setGoal(String(habit.goal));
+    setSelectedIcon(habit.icon);
+    setSelectedColor(habit.theme);
+  }, [visible, habit]);
 
   const renderBackdrop = (props: any) => (
     <BottomSheetBackdrop
@@ -82,21 +104,6 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       pressBehavior="close"
     />
   );
-
-  const handleSave = () => {
-    haptics.impact();
-    console.log({
-      habitName,
-      duration,
-      goal,
-      isEnabled,
-      selectedIcon,
-      selectedColor,
-    });
-    setVisible(false);
-  };
-
-  if (!visible) return null;
 
   return (
     <BottomSheet
@@ -154,7 +161,10 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
             }}
           >
             <Image
-              source={selectedIcon || require("@/assets/icons/habit/emoji.png")}
+              source={
+                habitIcons[selectedIcon] ||
+                require("@/assets/icons/habit/emoji.png")
+              }
               style={{
                 width: 50,
                 height: 50,
@@ -339,10 +349,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
               >
                 Streak counts after timer ends
               </Text>
-              <ToggleButton
-                isOn={isEnabled}
-                onToggle={() => setIsEnabled(!isEnabled)}
-              />
+              <ToggleButton isOn={strict} onToggle={() => setStrict(!strict)} />
             </View>
           </View>
         </ScrollView>
@@ -385,31 +392,36 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
           </Pressable>
 
           <Pressable
-            onPress={handleSave}
+            onPress={handle_submit}
             style={{
               flex: 1,
               backgroundColor: Colors[theme].primary,
               borderRadius: 50,
               paddingVertical: 10,
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "NunitoBold",
-                fontSize: 16,
-                color: "#eee",
-                textAlign: "center",
-              }}
-            >
-              Save Changes
-            </Text>
+            {btnLoading ? (
+              <ActivityIndicator color={"#eee"} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 16,
+                  color: "#eee",
+                  textAlign: "center",
+                }}
+              >
+                Save Changes
+              </Text>
+            )}
           </Pressable>
         </View>
       </BottomSheetView>
 
       <IconColorPicker
         visible={iconPickerVisible}
-        icons={Object.values(habitIcons)}
+        icons={Object.keys(habitIcons)}
         selectedColor={selectedColor}
         onClose={() => setIconPickerVisible(false)}
         onSelect={(icon, color) => {

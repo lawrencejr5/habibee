@@ -19,11 +19,12 @@ import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { HabitType } from "@/constants/Types";
 
 interface TaskTimerModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  habit: any;
+  habit: HabitType;
 }
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({

@@ -104,3 +104,35 @@ export const record_streak = mutation({
     }
   },
 });
+
+export const update_habit = mutation({
+  args: {
+    habit_id: v.id("habits"),
+    habit: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    goal: v.optional(v.number()),
+    strict: v.optional(v.boolean()),
+    icon: v.optional(v.string()),
+    theme: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated, couldn't find user");
+
+    const habit_exists = await ctx.db.get(args.habit_id);
+    if (!habit_exists) throw new Error("Habit not found");
+
+    if (user_id !== habit_exists.user) throw new Error("");
+
+    const fields_to_update: Record<string, any> = {};
+    if (args.habit !== undefined) fields_to_update.habit = args.habit;
+    if (args.duration !== undefined) fields_to_update.duration = args.duration;
+    if (args.goal !== undefined) fields_to_update.goal = args.goal;
+    if (args.strict !== undefined) fields_to_update.strict = args.strict;
+    if (args.icon !== undefined) fields_to_update.icon = args.icon;
+    if (args.theme !== undefined) fields_to_update.theme = args.theme;
+
+    await ctx.db.patch(args.habit_id, fields_to_update);
+    return { msg: "success", habit: args.habit_id };
+  },
+});

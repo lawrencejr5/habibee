@@ -24,6 +24,7 @@ import EditHabitModal from "./EditHabitModal";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { HabitType } from "@/constants/Types";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -167,12 +168,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 />
               </Pressable>
               {showEditButton && (
-                <Pressable
-                  onPress={() => {
-                    haptics.impact();
-                    setEditModalVisible(true);
-                    setShowEditButton(false);
-                  }}
+                <View
                   style={{
                     position: "absolute",
                     right: 60,
@@ -180,25 +176,64 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     backgroundColor: Colors[theme].surface,
                     borderColor: Colors[theme].border,
                     borderWidth: 2,
-                    paddingVertical: 10,
-                    paddingHorizontal: 20,
+                    paddingHorizontal: 15,
+                    width: 150,
                     borderRadius: 8,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
                   }}
                 >
-                  <Feather name="edit" size={16} color="#fff" />
-                  <Text
+                  <Pressable
                     style={{
-                      color: "#fff",
-                      fontFamily: "NunitoBold",
-                      fontSize: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => {
+                      haptics.impact();
+                      setEditModalVisible(true);
+                      setShowEditButton(false);
                     }}
                   >
-                    Edit habit
-                  </Text>
-                </Pressable>
+                    <Feather name="edit" size={16} color={Colors[theme].text} />
+                    <Text
+                      style={{
+                        color: Colors[theme].text,
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
+                      }}
+                    >
+                      Edit habit
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => {
+                      haptics.impact();
+                      // setEditModalVisible(true);
+                      setShowEditButton(false);
+                    }}
+                  >
+                    <Feather
+                      name="trash-2"
+                      size={16}
+                      color={Colors[theme].danger}
+                    />
+                    <Text
+                      style={{
+                        color: Colors[theme].danger,
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
+                      }}
+                    >
+                      Delete habit
+                    </Text>
+                  </Pressable>
+                </View>
               )}
             </View>
 
@@ -430,16 +465,15 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           <TaskTimerModal
             visible={timerModalVisible}
             setVisible={setTimerModalVisible}
-            habit={habit}
+            habit={habit as HabitType}
           />
-          <EditHabitModal
-            visible={editModalVisible}
-            setVisible={setEditModalVisible}
-            habitTitle={habit.habit}
-            habitDuration={String(habit.duration)}
-            habitIcon={habitIcons[habit.icon ?? "default"]}
-            habitColor={habit.theme}
-          />
+          {editModalVisible && (
+            <EditHabitModal
+              visible={editModalVisible}
+              setVisible={setEditModalVisible}
+              habit={habit as HabitType}
+            />
+          )}
         </View>
       </BottomSheetView>
     </BottomSheet>

@@ -25,6 +25,7 @@ import { useUser } from "@/context/UserContext";
 
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { HabitType } from "@/constants/Types";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -405,7 +406,9 @@ const Home = () => {
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
-        habit={habitData.find((habit) => habit._id === selectedHabitId)}
+        habit={
+          habitData.find((habit) => habit._id === selectedHabitId) as HabitType
+        }
       />
       <HabitDetaillsModal
         visible={detailsModalVisible}
