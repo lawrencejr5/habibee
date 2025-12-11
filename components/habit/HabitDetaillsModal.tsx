@@ -21,8 +21,9 @@ import { useColorScheme } from "../useColorScheme";
 import { habitIcons } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
+import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
 import { useHapitcs } from "@/context/HapticsContext";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 
@@ -75,6 +76,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [showEditButton, setShowEditButton] = useState<boolean>(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false); // State for delete modal
 
   const handleStart = () => {
     haptics.impact();
@@ -222,8 +224,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       }}
                       onPress={() => {
                         haptics.impact();
-                        // setEditModalVisible(true);
-                        setShowEditButton(false);
+                        setDeleteModalVisible(true); // Open delete modal
                       }}
                     >
                       <Feather
@@ -484,6 +485,15 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
       <EditHabitModal
         visible={editModalVisible}
         setVisible={setEditModalVisible}
+        habit={habit as HabitType}
+      />
+      {/* Delete Habit Modal */}
+      <DeleteHabitModal
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false);
+          setVisible(false);
+        }}
         habit={habit as HabitType}
       />
     </>

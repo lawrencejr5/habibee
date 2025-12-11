@@ -136,3 +136,28 @@ export const update_habit = mutation({
     return { msg: "success", habit: args.habit_id };
   },
 });
+
+export const delete_habit = mutation({
+  args: { habit_id: v.id("habits") },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated");
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (!habit) throw new Error("Habit not found");
+
+    const habit_enteries = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_habit_date", (q) => q.eq("habit", args.habit_id))
+      .collect();
+
+    if (habit_enteries) {
+      for (const entry of habit_enteries) {
+        await ctx.db.delete(entry._id);
+      }
+    }
+
+    await ctx.db.delete(args.habit_id);
+    return { msg: "Habit deleted", habit: args.habit_id };
+  },
+});
