@@ -105,7 +105,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     } finally {
       setBtnLoading(false);
       setIsRunning(false);
-      // setVisible(false);
+      bottomSheetRef.current?.close();
     }
   };
 
@@ -188,7 +188,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
               borderRadius: 140,
               backgroundColor: Colors[theme].surface,
               borderWidth: 8,
-              borderColor: Colors[theme].primary,
+              borderColor: habit.theme,
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -246,7 +246,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             onPress={handleFinish}
             disabled={btnLoading || isStrict}
             style={{
-              backgroundColor: Colors[theme].primary,
+              backgroundColor: habit.theme,
               paddingVertical: 15,
               borderRadius: 50,
               alignItems: "center",

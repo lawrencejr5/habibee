@@ -105,6 +105,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
     />
   );
 
+  if (!visible) return null;
+
   return (
     <BottomSheet
       ref={bottomSheetRef}
@@ -127,10 +129,10 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       <BottomSheetView style={{ flex: 1, paddingHorizontal: 20 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 50 }}
         >
           {/* Header */}
-          <View style={{ marginTop: 20, marginBottom: 20 }}>
+          <View style={{ marginTop: 20 }}>
             <Text
               style={{
                 color: Colors[theme].text,
@@ -191,7 +193,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
 
           {/* Form */}
           <View style={{ marginTop: 30 }}>
-            <View style={{ marginBottom: 20 }}>
+            <View style={{ marginBottom: 0 }}>
               <Text
                 style={{
                   fontFamily: "NunitoBold",
@@ -357,12 +359,9 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         {/* Save button - Fixed at bottom */}
         <View
           style={{
-            position: "absolute",
-            bottom: 0,
-            left: 20,
-            right: 20,
             flexDirection: "row",
             gap: 12,
+            marginBottom: 30,
           }}
         >
           <Pressable

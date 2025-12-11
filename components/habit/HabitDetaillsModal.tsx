@@ -98,385 +98,395 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   }
 
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      enablePanDownToClose={true}
-      onClose={() => setVisible(false)}
-      backgroundStyle={{
-        backgroundColor: Colors[theme].background,
-      }}
-      handleIndicatorStyle={{
-        width: 0,
-        height: 0,
-        backgroundColor: "grey",
-        marginTop: 10,
-        borderRadius: 30,
-      }}
-    >
-      <BottomSheetView
-        style={{
-          flex: 1,
+    <>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}
+        onClose={() => setVisible(false)}
+        backgroundStyle={{
+          backgroundColor: Colors[theme].background,
+        }}
+        handleIndicatorStyle={{
+          width: 0,
+          height: 0,
+          backgroundColor: "grey",
+          marginTop: 10,
+          borderRadius: 30,
         }}
       >
-        <View
+        <BottomSheetView
           style={{
             flex: 1,
-            backgroundColor: Colors[theme].background,
           }}
         >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: Colors[theme].background,
+            }}
           >
-            {/* Header */}
-            <View
-              style={{
-                paddingHorizontal: 20,
-                paddingTop: 20,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 100 }}
             >
-              <Pressable
+              {/* Header */}
+              <View
                 style={{
-                  padding: 8,
-                }}
-                onPress={() => {
-                  haptics.impact();
-                  bottomSheetRef.current?.close();
+                  paddingHorizontal: 20,
+                  paddingTop: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                <Feather
-                  name="chevron-down"
-                  size={30}
-                  color={Colors[theme].text}
-                />
-              </Pressable>
-              <Pressable
-                style={{
-                  padding: 8,
-                }}
-                onPress={() => setShowEditButton(!showEditButton)}
-              >
-                <MaterialCommunityIcons
-                  name="dots-vertical"
-                  size={25}
-                  color={Colors[theme].text}
-                />
-              </Pressable>
-              {showEditButton && (
-                <View
+                <Pressable
                   style={{
-                    position: "absolute",
-                    right: 60,
-                    top: 20,
-                    backgroundColor: Colors[theme].surface,
-                    borderColor: Colors[theme].border,
-                    borderWidth: 2,
-                    paddingHorizontal: 15,
-                    width: 150,
-                    borderRadius: 8,
+                    padding: 8,
+                  }}
+                  onPress={() => {
+                    haptics.impact();
+                    bottomSheetRef.current?.close();
                   }}
                 >
-                  <Pressable
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 10,
-                      paddingVertical: 10,
-                    }}
-                    onPress={() => {
-                      haptics.impact();
-                      setEditModalVisible(true);
-                      setShowEditButton(false);
-                    }}
-                  >
-                    <Feather name="edit" size={16} color={Colors[theme].text} />
-                    <Text
-                      style={{
-                        color: Colors[theme].text,
-                        fontFamily: "NunitoMedium",
-                        fontSize: 14,
-                      }}
-                    >
-                      Edit habit
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 10,
-                      paddingVertical: 10,
-                    }}
-                    onPress={() => {
-                      haptics.impact();
-                      // setEditModalVisible(true);
-                      setShowEditButton(false);
-                    }}
-                  >
-                    <Feather
-                      name="trash-2"
-                      size={16}
-                      color={Colors[theme].danger}
-                    />
-                    <Text
-                      style={{
-                        color: Colors[theme].danger,
-                        fontFamily: "NunitoMedium",
-                        fontSize: 14,
-                      }}
-                    >
-                      Delete habit
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-            </View>
-
-            {/* Icon and Color */}
-            <View style={{ alignItems: "center", marginTop: 30 }}>
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-                  backgroundColor: habit.theme + "20",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 3,
-                  borderColor: habit.theme,
-                }}
-              >
-                <Image
-                  source={habitIcons[habit.icon ?? "default"]}
+                  <Feather
+                    name="chevron-down"
+                    size={30}
+                    color={Colors[theme].text}
+                  />
+                </Pressable>
+                <Pressable
                   style={{
-                    width: 50,
-                    height: 50,
-                    tintColor: habit.theme,
+                    padding: 10,
                   }}
-                />
-              </View>
-
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 24,
-                  marginTop: 20,
-                }}
-              >
-                {habit.habit}
-              </ThemedText>
-
-              <Text
-                style={{
-                  fontFamily: "NunitoRegular",
-                  fontSize: 14,
-                  color: Colors[theme].text_secondary,
-                  marginTop: 5,
-                }}
-              >
-                {String(habit.duration)} min(s) daily
-              </Text>
-            </View>
-
-            {/* Progress Card */}
-            <View
-              style={{
-                marginHorizontal: 20,
-                marginTop: 30,
-                backgroundColor: Colors[theme].surface,
-                borderWidth: 2,
-                borderColor: Colors[theme].border,
-                borderRadius: 15,
-                padding: 20,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: "NunitoBold",
-                      fontSize: 14,
-                      color: Colors[theme].text_secondary,
-                    }}
-                  >
-                    Current Streak
-                  </Text>
+                  onPress={() => {
+                    haptics.impact();
+                    setShowEditButton(!showEditButton);
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="dots-vertical"
+                    size={25}
+                    color={Colors[theme].text}
+                  />
+                </Pressable>
+                {showEditButton && (
                   <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginTop: 5,
-                      gap: 5,
+                      position: "absolute",
+                      right: 60,
+                      top: 20,
+                      backgroundColor: Colors[theme].surface,
+                      borderColor: Colors[theme].border,
+                      borderWidth: 2,
+                      paddingHorizontal: 15,
+                      width: 150,
+                      borderRadius: 8,
                     }}
                   >
+                    <Pressable
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 10,
+                      }}
+                      onPress={() => {
+                        haptics.impact();
+                        setEditModalVisible(true);
+                        setShowEditButton(false);
+                      }}
+                    >
+                      <Feather
+                        name="edit"
+                        size={16}
+                        color={Colors[theme].text}
+                      />
+                      <Text
+                        style={{
+                          color: Colors[theme].text,
+                          fontFamily: "NunitoMedium",
+                          fontSize: 14,
+                        }}
+                      >
+                        Edit habit
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 10,
+                      }}
+                      onPress={() => {
+                        haptics.impact();
+                        // setEditModalVisible(true);
+                        setShowEditButton(false);
+                      }}
+                    >
+                      <Feather
+                        name="trash-2"
+                        size={16}
+                        color={Colors[theme].danger}
+                      />
+                      <Text
+                        style={{
+                          color: Colors[theme].danger,
+                          fontFamily: "NunitoMedium",
+                          fontSize: 14,
+                        }}
+                      >
+                        Delete habit
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+
+              {/* Icon and Color */}
+              <View style={{ alignItems: "center", marginTop: 30 }}>
+                <View
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 50,
+                    backgroundColor: habit.theme + "20",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 3,
+                    borderColor: habit.theme,
+                  }}
+                >
+                  <Image
+                    source={habitIcons[habit.icon ?? "default"]}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      tintColor: habit.theme,
+                    }}
+                  />
+                </View>
+
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 24,
+                    marginTop: 20,
+                  }}
+                >
+                  {habit.habit}
+                </ThemedText>
+
+                <Text
+                  style={{
+                    fontFamily: "NunitoRegular",
+                    fontSize: 14,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 5,
+                  }}
+                >
+                  {String(habit.duration)} min(s) daily
+                </Text>
+              </View>
+
+              {/* Progress Card */}
+              <View
+                style={{
+                  marginHorizontal: 20,
+                  marginTop: 30,
+                  backgroundColor: Colors[theme].surface,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                  borderRadius: 15,
+                  padding: 20,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 14,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      Current Streak
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 5,
+                        gap: 5,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontFamily: "NunitoExtraBold",
+                          fontSize: 32,
+                        }}
+                      >
+                        {habit.current_streak}
+                      </ThemedText>
+                      <Image
+                        source={require("@/assets/icons/fire.png")}
+                        style={{ width: 24, height: 24 }}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 14,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      Goal Progress
+                    </Text>
                     <ThemedText
                       style={{
                         fontFamily: "NunitoExtraBold",
                         fontSize: 32,
+                        marginTop: 5,
                       }}
                     >
-                      {habit.current_streak}
+                      {Math.min(
+                        Math.ceil((habit.current_streak / habit.goal) * 100),
+                        100
+                      )}
+                      %
                     </ThemedText>
-                    <Image
-                      source={require("@/assets/icons/fire.png")}
-                      style={{ width: 24, height: 24 }}
-                    />
                   </View>
-                </View>
-
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text
-                    style={{
-                      fontFamily: "NunitoBold",
-                      fontSize: 14,
-                      color: Colors[theme].text_secondary,
-                    }}
-                  >
-                    Goal Progress
-                  </Text>
-                  <ThemedText
-                    style={{
-                      fontFamily: "NunitoExtraBold",
-                      fontSize: 32,
-                      marginTop: 5,
-                    }}
-                  >
-                    {Math.floor((habit.current_streak / 365) * 100)}%
-                  </ThemedText>
                 </View>
               </View>
-            </View>
 
-            {/* Heat Map */}
-            <View style={{ marginHorizontal: 20, marginTop: 30 }}>
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 18,
-                  marginBottom: 15,
-                }}
-              >
-                Activity
-              </ThemedText>
+              {/* Heat Map */}
+              <View style={{ marginHorizontal: 20, marginTop: 30 }}>
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 18,
+                    marginBottom: 15,
+                  }}
+                >
+                  Activity
+                </ThemedText>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View>
-                  <View style={{ flexDirection: "row", gap: 3 }}>
-                    {weeks.map((week, weekIndex) => (
-                      <View key={weekIndex} style={{ gap: 3 }}>
-                        {week.map((day, dayIndex) => (
-                          <View
-                            key={dayIndex}
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: 2,
-                              backgroundColor: day.completed
-                                ? habit.theme + "cc"
-                                : Colors[theme].border,
-                            }}
-                          />
-                        ))}
-                      </View>
-                    ))}
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginTop: 10,
-                    }}
-                  >
-                    <Text
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View>
+                    <View style={{ flexDirection: "row", gap: 3 }}>
+                      {weeks.map((week, weekIndex) => (
+                        <View key={weekIndex} style={{ gap: 3 }}>
+                          {week.map((day, dayIndex) => (
+                            <View
+                              key={dayIndex}
+                              style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: 2,
+                                backgroundColor: day.completed
+                                  ? habit.theme + "cc"
+                                  : Colors[theme].border,
+                              }}
+                            />
+                          ))}
+                        </View>
+                      ))}
+                    </View>
+                    <View
                       style={{
-                        fontFamily: "NunitoRegular",
-                        fontSize: 10,
-                        color: Colors[theme].text_secondary,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        marginTop: 10,
                       }}
                     >
-                      Jan
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: "NunitoRegular",
-                        fontSize: 10,
-                        color: Colors[theme].text_secondary,
-                      }}
-                    >
-                      Dec
-                    </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoRegular",
+                          fontSize: 10,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        Jan
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoRegular",
+                          fontSize: 10,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        Dec
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </ScrollView>
-            </View>
-          </ScrollView>
+                </ScrollView>
+              </View>
+            </ScrollView>
 
-          {/* Start Button - Fixed at bottom */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: insets.bottom + 20,
-              left: 20,
-              right: 20,
-            }}
-          >
-            <Pressable
-              onPress={handleStart}
-              disabled={isDone}
+            {/* Start Button - Fixed at bottom */}
+            <View
               style={{
-                backgroundColor: habit.theme,
-                paddingVertical: 16,
-                borderRadius: 50,
-                alignItems: "center",
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 4,
-                },
-                shadowOpacity: 0.3,
-                shadowRadius: 4.65,
-                elevation: 8,
-                opacity: isDone ? 0.5 : 1,
+                position: "absolute",
+                bottom: insets.bottom + 20,
+                left: 20,
+                right: 20,
               }}
             >
-              <Text
+              <Pressable
+                onPress={handleStart}
+                disabled={isDone}
                 style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 16,
-                  color: "#fff",
+                  backgroundColor: habit.theme,
+                  paddingVertical: 16,
+                  borderRadius: 50,
+                  alignItems: "center",
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 4,
+                  },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4.65,
+                  elevation: 8,
+                  opacity: isDone ? 0.5 : 1,
                 }}
               >
-                {isDone ? "Completed for today" : "Start task"}
-              </Text>
-            </Pressable>
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 16,
+                    color: "#fff",
+                  }}
+                >
+                  {isDone ? "Completed for today" : "Start task"}
+                </Text>
+              </Pressable>
+            </View>
           </View>
-
-          <TaskTimerModal
-            visible={timerModalVisible}
-            setVisible={setTimerModalVisible}
-            habit={habit as HabitType}
-          />
-          {editModalVisible && (
-            <EditHabitModal
-              visible={editModalVisible}
-              setVisible={setEditModalVisible}
-              habit={habit as HabitType}
-            />
-          )}
-        </View>
-      </BottomSheetView>
-    </BottomSheet>
+        </BottomSheetView>
+      </BottomSheet>
+      <TaskTimerModal
+        visible={timerModalVisible}
+        setVisible={setTimerModalVisible}
+        habit={habit as HabitType}
+      />
+      <EditHabitModal
+        visible={editModalVisible}
+        setVisible={setEditModalVisible}
+        habit={habit as HabitType}
+      />
+    </>
   );
 };
 
