@@ -13,9 +13,10 @@ import { useTheme } from "@/context/ThemeContext";
 
 interface AddButtonProps {
   onPress: () => void;
+  onAiPress: () => void;
 }
 
-const AddButton: React.FC<AddButtonProps> = ({ onPress }) => {
+const AddButton: React.FC<AddButtonProps> = ({ onPress, onAiPress }) => {
   const { theme } = useTheme();
   return (
     <View
@@ -37,7 +38,7 @@ const AddButton: React.FC<AddButtonProps> = ({ onPress }) => {
       }}
     >
       <Pressable
-        onPress={() => {}}
+        onPress={onAiPress}
         style={{
           backgroundColor: Colors[theme ?? "light"].primary,
           width: 45,

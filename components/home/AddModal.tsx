@@ -22,12 +22,13 @@ import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useTheme } from "@/context/ThemeContext";
 
 const AddModal: React.FC<{
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }> = ({ visible, setVisible }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
 

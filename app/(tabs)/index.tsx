@@ -8,7 +8,7 @@ import { Text as ThemedText, View as ThemedView } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 
 import AddButton from "@/components/AddButton";
-import { habitIcons, habitsData } from "@/data/habits";
+import { habitIcons } from "@/data/habits";
 
 import HabitDetaillsModal from "@/components/habit/HabitDetaillsModal";
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
@@ -26,6 +26,7 @@ import { useUser } from "@/context/UserContext";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
+import AIChatModal from "@/components/home/AIChatModal";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -45,6 +46,7 @@ const Home = () => {
   const { motivationalMsgs } = useMotivationalContext();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
+  const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
   const [selectedHabit, setSelectedHabit] = useState<{
     title: string;
@@ -99,6 +101,12 @@ const Home = () => {
     haptics.impact();
   };
 
+  const modalOpen =
+    timerModalVisible ||
+    addModalVisible ||
+    detailsModalVisible ||
+    aiChatModalVisible;
+
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
 
@@ -113,8 +121,7 @@ const Home = () => {
           paddingBottom: 10,
           paddingHorizontal: 10,
           backgroundColor: Colors[theme].background,
-          zIndex:
-            timerModalVisible || addModalVisible || detailsModalVisible ? 0 : 2,
+          zIndex: modalOpen ? 0 : 2,
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
@@ -399,10 +406,20 @@ const Home = () => {
           </View>
         </View>
       </ScrollView>
-      {!timerModalVisible && !addModalVisible && !detailsModalVisible && (
-        <AddButton onPress={open} />
+      {!modalOpen && (
+        <AddButton
+          onPress={open}
+          onAiPress={() => {
+            setAiChatModalVisible(true);
+            haptics.impact();
+          }}
+        />
       )}
       <AddModal visible={addModalVisible} setVisible={setAddModalVisible} />
+      <AIChatModal
+        visible={aiChatModalVisible}
+        setVisible={setAiChatModalVisible}
+      />
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}

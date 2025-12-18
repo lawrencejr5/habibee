@@ -247,84 +247,8 @@ export const generate_habit_ai = mutation({
   args: {
     userInput: v.string(),
   },
-  handler: async (ctx, { userInput }) => {
-    const user = await getAuthUserId(ctx);
-    if (!user) throw new Error("User is not authenticated");
-
-    // Convert input to lowercase for keyword matching
-    const input = userInput.toLowerCase();
-
-    // Find matching habit suggestions based on keywords
-    let suggestedHabits: (typeof HABIT_SUGGESTIONS)[string][0][] = [];
-
-    for (const [category, habits] of Object.entries(HABIT_SUGGESTIONS)) {
-      if (
-        input.includes(category) ||
-        category.split(" ").some((word) => input.includes(word))
-      ) {
-        suggestedHabits.push(...habits);
-      }
-    }
-
-    // If no exact match, try to find habits by keywords in the suggestion names
-    if (suggestedHabits.length === 0) {
-      for (const habits of Object.values(HABIT_SUGGESTIONS)) {
-        for (const habit of habits) {
-          const habitWords = habit.habit.toLowerCase().split(" ");
-          if (
-            habitWords.some((word) => input.includes(word)) ||
-            input.includes(habit.habit.toLowerCase())
-          ) {
-            suggestedHabits.push(habit);
-          }
-        }
-      }
-    }
-
-    // If still no match, provide a generic suggestion based on common keywords
-    if (suggestedHabits.length === 0) {
-      if (
-        input.includes("exercise") ||
-        input.includes("activity") ||
-        input.includes("move")
-      ) {
-        suggestedHabits = HABIT_SUGGESTIONS.fitness;
-      } else if (input.includes("study") || input.includes("skill")) {
-        suggestedHabits = HABIT_SUGGESTIONS.learning;
-      } else if (input.includes("relax") || input.includes("calm")) {
-        suggestedHabits = HABIT_SUGGESTIONS.mindfulness;
-      } else {
-        // Default fallback with a generic habit
-        suggestedHabits = [
-          {
-            habit: "New Habit",
-            icon: "brain",
-            duration: 30,
-            goal: 1,
-          },
-        ];
-      }
-    }
-
-    // Select a random habit from suggestions
-    const selectedHabit =
-      suggestedHabits[Math.floor(Math.random() * suggestedHabits.length)];
-
-    // Select a random color
-    const randomColor =
-      AVAILABLE_COLORS[Math.floor(Math.random() * AVAILABLE_COLORS.length)];
-
-    return {
-      success: true,
-      habit: {
-        habit: selectedHabit.habit,
-        icon: selectedHabit.icon,
-        theme: randomColor,
-        duration: selectedHabit.duration,
-        goal: selectedHabit.goal,
-      },
-      message: `Great! I've generated a habit for you based on "${userInput}".`,
-    };
+  handler: async (ctx, args) => {
+    return;
   },
 });
 

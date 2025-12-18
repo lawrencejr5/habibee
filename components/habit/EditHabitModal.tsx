@@ -20,6 +20,7 @@ import {
 
 import BottomSheet, {
   BottomSheetBackdrop,
+  BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import Colors from "@/constants/Colors";
@@ -111,6 +112,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
     <BottomSheet
       ref={bottomSheetRef}
       index={0}
+      android_keyboardInputMode="adjustResize"
+      keyboardBehavior="fillParent"
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
@@ -272,7 +275,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                       marginRight: 10,
                     }}
                   />
-                  <TextInput
+                  <BottomSheetTextInput
                     style={{
                       flex: 1,
                       fontFamily: "NunitoMedium",
