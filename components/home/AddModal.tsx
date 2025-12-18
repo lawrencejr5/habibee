@@ -64,6 +64,7 @@ const AddModal: React.FC<{
     try {
       if (!habit || !duration || !goal) {
         console.log("Fill in the details for this habit");
+        return;
       }
       await add_habit({
         habit,

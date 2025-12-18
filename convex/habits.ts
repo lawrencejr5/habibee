@@ -2,6 +2,87 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+// Available habit icons that can be suggested by AI
+const AVAILABLE_ICONS = [
+  "pray",
+  "gym",
+  "book",
+  "code",
+  "meditate",
+  "write",
+  "water",
+  "steps",
+  "heart",
+  "brain",
+  "paint",
+  "note",
+  "save",
+  "money",
+  "flower",
+];
+
+// Available theme colors
+const AVAILABLE_COLORS = [
+  "#c5c9cc",
+  "#9b59b6",
+  "#e74c3c",
+  "#3498db",
+  "#1abc9c",
+  "#e67e22",
+];
+
+// Habit suggestions database - maps keywords to habit data
+const HABIT_SUGGESTIONS: Record<
+  string,
+  {
+    habit: string;
+    icon: string;
+    duration: number;
+    goal: number;
+  }[]
+> = {
+  fitness: [
+    { habit: "Morning Workout", icon: "gym", duration: 30, goal: 1 },
+    { habit: "Running", icon: "steps", duration: 30, goal: 1 },
+    { habit: "Yoga", icon: "meditate", duration: 21, goal: 1 },
+  ],
+  reading: [
+    { habit: "Read Daily", icon: "book", duration: 30, goal: 1 },
+    { habit: "Read Before Sleep", icon: "book", duration: 30, goal: 1 },
+  ],
+  productivity: [
+    { habit: "Coding Practice", icon: "code", duration: 30, goal: 1 },
+    { habit: "Write Daily", icon: "write", duration: 21, goal: 1 },
+    { habit: "Journal", icon: "note", duration: 30, goal: 1 },
+  ],
+  health: [
+    { habit: "Drink Water", icon: "water", duration: 30, goal: 8 },
+    { habit: "Meditation", icon: "meditate", duration: 21, goal: 1 },
+    { habit: "Sleep Early", icon: "brain", duration: 21, goal: 1 },
+  ],
+  mindfulness: [
+    { habit: "Daily Meditation", icon: "meditate", duration: 30, goal: 1 },
+    { habit: "Gratitude Practice", icon: "note", duration: 30, goal: 1 },
+  ],
+  creative: [
+    { habit: "Painting", icon: "paint", duration: 21, goal: 1 },
+    { habit: "Drawing", icon: "paint", duration: 30, goal: 1 },
+    { habit: "Creative Writing", icon: "write", duration: 21, goal: 1 },
+  ],
+  learning: [
+    { habit: "Learn Something New", icon: "brain", duration: 30, goal: 1 },
+    { habit: "Online Course", icon: "code", duration: 60, goal: 1 },
+  ],
+  financial: [
+    { habit: "Save Money", icon: "save", duration: 30, goal: 1 },
+    { habit: "Budget Review", icon: "money", duration: 30, goal: 1 },
+  ],
+  spiritual: [
+    { habit: "Prayer", icon: "pray", duration: 30, goal: 1 },
+    { habit: "Spiritual Reading", icon: "book", duration: 21, goal: 1 },
+  ],
+};
+
 export const get_user_habits = query({
   args: {},
   handler: async (ctx, args) => {
@@ -159,5 +240,119 @@ export const delete_habit = mutation({
 
     await ctx.db.delete(args.habit_id);
     return { msg: "Habit deleted", habit: args.habit_id };
+  },
+});
+
+export const generate_habit_ai = mutation({
+  args: {
+    userInput: v.string(),
+  },
+  handler: async (ctx, { userInput }) => {
+    const user = await getAuthUserId(ctx);
+    if (!user) throw new Error("User is not authenticated");
+
+    // Convert input to lowercase for keyword matching
+    const input = userInput.toLowerCase();
+
+    // Find matching habit suggestions based on keywords
+    let suggestedHabits: (typeof HABIT_SUGGESTIONS)[string][0][] = [];
+
+    for (const [category, habits] of Object.entries(HABIT_SUGGESTIONS)) {
+      if (
+        input.includes(category) ||
+        category.split(" ").some((word) => input.includes(word))
+      ) {
+        suggestedHabits.push(...habits);
+      }
+    }
+
+    // If no exact match, try to find habits by keywords in the suggestion names
+    if (suggestedHabits.length === 0) {
+      for (const habits of Object.values(HABIT_SUGGESTIONS)) {
+        for (const habit of habits) {
+          const habitWords = habit.habit.toLowerCase().split(" ");
+          if (
+            habitWords.some((word) => input.includes(word)) ||
+            input.includes(habit.habit.toLowerCase())
+          ) {
+            suggestedHabits.push(habit);
+          }
+        }
+      }
+    }
+
+    // If still no match, provide a generic suggestion based on common keywords
+    if (suggestedHabits.length === 0) {
+      if (
+        input.includes("exercise") ||
+        input.includes("activity") ||
+        input.includes("move")
+      ) {
+        suggestedHabits = HABIT_SUGGESTIONS.fitness;
+      } else if (input.includes("study") || input.includes("skill")) {
+        suggestedHabits = HABIT_SUGGESTIONS.learning;
+      } else if (input.includes("relax") || input.includes("calm")) {
+        suggestedHabits = HABIT_SUGGESTIONS.mindfulness;
+      } else {
+        // Default fallback with a generic habit
+        suggestedHabits = [
+          {
+            habit: "New Habit",
+            icon: "brain",
+            duration: 30,
+            goal: 1,
+          },
+        ];
+      }
+    }
+
+    // Select a random habit from suggestions
+    const selectedHabit =
+      suggestedHabits[Math.floor(Math.random() * suggestedHabits.length)];
+
+    // Select a random color
+    const randomColor =
+      AVAILABLE_COLORS[Math.floor(Math.random() * AVAILABLE_COLORS.length)];
+
+    return {
+      success: true,
+      habit: {
+        habit: selectedHabit.habit,
+        icon: selectedHabit.icon,
+        theme: randomColor,
+        duration: selectedHabit.duration,
+        goal: selectedHabit.goal,
+      },
+      message: `Great! I've generated a habit for you based on "${userInput}".`,
+    };
+  },
+});
+
+export const create_habit = mutation({
+  args: {
+    habit: v.string(),
+    icon: v.string(),
+    theme: v.string(),
+    duration: v.number(),
+    goal: v.number(),
+    strict: v.boolean(),
+  },
+  handler: async (ctx, { habit, icon, theme, duration, goal, strict }) => {
+    const user = await getAuthUserId(ctx);
+    if (!user) throw new Error("User is not authenticated");
+
+    const habit_id = await ctx.db.insert("habits", {
+      user,
+      habit,
+      icon,
+      theme,
+      duration,
+      goal,
+      strict,
+      current_streak: 0,
+      highest_streak: 0,
+    });
+
+    return habit_id;
   },
 });
