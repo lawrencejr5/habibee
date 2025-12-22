@@ -8,10 +8,13 @@ import { router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { AppState, AppStateStatus } from "react-native";
+
+import { api } from "@/convex/_generated/api";
 
 // 1. Remove ConvexProvider, keep only ConvexAuthProvider and useConvexAuth
-import { ConvexReactClient, useConvexAuth } from "convex/react";
+import { ConvexReactClient, useConvexAuth, useMutation } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,7 +23,7 @@ import DeviceThemeProvider, { useTheme } from "@/context/ThemeContext";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import HapticsProvider from "@/context/HapticsContext";
-import LoadingProvider from "@/context/LoadingContext";
+import LoadingProvider, { useLoadingContext } from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
 import UserProvider, { useUser } from "@/context/UserContext";
 
@@ -70,7 +73,42 @@ export default function RootLayout() {
 
 function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { theme } = useTheme();
+  const { setAppLoading } = useLoadingContext();
   const segments = useSegments();
+
+  const checkStreak = useMutation(api.habits.check_streak_and_reset);
+  const performStreakCheck = async () => {
+    setAppLoading(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      await checkStreak({ today });
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setAppLoading(false);
+    }
+  };
+
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    performStreakCheck();
+
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        // App has come to the foreground!
+        console.log("App active - Checking for dead streaks...");
+        performStreakCheck();
+      }
+      appState.current = nextAppState;
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // 4. Move useConvexAuth HERE (Child of Provider)
   const { isAuthenticated, isLoading } = useConvexAuth();

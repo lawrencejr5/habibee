@@ -13,6 +13,7 @@ import type * as habits from "../habits.js";
 import type * as http from "../http.js";
 import type * as motivationa_messages from "../motivationa_messages.js";
 import type * as users from "../users.js";
+import type * as utils from "../utils.js";
 import type * as weekly_stats from "../weekly_stats.js";
 
 import type {
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   motivationa_messages: typeof motivationa_messages;
   users: typeof users;
+  utils: typeof utils;
   weekly_stats: typeof weekly_stats;
 }>;
 

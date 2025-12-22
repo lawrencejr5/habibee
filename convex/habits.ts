@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+import { getDaysDifference } from "./utils";
+
 // Available habit icons that can be suggested by AI
 const AVAILABLE_ICONS = [
   "pray",
@@ -240,6 +242,35 @@ export const delete_habit = mutation({
 
     await ctx.db.delete(args.habit_id);
     return { msg: "Habit deleted", habit: args.habit_id };
+  },
+});
+
+export const check_streak_and_reset = mutation({
+  args: { today: v.string() },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("User is not authenticated");
+
+    const habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", user_id))
+      .collect();
+
+    for (const habit of habits) {
+      if (!habit.lastCompleted || habit.current_streak === 0) continue;
+
+      const diff = getDaysDifference(habit.lastCompleted, args.today);
+      if (diff > 1) {
+        await ctx.db.patch(habit._id, { current_streak: 0 });
+      }
+    }
+
+    const user = await ctx.db.get(user_id);
+
+    if (!user?.last_streak_date || user.streak === 0) return;
+
+    const diff = getDaysDifference(user.last_streak_date, args.today);
+    if (diff > 1) await ctx.db.patch(user_id, { streak: 0 });
   },
 });
 
