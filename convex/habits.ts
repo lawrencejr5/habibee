@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-import { getDaysDifference } from "./utils";
+import { getDaysDifference, getFirstDayOfTheWeek } from "./utils";
 
 // Available habit icons that can be suggested by AI
 const AVAILABLE_ICONS = [
@@ -135,7 +135,7 @@ export const record_streak = mutation({
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthenticated");
 
-    const current_date = new Date().toISOString().split("T")[0];
+    const current_date = new Date().toLocaleDateString("en-CA");
 
     const streak_recorded = await ctx.db
       .query("habit_enteries")
@@ -179,11 +179,23 @@ export const record_streak = mutation({
       const week_day = new Date().toLocaleDateString("en-US", {
         weekday: "short",
       });
-      await ctx.db.insert("weekly_stats", {
-        user: user_id,
-        week_day,
-        date: current_date,
-      });
+      const user_weekly_stat = await ctx.db
+        .query("weekly_stats")
+        .withIndex("by_user_weekday", (q) =>
+          q.eq("user", user_id).eq("week_day", week_day)
+        )
+        .unique();
+      if (user_weekly_stat) {
+        await ctx.db.patch(user_weekly_stat._id, {
+          date: new Date().toISOString().split("T")[0],
+        });
+      } else {
+        await ctx.db.insert("weekly_stats", {
+          user: user_id,
+          week_day,
+          date: current_date,
+        });
+      }
     }
   },
 });

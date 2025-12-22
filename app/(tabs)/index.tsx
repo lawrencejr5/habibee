@@ -28,6 +28,8 @@ import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import AIChatModal from "@/components/home/AIChatModal";
 
+import { getFirstDayOfTheWeek } from "@/convex/utils";
+
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -106,6 +108,8 @@ const Home = () => {
     addModalVisible ||
     detailsModalVisible ||
     aiChatModalVisible;
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
 
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
@@ -196,13 +200,9 @@ const Home = () => {
             gap: 10,
           }}
         >
-          <StreakDay day="Sun" />
-          <StreakDay day="Mon" />
-          <StreakDay day="Tue" />
-          <StreakDay day="Wed" />
-          <StreakDay day="Thur" />
-          <StreakDay day="Fri" />
-          <StreakDay day="Sat" />
+          {weekDays.map((weekday, i) => {
+            return <StreakDay key={i} day={weekday} />;
+          })}
         </View>
       </ThemedView>
 
@@ -439,9 +439,10 @@ const Home = () => {
 const StreakDay: React.FC<{ day: string }> = ({ day }) => {
   const { theme } = useTheme();
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
-  const week_done = weekly_stats?.map((stat) => {
-    return stat.week_day;
-  });
+  const sunday = getFirstDayOfTheWeek();
+  const week_done = weekly_stats
+    ?.filter((stat) => stat.date >= sunday)
+    .map((stat) => stat.week_day);
 
   return (
     <View

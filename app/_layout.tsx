@@ -75,6 +75,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { theme } = useTheme();
   const { setAppLoading } = useLoadingContext();
   const segments = useSegments();
+  const appState = useRef(AppState.currentState);
 
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
@@ -88,8 +89,6 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
       setAppLoading(false);
     }
   };
-
-  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     performStreakCheck();

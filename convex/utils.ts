@@ -8,3 +8,13 @@ export const getDaysDifference = (oldDate: string, newDate: string) => {
     Math.abs((firstDate.getTime() - secondDate.getTime()) / oneDay)
   );
 };
+
+export const getFirstDayOfTheWeek = () => {
+  const now = new Date();
+  const day_number = now.getDay();
+
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - day_number);
+
+  return sunday.toISOString().split("T")[0];
+};

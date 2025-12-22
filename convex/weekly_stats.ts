@@ -9,7 +9,7 @@ export const get_user_weekly_stats = query({
 
     const weekly_stats = await ctx.db
       .query("weekly_stats")
-      .withIndex("by_user", (q) => q.eq("user", user_id))
+      .withIndex("by_user_weekday", (q) => q.eq("user", user_id))
       .collect();
 
     return weekly_stats;

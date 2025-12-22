@@ -18,7 +18,7 @@ const schema = defineSchema({
     user: v.id("users"),
     week_day: v.string(),
     date: v.string(),
-  }).index("by_user", ["user"]),
+  }).index("by_user_weekday", ["user", "week_day"]),
 
   motivational_messages: defineTable({
     text: v.string(),
