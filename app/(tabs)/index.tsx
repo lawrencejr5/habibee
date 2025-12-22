@@ -36,7 +36,7 @@ const Home = () => {
   const haptics = useHapitcs();
 
   const { signedIn } = useUser();
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("en-CA");
 
   const habitData = useQuery(api.habits.get_user_habits);
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
@@ -336,7 +336,7 @@ const Home = () => {
                   title={habit.habit}
                   done={
                     habit.lastCompleted ===
-                    new Date().toISOString().split("T")[0]
+                    new Date().toLocaleDateString("en-CA")
                   }
                   streak={habit.current_streak}
                   habitType={habit.icon ?? "default"}

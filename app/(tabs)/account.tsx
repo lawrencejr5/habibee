@@ -33,7 +33,7 @@ export default function Account() {
   const { appLoading } = useLoadingContext();
   const { signedIn } = useUser();
   const { isLoading: authLoading } = useConvexAuth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("en-CA");
 
   const [openAccountInfoModal, setOpenAccountInfoModal] =
     useState<boolean>(false);
