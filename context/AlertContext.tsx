@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import CustomAlert from "@/components/CustomAlert"; // We will build this next
+import { useHapitcs } from "./HapticsContext";
 
 type AlertTheme = "success" | "danger" | "warning";
 
@@ -32,7 +33,10 @@ export const CustomAlertProvider = ({ children }: { children: ReactNode }) => {
     theme: "success", // default
   });
 
+  const haptics = useHapitcs();
+
   const showCustomAlert = useCallback((msg: string, theme: AlertTheme) => {
+    haptics.impact("success");
     setAlert({ visible: true, msg, theme });
   }, []);
 

@@ -19,11 +19,13 @@ import { useHapitcs } from "@/context/HapticsContext";
 
 import { api } from "@/convex/_generated/api";
 import { useMutation } from "convex/react";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const AddUsername = () => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { theme } = useTheme();
+  const { showCustomAlert } = useCustomAlert();
 
   const [username, setUsername] = useState<string>("");
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
@@ -33,12 +35,15 @@ const AddUsername = () => {
     setBtnLoading(true);
     try {
       if (username.trim().length === 0) {
-        console.log("Username cannot be empty!");
+        showCustomAlert("Username cannot be empty", "warning");
+        return;
       }
       await add_username({ username: username.trim() });
+      showCustomAlert("Username set successfully", "success");
       router.replace("/(tabs)");
     } catch (err) {
       console.log(err);
+      showCustomAlert("An error occured", "danger");
     } finally {
       setBtnLoading(false);
     }

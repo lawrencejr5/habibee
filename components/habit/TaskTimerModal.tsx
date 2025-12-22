@@ -20,6 +20,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
+import { useCustomAlert } from "@/context/AlertContext";
 
 interface TaskTimerModalProps {
   visible: boolean;
@@ -35,6 +36,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+  const { showCustomAlert } = useCustomAlert();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -100,8 +102,10 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     setBtnLoading(true);
     try {
       await record_streak({ habit_id: habit._id });
+      showCustomAlert("Streak increased for this habit", "success");
     } catch (err) {
       console.log(err);
+      showCustomAlert("Couldn't count this streak", "danger");
     } finally {
       setBtnLoading(false);
       setIsRunning(false);

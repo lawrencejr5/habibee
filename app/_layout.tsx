@@ -58,8 +58,8 @@ export default function RootLayout() {
   return (
     <ConvexAuthProvider client={convex} storage={AsyncStorage}>
       <DeviceThemeProvider>
-        <CustomAlertProvider>
-          <HapticsProvider>
+        <HapticsProvider>
+          <CustomAlertProvider>
             <LoadingProvider>
               <UserProvider>
                 <MotivationMsgProvider>
@@ -67,8 +67,8 @@ export default function RootLayout() {
                 </MotivationMsgProvider>
               </UserProvider>
             </LoadingProvider>
-          </HapticsProvider>
-        </CustomAlertProvider>
+          </CustomAlertProvider>
+        </HapticsProvider>
       </DeviceThemeProvider>
     </ConvexAuthProvider>
   );

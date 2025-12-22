@@ -5,8 +5,9 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
+  Modal, // <--- Added Modal import
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // Highly recommended for notch handling
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
 import { Image } from "react-native";
@@ -28,21 +29,17 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
 
   useEffect(() => {
     if (visible) {
-      // 1. Drop Down (Spring Animation)
       Animated.spring(translateY, {
-        toValue: insets.top + 10, // Drop to just below the notch
+        toValue: insets.top + 10,
         useNativeDriver: true,
-        speed: 12, // Controls velocity
-        bounciness: 8, // Controls "springiness"
+        speed: 12,
+        bounciness: 8,
       }).start();
 
-      // 2. Auto-hide after 3 seconds
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         hideAlert();
       }, 2000);
-    } else {
-      hideAlert();
     }
 
     return () => {
@@ -56,7 +53,8 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      if (visible) onHide(); // Sync state with parent
+      // Only now do we tell the parent to unmount the Modal
+      onHide();
     });
   };
 
@@ -87,40 +85,55 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
     }
   };
 
+  // If the parent says visible=false, we don't render the Modal
+  // (unless we are mid-animation, but the parent state controls the mount)
+  if (!visible) return null;
+
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          backgroundColor: Colors[deviceTheme].surface,
-          borderColor: getBackgroundColor(),
-          transform: [{ translateY }],
-          // Ensure it sits above other content
-          zIndex: 9999,
-        },
-      ]}
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="none" // We use your custom Animated.spring instead
+      statusBarTranslucent={true} // Allows it to cover status bar area
+      onRequestClose={hideAlert} // Android back button support
     >
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={hideAlert} // Allow user to dismiss early
-        style={styles.contentContainer}
-      >
-        <Image
-          source={getIcon()}
-          style={{ width: 16, height: 16, tintColor: getBackgroundColor() }}
-        />
-        <Text
-          style={[styles.messageText, { color: getBackgroundColor() }]}
-          numberOfLines={2}
+      <View style={styles.modalOverlay} pointerEvents="box-none">
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              backgroundColor: Colors[deviceTheme].surface,
+              borderColor: getBackgroundColor(),
+              transform: [{ translateY }],
+            },
+          ]}
         >
-          {msg}
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={hideAlert}
+            style={styles.contentContainer}
+          >
+            <Image
+              source={getIcon()}
+              style={{ width: 16, height: 16, tintColor: getBackgroundColor() }}
+            />
+            <Text
+              style={[styles.messageText, { color: getBackgroundColor() }]}
+              numberOfLines={2}
+            >
+              {msg}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+  },
   container: {
     position: "absolute",
     top: 0,
@@ -143,22 +156,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
-  iconContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.2)", // Semi-transparent white circle
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  iconText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
   messageText: {
-    color: "#fff", // White text from your palette logic
     fontSize: 14,
     fontFamily: "NunitoBold",
   },

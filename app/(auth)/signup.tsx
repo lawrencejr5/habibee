@@ -17,10 +17,13 @@ import { Image } from "react-native";
 
 import CustomInput from "@/components/auth/CustomInput";
 import { Link, router } from "expo-router";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const SignUpPage = () => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+
+  const { showCustomAlert } = useCustomAlert();
 
   const { signIn } = useAuthActions();
 
@@ -33,6 +36,11 @@ const SignUpPage = () => {
   const handleSubmit = async () => {
     setBtnLoading(true);
     try {
+      if (!email || !fullname || !password) {
+        showCustomAlert("Please fill in required fields", "warning");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("fullname", fullname.trim());
       formData.append("email", email.trim());
@@ -40,9 +48,9 @@ const SignUpPage = () => {
       formData.append("flow", flow);
 
       await signIn("password", formData);
-      console.log("signed up");
+      showCustomAlert("Signed up successfully", "success");
     } catch (err) {
-      console.log("auth failed");
+      showCustomAlert("An error occured", "danger");
     } finally {
       setBtnLoading(false);
     }

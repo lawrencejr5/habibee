@@ -14,6 +14,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useCustomAlert } from "@/context/AlertContext";
 
 type DeleteHabitModalProps = {
   visible: boolean;
@@ -28,6 +29,7 @@ const DeleteHabitModal: React.FC<DeleteHabitModalProps> = ({
 }) => {
   const theme = useColorScheme();
   const haptics = useHapitcs();
+  const { showCustomAlert } = useCustomAlert();
 
   const delete_habit = useMutation(api.habits.delete_habit);
 
@@ -37,9 +39,10 @@ const DeleteHabitModal: React.FC<DeleteHabitModalProps> = ({
     haptics.impact();
     try {
       await delete_habit({ habit_id: habit._id });
+      showCustomAlert("Habit deleted successfully", "success");
       onClose();
     } catch (error) {
-      console.error("Failed to delete habit:", error);
+      showCustomAlert("Failed to delete habit", "danger");
     } finally {
       setBtnLoading(false);
       haptics.impact();

@@ -23,6 +23,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { ActivityIndicator } from "react-native";
 import { useUser } from "@/context/UserContext";
+import { useCustomAlert } from "@/context/AlertContext";
 
 interface AccountModalProps {
   visible: boolean;
@@ -32,6 +33,8 @@ interface AccountModalProps {
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const theme = useColorScheme();
   const haptics = useHapitcs();
+
+  const { showCustomAlert } = useCustomAlert();
 
   const { signedIn } = useUser();
   const today = new Date().toISOString().split("T")[0];
@@ -44,8 +47,10 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
     try {
       haptics.impact();
       await signOut();
+      showCustomAlert("Signed out", "success");
     } catch (err) {
       console.log(err);
+      showCustomAlert("An error occured!", "danger");
     } finally {
       setSigninOut(false);
     }

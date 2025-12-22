@@ -16,10 +16,12 @@ import CustomInput from "@/components/auth/CustomInput";
 import { Link } from "expo-router";
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const SigninPage = () => {
   const theme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { showCustomAlert } = useCustomAlert();
 
   const { signIn } = useAuthActions();
 
@@ -31,15 +33,20 @@ const SigninPage = () => {
   const handleSubmit = async () => {
     setBtnLoading(true);
     try {
+      if (!email || !password) {
+        showCustomAlert("Please fill in required fields", "warning");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("email", email.trim());
       formData.append("password", password);
       formData.append("flow", "signIn");
 
       await signIn("password", formData);
-      console.log("signed in");
+      showCustomAlert("Signed in successfully", "success");
     } catch (err) {
-      console.log(err);
+      showCustomAlert("An error occured", "danger");
     } finally {
       setBtnLoading(false);
     }

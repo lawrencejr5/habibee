@@ -70,6 +70,10 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   const handle_submit = async () => {
     setBtnLoading(true);
     try {
+      if (!habitName || !duration || !goal) {
+        showCustomAlert("Fill in the details for this habit", "warning");
+        return;
+      }
       await update_habit({
         habit_id: habit._id,
         habit: habitName,
@@ -81,7 +85,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       });
       showCustomAlert("Habit updated successfully!", "success");
     } catch (err) {
-      console.log(err);
+      showCustomAlert("An error occurred!", "success");
     } finally {
       setBtnLoading(false);
     }

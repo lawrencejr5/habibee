@@ -23,6 +23,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "@/context/ThemeContext";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const AddModal: React.FC<{
   visible: boolean;
@@ -31,6 +32,7 @@ const AddModal: React.FC<{
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+  const { showCustomAlert } = useCustomAlert();
 
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string>("default");
@@ -51,7 +53,6 @@ const AddModal: React.FC<{
   const add_habit = useMutation(api.habits.add_habit);
 
   const resetForm = () => {
-    setVisible(false);
     setHabit("");
     setDuration("");
     setGoal("");
@@ -64,9 +65,10 @@ const AddModal: React.FC<{
     setBtnLoading(true);
     try {
       if (!habit || !duration || !goal) {
-        console.log("Fill in the details for this habit");
+        showCustomAlert("Fill in the details for this habit", "warning");
         return;
       }
+
       await add_habit({
         habit,
         icon: (selectedIcon as string) ?? "default",
@@ -75,8 +77,12 @@ const AddModal: React.FC<{
         goal: Number(goal),
         duration: Number(duration),
       });
+
+      showCustomAlert("Habit created successfully", "success");
+      setVisible(false);
     } catch (error) {
       console.log(error);
+      showCustomAlert("An error occured", "success");
     } finally {
       setBtnLoading(false);
       resetForm();
