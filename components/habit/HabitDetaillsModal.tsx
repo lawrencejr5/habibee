@@ -224,6 +224,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       }}
                       onPress={() => {
                         haptics.impact();
+                        setEditModalVisible(true);
                         setDeleteModalVisible(true); // Open delete modal
                       }}
                     >

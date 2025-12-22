@@ -342,11 +342,11 @@ const Home = () => {
                   habitType={habit.icon ?? "default"}
                   themeColor={habit.theme ?? "#eee"}
                   onFireIconPress={() => {
-                    setSelectedHabit({
-                      title: habit.habit,
-                      duration: String(habit.duration),
-                    });
-                    setTimerModalVisible(true);
+                    // setSelectedHabit({
+                    //   title: habit.habit,
+                    //   duration: String(habit.duration),
+                    // });
+                    // setTimerModalVisible(true);
                   }}
                   onCardPress={() => {
                     haptics.impact();
