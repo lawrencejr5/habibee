@@ -33,6 +33,8 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
+import { useTheme } from "@/context/ThemeContext";
+import { useCustomAlert } from "@/context/AlertContext";
 
 interface EditHabitModalProps {
   visible: boolean;
@@ -45,8 +47,10 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   setVisible,
   habit,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
+
+  const { showCustomAlert } = useCustomAlert();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
@@ -75,6 +79,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         goal: Number(goal),
         strict,
       });
+      showCustomAlert("Habit updated successfully!", "success");
     } catch (err) {
       console.log(err);
     } finally {

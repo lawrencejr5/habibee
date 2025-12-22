@@ -26,6 +26,7 @@ import HapticsProvider from "@/context/HapticsContext";
 import LoadingProvider, { useLoadingContext } from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
 import UserProvider, { useUser } from "@/context/UserContext";
+import { CustomAlertProvider } from "@/context/AlertContext";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -57,15 +58,17 @@ export default function RootLayout() {
   return (
     <ConvexAuthProvider client={convex} storage={AsyncStorage}>
       <DeviceThemeProvider>
-        <HapticsProvider>
-          <LoadingProvider>
-            <UserProvider>
-              <MotivationMsgProvider>
-                <NavigationWithTheme loaded={loaded} />
-              </MotivationMsgProvider>
-            </UserProvider>
-          </LoadingProvider>
-        </HapticsProvider>
+        <CustomAlertProvider>
+          <HapticsProvider>
+            <LoadingProvider>
+              <UserProvider>
+                <MotivationMsgProvider>
+                  <NavigationWithTheme loaded={loaded} />
+                </MotivationMsgProvider>
+              </UserProvider>
+            </LoadingProvider>
+          </HapticsProvider>
+        </CustomAlertProvider>
       </DeviceThemeProvider>
     </ConvexAuthProvider>
   );
