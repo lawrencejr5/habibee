@@ -42,6 +42,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
 
+  const today = new Date().toLocaleDateString("en-CA");
+
   const habitsData = useQuery(api.habits.get_user_habits);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -88,8 +90,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   // Find the habit by id
   const habit = habitsData?.find((h) => h._id === habit_id);
-  const isDone =
-    habit?.lastCompleted === new Date().toISOString().split("T")[0];
+  const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
     return (

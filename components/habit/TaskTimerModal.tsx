@@ -40,6 +40,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
+  const today = new Date().toLocaleDateString("en-CA");
+  const week_day = new Date().toLocaleDateString("en-US", {
+    weekday: "short",
+  });
+
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
 
@@ -101,7 +106,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     haptics.impact("success");
     setBtnLoading(true);
     try {
-      await record_streak({ habit_id: habit._id });
+      await record_streak({
+        habit_id: habit._id,
+        current_date: today,
+        week_day,
+      });
       showCustomAlert("Streak increased for this habit", "success");
     } catch (err) {
       console.log(err);

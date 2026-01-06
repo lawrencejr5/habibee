@@ -130,22 +130,26 @@ export const add_habit = mutation({
 });
 
 export const record_streak = mutation({
-  args: { habit_id: v.id("habits") },
+  args: {
+    habit_id: v.id("habits"),
+    current_date: v.string(),
+    week_day: v.string(),
+  },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthenticated");
 
-    const current_date = new Date().toLocaleDateString("en-CA");
-
     const streak_recorded = await ctx.db
       .query("habit_enteries")
       .withIndex("by_habit_date", (q) =>
-        q.eq("habit", args.habit_id).eq("date", current_date)
+        q.eq("habit", args.habit_id).eq("date", args.current_date)
       )
       .unique();
 
     if (streak_recorded)
-      throw new Error("Streak has already been counted for today");
+      throw new Error(
+        "Streak has already been counted for today " + `${args.current_date}`
+      );
 
     const habit = await ctx.db.get(args.habit_id);
     if (!habit) throw new Error("Habit does not exist");
@@ -154,7 +158,7 @@ export const record_streak = mutation({
       user: user_id,
       habit: args.habit_id,
       status: "completed",
-      date: current_date,
+      date: args.current_date,
     });
 
     const newStreak = (habit.current_streak ?? 0) + 1;
@@ -163,37 +167,35 @@ export const record_streak = mutation({
     await ctx.db.patch(args.habit_id, {
       current_streak: newStreak,
       highest_streak: newHighestStreak,
-      lastCompleted: current_date,
+      lastCompleted: args.current_date,
     });
 
     const user = await ctx.db.get(user_id);
     if (!user) throw new Error("User not found");
 
-    if (user.last_streak_date !== current_date) {
+    if (user.last_streak_date !== args.current_date) {
       const newUserStreak = (user.streak ?? 0) + 1;
       await ctx.db.patch(user_id, {
         streak: newUserStreak,
-        last_streak_date: current_date,
+        last_streak_date: args.current_date,
       });
 
-      const week_day = new Date().toLocaleDateString("en-US", {
-        weekday: "short",
-      });
       const user_weekly_stat = await ctx.db
         .query("weekly_stats")
         .withIndex("by_user_weekday", (q) =>
-          q.eq("user", user_id).eq("week_day", week_day)
+          q.eq("user", user_id).eq("week_day", args.week_day)
         )
         .unique();
+
       if (user_weekly_stat) {
         await ctx.db.patch(user_weekly_stat._id, {
-          date: new Date().toISOString().split("T")[0],
+          date: args.current_date,
         });
       } else {
         await ctx.db.insert("weekly_stats", {
           user: user_id,
-          week_day,
-          date: current_date,
+          week_day: args.week_day,
+          date: args.current_date,
         });
       }
     }
