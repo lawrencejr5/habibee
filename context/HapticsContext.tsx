@@ -30,7 +30,7 @@ interface HapticsContextType {
 const HapticsContext = createContext<HapticsContextType | null>(null);
 
 const HapticsProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const [enabled, setEnabled] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {

@@ -82,15 +82,16 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
-    setAppLoading(true);
+    // setAppLoading(true);
     try {
       const today = new Date().toISOString().split("T")[0];
       await checkStreak({ today });
     } catch (err) {
       console.log(err);
-    } finally {
-      setAppLoading(false);
     }
+    // finally {
+    //   setAppLoading(false);
+    // }
   };
 
   useEffect(() => {
