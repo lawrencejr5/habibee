@@ -225,8 +225,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       }}
                       onPress={() => {
                         haptics.impact();
-                        setEditModalVisible(true);
-                        setDeleteModalVisible(true); // Open delete modal
+                        setShowEditButton(false);
+                        setDeleteModalVisible(true);
                       }}
                     >
                       <Feather
@@ -494,7 +494,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         visible={deleteModalVisible}
         onClose={() => {
           setDeleteModalVisible(false);
-          setVisible(false);
         }}
         habit={habit as HabitType}
       />
