@@ -48,6 +48,7 @@ const AddModal: React.FC<{
   const close = () => {
     haptics.impact();
     resetForm();
+    setVisible(false);
   };
 
   const add_habit = useMutation(api.habits.add_habit);
