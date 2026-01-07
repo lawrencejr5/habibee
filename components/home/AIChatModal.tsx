@@ -1,5 +1,5 @@
 import React, { Dispatch, FC, SetStateAction, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, TextInput } from "react-native";
 import BottomSheet, {
   BottomSheetTextInput,
   BottomSheetView,
@@ -13,6 +13,7 @@ import { Text as ThemedText } from "../Themed";
 import { useHapitcs } from "@/context/HapticsContext";
 import { Image } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 interface AIChatModalProps {
   visible: boolean;
@@ -118,54 +119,60 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             {/* Chat Area */}
             <View
               style={{
-                flex: 1,
                 marginHorizontal: 20,
                 marginTop: 20,
               }}
-            >
-              {/* Chat content will go here */}
-            </View>
+            ></View>
           </ScrollView>
 
           {/* Input Area - Fixed at bottom */}
-          <View
+          <KeyboardStickyView
             style={{
-              paddingHorizontal: 20,
-              marginBottom: 10,
+              // backgroundColor: Colors[theme].background,
+              position: "fixed",
+              zIndex: 10,
+              bottom: insets.bottom,
             }}
+            offset={{ opened: 50, closed: insets.bottom - 30 }}
           >
             <View
               style={{
-                width: "100%",
-                padding: 5,
-                paddingHorizontal: 10,
-                backgroundColor: Colors[theme].surface,
-                borderColor: Colors[theme].border,
-                borderWidth: 3,
-                borderRadius: 50,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
+                paddingHorizontal: 20,
               }}
             >
-              <BottomSheetTextInput
+              <View
                 style={{
-                  backgroundColor: "transparent",
-                  fontFamily: "NunitoBold",
+                  width: "100%",
+                  padding: 5,
+                  paddingHorizontal: 10,
+                  backgroundColor: Colors[theme].surface,
+                  borderColor: Colors[theme].border,
+                  borderWidth: 3,
+                  borderRadius: 50,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
-                placeholder="Describe what you want..."
-              />
+              >
+                <TextInput
+                  style={{
+                    backgroundColor: "transparent",
+                    fontFamily: "NunitoBold",
+                  }}
+                  placeholder="Describe what you want..."
+                />
 
-              <Image
-                source={require("../../assets/icons/send.png")}
-                style={{
-                  width: 20,
-                  height: 20,
-                  tintColor: Colors[theme].primary,
-                }}
-              />
+                <Image
+                  source={require("../../assets/icons/send.png")}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+              </View>
             </View>
-          </View>
+          </KeyboardStickyView>
         </View>
       </BottomSheetView>
     </BottomSheet>
