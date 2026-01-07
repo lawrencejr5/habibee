@@ -1,11 +1,7 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  KeyboardAvoidingView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import React, { useState } from "react";
+
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -91,155 +87,160 @@ const SigninPage = () => {
           Welcome back, we're happy to have u back
         </Text>
       </View>
-      <View
-        style={{
-          width: "100%",
-          backgroundColor: Colors[theme].surface,
-          borderColor: Colors[theme].border,
-          borderWidth: 3,
-          borderRadius: 20,
-          paddingHorizontal: 10,
-          paddingVertical: 20,
-        }}
+      <KeyboardStickyView
+        style={{ paddingHorizontal: 10 }}
+        offset={{ opened: 200, closed: insets.bottom }}
       >
-        {/* Continue with google */}
-        <Pressable
-          style={{
-            backgroundColor: "#fff",
-            borderWidth: theme === "dark" ? 3 : 2,
-            borderColor: Colors[theme].border,
-            paddingHorizontal: 20,
-            paddingVertical: 7,
-            borderRadius: 7,
-            alignSelf: "center",
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <Image
-            source={require("@/assets/icons/google.png")}
-            style={{ height: 20, width: 20 }}
-          />
-          <Text
-            style={{
-              color: "#1f2428",
-              fontFamily: "NunitoBold",
-            }}
-          >
-            Continue with google
-          </Text>
-        </Pressable>
-        {/* ---- OR ---- */}
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginVertical: 20,
+            width: "100%",
+            backgroundColor: Colors[theme].surface,
+            borderColor: Colors[theme].border,
+            borderWidth: 3,
+            borderRadius: 20,
+            paddingHorizontal: 10,
+            paddingVertical: 20,
           }}
         >
-          <View
-            style={{
-              flex: 1,
-              height: theme === "dark" ? 4 : 2,
-              backgroundColor: Colors[theme].border,
-            }}
-          />
-          <Text
-            style={{
-              marginHorizontal: 10,
-              color: Colors[theme].text_secondary,
-              fontSize: 14,
-              fontWeight: "500",
-            }}
-          >
-            OR
-          </Text>
-          <View
-            style={{
-              flex: 1,
-              height: theme === "dark" ? 4 : 2,
-              backgroundColor: Colors[theme].border,
-            }}
-          />
-        </View>
-
-        {/* Text inputs */}
-
-        <View>
-          <CustomInput
-            title="Email/Username:"
-            icon={require("@/assets/icons/user.png")}
-            value={email}
-            setValue={setEmail}
-            placeHolder="Email or Username"
-          />
-          <CustomInput
-            title="Password:"
-            icon={require("@/assets/icons/lock.png")}
-            value={password}
-            setValue={setPassword}
-            placeHolder="Password"
-            password={true}
-          />
-
+          {/* Continue with google */}
           <Pressable
-            onPress={handleSubmit}
-            disabled={btnLoading}
             style={{
-              backgroundColor: Colors[theme].primary,
+              backgroundColor: "#fff",
+              borderWidth: theme === "dark" ? 3 : 2,
+              borderColor: Colors[theme].border,
+              paddingHorizontal: 20,
               paddingVertical: 7,
-              marginVertical: 15,
-              width: "75%",
-              alignSelf: "center",
               borderRadius: 7,
-              opacity: btnLoading ? 0.5 : 1,
+              alignSelf: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            {btnLoading ? (
-              <ActivityIndicator color={"#fff"} />
-            ) : (
-              <Text
-                style={{
-                  color: "#fff",
-                  textAlign: "center", // This is optional since the Pressable is centering it
-                  fontFamily: "NunitoBold",
-                }}
-              >
-                Signin
-              </Text>
-            )}
+            <Image
+              source={require("@/assets/icons/google.png")}
+              style={{ height: 20, width: 20 }}
+            />
+            <Text
+              style={{
+                color: "#1f2428",
+                fontFamily: "NunitoBold",
+              }}
+            >
+              Continue with google
+            </Text>
           </Pressable>
-
+          {/* ---- OR ---- */}
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "center",
-              gap: 10,
-              marginTop: 10,
+              alignItems: "center",
+              marginVertical: 20,
             }}
           >
+            <View
+              style={{
+                flex: 1,
+                height: theme === "dark" ? 4 : 2,
+                backgroundColor: Colors[theme].border,
+              }}
+            />
             <Text
               style={{
+                marginHorizontal: 10,
                 color: Colors[theme].text_secondary,
-                fontFamily: "NunitoRegular",
+                fontSize: 14,
+                fontWeight: "500",
               }}
             >
-              Don't have an account?
+              OR
             </Text>
-            <Link
-              href={"/(auth)/signup"}
+            <View
               style={{
-                color: Colors[theme].accent1,
-                fontFamily: "NunitoRegular",
+                flex: 1,
+                height: theme === "dark" ? 4 : 2,
+                backgroundColor: Colors[theme].border,
+              }}
+            />
+          </View>
+
+          {/* Text inputs */}
+
+          <View>
+            <CustomInput
+              title="Email/Username:"
+              icon={require("@/assets/icons/user.png")}
+              value={email}
+              setValue={setEmail}
+              placeHolder="Email or Username"
+            />
+            <CustomInput
+              title="Password:"
+              icon={require("@/assets/icons/lock.png")}
+              value={password}
+              setValue={setPassword}
+              placeHolder="Password"
+              password={true}
+            />
+
+            <Pressable
+              onPress={handleSubmit}
+              disabled={btnLoading}
+              style={{
+                backgroundColor: Colors[theme].primary,
+                paddingVertical: 7,
+                marginVertical: 15,
+                width: "75%",
+                alignSelf: "center",
+                borderRadius: 7,
+                opacity: btnLoading ? 0.5 : 1,
               }}
             >
-              Signup
-            </Link>
+              {btnLoading ? (
+                <ActivityIndicator color={"#fff"} />
+              ) : (
+                <Text
+                  style={{
+                    color: "#fff",
+                    textAlign: "center", // This is optional since the Pressable is centering it
+                    fontFamily: "NunitoBold",
+                  }}
+                >
+                  Signin
+                </Text>
+              )}
+            </Pressable>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 10,
+                marginTop: 10,
+              }}
+            >
+              <Text
+                style={{
+                  color: Colors[theme].text_secondary,
+                  fontFamily: "NunitoRegular",
+                }}
+              >
+                Don't have an account?
+              </Text>
+              <Link
+                href={"/(auth)/signup"}
+                style={{
+                  color: Colors[theme].accent1,
+                  fontFamily: "NunitoRegular",
+                }}
+              >
+                Signup
+              </Link>
+            </View>
           </View>
         </View>
-      </View>
+      </KeyboardStickyView>
     </View>
   );
 };

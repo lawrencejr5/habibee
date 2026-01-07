@@ -11,6 +11,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
 
+import { KeyboardProvider } from "react-native-keyboard-controller";
+
 import { api } from "@/convex/_generated/api";
 
 // 1. Remove ConvexProvider, keep only ConvexAuthProvider and useConvexAuth
@@ -57,19 +59,21 @@ export default function RootLayout() {
 
   return (
     <ConvexAuthProvider client={convex} storage={AsyncStorage}>
-      <DeviceThemeProvider>
-        <HapticsProvider>
-          <CustomAlertProvider>
-            <LoadingProvider>
-              <UserProvider>
-                <MotivationMsgProvider>
-                  <NavigationWithTheme loaded={loaded} />
-                </MotivationMsgProvider>
-              </UserProvider>
-            </LoadingProvider>
-          </CustomAlertProvider>
-        </HapticsProvider>
-      </DeviceThemeProvider>
+      <KeyboardProvider>
+        <DeviceThemeProvider>
+          <HapticsProvider>
+            <CustomAlertProvider>
+              <LoadingProvider>
+                <UserProvider>
+                  <MotivationMsgProvider>
+                    <NavigationWithTheme loaded={loaded} />
+                  </MotivationMsgProvider>
+                </UserProvider>
+              </LoadingProvider>
+            </CustomAlertProvider>
+          </HapticsProvider>
+        </DeviceThemeProvider>
+      </KeyboardProvider>
     </ConvexAuthProvider>
   );
 }

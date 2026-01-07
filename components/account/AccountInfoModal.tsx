@@ -37,7 +37,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const { showCustomAlert } = useCustomAlert();
 
   const { signedIn } = useUser();
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("en-CA");
 
   const { signOut } = useAuthActions();
   const [signingOut, setSigninOut] = useState<boolean>(false);
