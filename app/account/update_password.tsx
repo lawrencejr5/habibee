@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import React, { useState } from "react";
 
 import * as Haptics from "expo-haptics";
@@ -11,6 +18,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import CustomInput from "@/components/account/CustomInput";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { ScrollView } from "react-native-gesture-handler";
 
 const UpdatePassword = () => {
   const insets = useSafeAreaInsets();
@@ -37,43 +45,52 @@ const UpdatePassword = () => {
       >
         <FontAwesome6 name="arrow-left" color={Colors[theme].text} size={24} />
       </Pressable>
-      <ThemedText
-        style={{ fontFamily: "NunitoBold", fontSize: 20, marginTop: 10 }}
+
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        Update Password
-      </ThemedText>
-      <Text
-        style={{
-          fontFamily: "NunitoLight",
-          color: Colors[theme].text_secondary,
-          fontSize: 14,
-        }}
-      >
-        Change your password and save changes
-      </Text>
-      <View style={{ marginTop: 5, flex: 1 }}>
-        <CustomInput
-          label="Old Password"
-          placeholder="Type your old password"
-          value={oldPass}
-          setValue={setOldPass}
-          password={true}
-        />
-        <CustomInput
-          label="New Password"
-          placeholder="Type new password"
-          value={newPass}
-          setValue={setNewPass}
-          password={true}
-        />
-        <CustomInput
-          label="Confirm Password"
-          placeholder="Confirm your new password"
-          value={confirmPass}
-          setValue={setConfirmPass}
-          password={true}
-        />
-      </View>
+        <ScrollView>
+          <ThemedText
+            style={{ fontFamily: "NunitoBold", fontSize: 20, marginTop: 10 }}
+          >
+            Update Password
+          </ThemedText>
+          <Text
+            style={{
+              fontFamily: "NunitoLight",
+              color: Colors[theme].text_secondary,
+              fontSize: 14,
+            }}
+          >
+            Change your password and save changes
+          </Text>
+          <View style={{ marginTop: 5, flex: 1 }}>
+            <CustomInput
+              label="Old Password"
+              placeholder="Type your old password"
+              value={oldPass}
+              setValue={setOldPass}
+              password={true}
+            />
+            <CustomInput
+              label="New Password"
+              placeholder="Type new password"
+              value={newPass}
+              setValue={setNewPass}
+              password={true}
+            />
+            <CustomInput
+              label="Confirm Password"
+              placeholder="Confirm your new password"
+              value={confirmPass}
+              setValue={setConfirmPass}
+              password={true}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Pressable
         style={{
           width: "100%",

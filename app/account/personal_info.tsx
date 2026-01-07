@@ -1,4 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import React, { useState } from "react";
 
 import * as Haptics from "expo-haptics";
@@ -28,50 +36,62 @@ const PersonalInfo = () => {
         paddingHorizontal: 20,
       }}
     >
-      <Pressable
-        style={{ padding: 10, paddingLeft: 0 }}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.back();
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <FontAwesome6 name="arrow-left" color={Colors[theme].text} size={24} />
-      </Pressable>
-      <ThemedText
-        style={{ fontFamily: "NunitoBold", fontSize: 20, marginTop: 10 }}
-      >
-        Personal Details
-      </ThemedText>
-      <Text
-        style={{
-          fontFamily: "NunitoLight",
-          color: Colors[theme].text_secondary,
-          fontSize: 14,
-        }}
-      >
-        Edit your personal details and save changes
-      </Text>
-      <View style={{ marginTop: 5, flex: 1 }}>
-        <CustomInput
-          label="Full name"
-          placeholder="Type new name"
-          value={fullname}
-          setValue={setFullname}
-        />
-        <CustomInput
-          label="Username"
-          placeholder="Type new username"
-          value={username}
-          setValue={setUsername}
-        />
-        <CustomInput
-          label="Email"
-          placeholder="Type new email"
-          value={email}
-          setValue={setEmail}
-          disabled={true}
-        />
-      </View>
+        <Pressable
+          style={{ padding: 10, paddingLeft: 0 }}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.back();
+          }}
+        >
+          <FontAwesome6
+            name="arrow-left"
+            color={Colors[theme].text}
+            size={24}
+          />
+        </Pressable>
+        <ScrollView>
+          <ThemedText
+            style={{ fontFamily: "NunitoBold", fontSize: 20, marginTop: 10 }}
+          >
+            Personal Details
+          </ThemedText>
+          <Text
+            style={{
+              fontFamily: "NunitoLight",
+              color: Colors[theme].text_secondary,
+              fontSize: 14,
+            }}
+          >
+            Edit your personal details and save changes
+          </Text>
+          <View style={{ marginTop: 5, flex: 1 }}>
+            <CustomInput
+              label="Full name"
+              placeholder="Type new name"
+              value={fullname}
+              setValue={setFullname}
+            />
+            <CustomInput
+              label="Username"
+              placeholder="Type new username"
+              value={username}
+              setValue={setUsername}
+            />
+            <CustomInput
+              label="Email"
+              placeholder="Type new email"
+              value={email}
+              setValue={setEmail}
+              disabled={true}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Pressable
         style={{
           width: "100%",
