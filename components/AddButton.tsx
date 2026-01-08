@@ -46,7 +46,7 @@ const AddButton: React.FC<AddButtonProps> = ({ onPress, onAiPress }) => {
           <Pressable
             onPress={onAiPress}
             style={{
-              backgroundColor: Colors[theme ?? "light"].primary,
+              backgroundColor: Colors[theme].primary,
               width: 45,
               height: 45,
               borderRadius: 35,
@@ -99,14 +99,6 @@ const AddButton: React.FC<AddButtonProps> = ({ onPress, onAiPress }) => {
           borderRadius: 35,
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 4,
-          },
-          shadowOpacity: 0.3,
-          shadowRadius: 4.65,
-          elevation: 8,
         }}
       >
         <Image

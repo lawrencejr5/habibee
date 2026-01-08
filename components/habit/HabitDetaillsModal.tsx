@@ -16,16 +16,16 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "../useColorScheme";
 
 import { habitIcons } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
 import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
 import { useHapitcs } from "@/context/HapticsContext";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
+import { useTheme } from "@/context/ThemeContext";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -38,9 +38,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   setVisible,
   habit_id,
 }) => {
-  const theme = useColorScheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+  const { theme } = useTheme();
 
   const today = new Date().toLocaleDateString("en-CA");
 

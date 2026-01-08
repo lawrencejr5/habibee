@@ -522,12 +522,13 @@ const HabitCard: React.FC<{
           alignItems: "center",
           gap: 15,
           marginLeft: 5,
+          flex: 1,
         }}
       >
         <View
           style={{
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             borderRadius: 10,
             backgroundColor: themeColor + "20",
             justifyContent: "center",
@@ -549,7 +550,7 @@ const HabitCard: React.FC<{
         <View>
           <ThemedText
             numberOfLines={1}
-            style={{ fontFamily: "NunitoBold", fontSize: 16, width: 200 }}
+            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
           >
             {title}
           </ThemedText>
@@ -557,7 +558,7 @@ const HabitCard: React.FC<{
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 10,
+              gap: 15,
               marginTop: 10,
             }}
           >
@@ -616,6 +617,7 @@ const HabitCard: React.FC<{
           </View>
         </View>
       </View>
+
       <Pressable
         onPress={() => {
           haptics.impact();
@@ -626,7 +628,7 @@ const HabitCard: React.FC<{
           borderColor: Colors[theme].border,
           width: 50,
           flexDirection: "row",
-          justifyContent: "flex-end",
+          justifyContent: "center",
           alignItems: "center",
           height: "100%",
           paddingHorizontal: 10,
