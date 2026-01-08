@@ -5,7 +5,8 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Modal, // <--- Added Modal import
+  Modal,
+  Pressable, // <--- Added Modal import
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
@@ -39,7 +40,7 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         hideAlert();
-      }, 2000);
+      }, 10_000);
     }
 
     return () => {
@@ -93,39 +94,46 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
     <Modal
       transparent={true}
       visible={visible}
+      pointerEvents="box-none"
       animationType="none" // We use your custom Animated.spring instead
       statusBarTranslucent={true} // Allows it to cover status bar area
       onRequestClose={hideAlert} // Android back button support
     >
-      <View style={styles.modalOverlay} pointerEvents="box-none">
-        <Animated.View
-          style={[
-            styles.container,
-            {
-              backgroundColor: Colors[deviceTheme].surface,
-              borderColor: getBackgroundColor(),
-              transform: [{ translateY }],
-            },
-          ]}
-        >
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={hideAlert}
-            style={styles.contentContainer}
+      <Pressable onPress={hideAlert} style={{ flex: 1 }}>
+        <View style={styles.modalOverlay} pointerEvents="box-none">
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                backgroundColor: Colors[deviceTheme].surface,
+                borderColor: getBackgroundColor(),
+                transform: [{ translateY }],
+              },
+            ]}
           >
-            <Image
-              source={getIcon()}
-              style={{ width: 16, height: 16, tintColor: getBackgroundColor() }}
-            />
-            <Text
-              style={[styles.messageText, { color: getBackgroundColor() }]}
-              numberOfLines={2}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={hideAlert}
+              style={styles.contentContainer}
             >
-              {msg}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
+              <Image
+                source={getIcon()}
+                style={{
+                  width: 16,
+                  height: 16,
+                  tintColor: getBackgroundColor(),
+                }}
+              />
+              <Text
+                style={[styles.messageText, { color: getBackgroundColor() }]}
+                numberOfLines={2}
+              >
+                {msg}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Pressable>
     </Modal>
   );
 };

@@ -76,10 +76,6 @@ const Home = () => {
       const typingInterval = setInterval(() => {
         if (currentIndex <= currentMessage.length) {
           setDisplayedText(currentMessage.slice(0, currentIndex));
-          // Add haptic feedback for each character typed only when on index page
-          // if (currentIndex > 0 && isOnIndexPage) {
-          //   haptics.impact("soft");
-          // }
           currentIndex++;
         } else {
           clearInterval(typingInterval);
@@ -109,7 +105,7 @@ const Home = () => {
     detailsModalVisible ||
     aiChatModalVisible;
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
