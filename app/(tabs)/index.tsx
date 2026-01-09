@@ -139,7 +139,7 @@ const Home = () => {
               height: 40,
               borderRadius: 20,
               borderColor: Colors[theme].text,
-              borderWidth: 1,
+              borderWidth: 2,
             }}
           />
           <View>

@@ -81,7 +81,7 @@ export default function TabLayout() {
                 borderColor: focused
                   ? Colors[theme].text
                   : Colors[theme].text_secondary,
-                borderWidth: focused ? 1 : 1,
+                borderWidth: focused ? 2 : 1,
               }}
               resizeMode="contain"
             />

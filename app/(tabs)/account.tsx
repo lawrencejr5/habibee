@@ -72,7 +72,7 @@ export default function Account() {
                 width: 70,
                 borderRadius: 50,
                 borderColor: Colors[theme].text,
-                borderWidth: 1,
+                borderWidth: 2,
               }}
             />
             <View>
