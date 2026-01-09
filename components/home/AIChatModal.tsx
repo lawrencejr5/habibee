@@ -257,12 +257,12 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
           <KeyboardStickyView
             style={{
               position: "absolute",
-              bottom: insets.bottom,
+              bottom: insets.bottom - 20,
               width: "100%",
               backgroundColor: Colors[theme].background,
               paddingVertical: 10,
             }}
-            offset={{ opened: 80, closed: 0 }} // Adjusted for bottom sheet
+            offset={{ opened: 60, closed: 0 }} // Adjusted for bottom sheet
           >
             <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
               <View
