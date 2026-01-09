@@ -40,7 +40,7 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         hideAlert();
-      }, 10_000);
+      }, 2000);
     }
 
     return () => {

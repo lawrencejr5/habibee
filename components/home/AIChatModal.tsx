@@ -1,32 +1,76 @@
-import React, { Dispatch, FC, SetStateAction, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, Text, View, TextInput } from "react-native";
-import BottomSheet, {
-  BottomSheetTextInput,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import React, {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Pressable, View, TextInput, Dimensions, Keyboard } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { Image } from "react-native";
 
 import Colors from "@/constants/Colors";
-import { Feather } from "@expo/vector-icons";
 import { Text as ThemedText } from "../Themed";
+
 import { useHapitcs } from "@/context/HapticsContext";
-import { Image } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { useUser } from "@/context/UserContext";
+import { useCustomAlert } from "@/context/AlertContext";
 
 interface AIChatModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }
 
+const { width } = Dimensions.get("window");
+
 const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+  const { signedIn } = useUser();
+  const { showCustomAlert } = useCustomAlert();
+
+  const [input, setInput] = useState<string>("");
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
+
+  // Use the Habibee orange or your primary theme color
+  const accentColor = Colors[theme].primary;
+
+  // Suggested actions data
+  const suggestions = [
+    {
+      id: 1,
+      icon: "lightning-bolt-outline", // MaterialCommunityIcons
+      label: "Generate new habits",
+      prompt: "Can you help me generate some healthy habits?",
+    },
+    {
+      id: 2,
+      icon: "chart-timeline-variant", // MaterialCommunityIcons
+      label: "Analyze my progress",
+      prompt: "Analyze my current habit streaks and progress.",
+    },
+    {
+      id: 3,
+      icon: "fire", // MaterialCommunityIcons
+      label: "Get motivation",
+      prompt: "I'm feeling unmotivated, give me a pep talk.",
+    },
+    {
+      id: 4,
+      icon: "clock-outline", // MaterialCommunityIcons
+      label: "Optimize routine",
+      prompt: "How can I optimize my daily routine?",
+    },
+  ];
 
   if (!visible) return null;
 
@@ -35,6 +79,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
+      keyboardBehavior="interactive"
       enableDynamicSizing={false}
       enablePanDownToClose={true}
       onClose={() => setVisible(false)}
@@ -42,19 +87,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         backgroundColor: Colors[theme].background,
       }}
       handleIndicatorStyle={{
-        width: 0,
-        height: 0,
-        backgroundColor: "grey",
+        width: 40,
+        height: 4,
+        backgroundColor: Colors[theme].border,
         marginTop: 10,
-        borderRadius: 30,
+        opacity: 0.5,
       }}
     >
-      <BottomSheetView
-        style={{
-          flex: 1,
-          minHeight: "100%",
-        }}
-      >
+      <BottomSheetView style={{ flex: 1, height: "100%" }}>
         <View
           style={{
             flex: 1,
@@ -62,11 +102,12 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             backgroundColor: Colors[theme].background,
           }}
         >
+          {/* Main Content */}
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-              paddingBottom: 100,
               flexGrow: 1,
+              paddingBottom: 100, // Space for sticky input
             }}
           >
             {/* Header */}
@@ -79,29 +120,31 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 justifyContent: "space-between",
               }}
             >
-              <Image
-                source={require("../../assets/images/ai-icon.png")}
-                style={{
-                  width: 35,
-                  height: 35,
-                  borderRadius: 20,
-                  borderColor: Colors[theme].text_secondary,
-                  borderWidth: 2,
-                }}
-              />
-
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 20,
-                }}
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
               >
-                Habibee Ai
-              </ThemedText>
+                <Image
+                  source={require("../../assets/images/ai-icon.png")}
+                  style={{
+                    width: 35,
+                    height: 35,
+                    borderRadius: 12, // Slightly squarer for modern look
+                  }}
+                />
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 18,
+                  }}
+                >
+                  Habibee AI
+                </ThemedText>
+              </View>
 
               <Pressable
                 style={{
-                  padding: 8,
+                  paddingHorizontal: 8,
+                  paddingBottom: 8,
                 }}
                 onPress={() => {
                   haptics.impact();
@@ -116,39 +159,122 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               </Pressable>
             </View>
 
-            {/* Chat Area */}
+            {/* Greeting & Suggestions Area */}
             <View
               style={{
-                marginHorizontal: 20,
-                marginTop: 20,
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 20,
+                marginTop: -40,
               }}
-            ></View>
+            >
+              {/* Greeting */}
+              <View style={{ marginBottom: 40, alignItems: "flex-start" }}>
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 28,
+                    textAlign: "left",
+                    marginBottom: 5,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Hey, {signedIn?.username}! 👋
+                </ThemedText>
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoRegular",
+                    fontSize: 16,
+                    color: Colors[theme].text_secondary,
+                    textAlign: "left",
+                  }}
+                >
+                  How can I help you stay on track today?
+                </ThemedText>
+              </View>
+
+              {/* Suggestions Grid */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 15,
+                  justifyContent: "center",
+                }}
+              >
+                {suggestions.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => {
+                      haptics.impact();
+                      setInput(item.prompt);
+                    }}
+                    style={({ pressed }) => ({
+                      width: (width - 60) / 2, // 2 columns with padding calc
+                      aspectRatio: 1.1, // Slightly taller than square
+                      backgroundColor: Colors[theme].surface,
+                      borderRadius: 20,
+                      padding: 15,
+                      justifyContent: "space-between",
+                      borderWidth: 1,
+                      borderColor: pressed ? accentColor : Colors[theme].border,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                    })}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        backgroundColor: accentColor + "15", // 15% opacity orange
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <MaterialCommunityIcons
+                        name={item.icon as any}
+                        size={22}
+                        color={accentColor}
+                      />
+                    </View>
+                    <ThemedText
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 15,
+                        lineHeight: 20,
+                      }}
+                    >
+                      {item.label}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
           </ScrollView>
 
           {/* Input Area - Fixed at bottom */}
           <KeyboardStickyView
             style={{
-              // backgroundColor: Colors[theme].background,
-              position: "fixed",
-              zIndex: 10,
+              position: "absolute",
               bottom: insets.bottom,
+              width: "100%",
+              backgroundColor: Colors[theme].background,
+              paddingVertical: 10,
             }}
-            offset={{ opened: 50, closed: insets.bottom - 30 }}
+            offset={{ opened: 80, closed: 0 }} // Adjusted for bottom sheet
           >
-            <View
-              style={{
-                paddingHorizontal: 20,
-              }}
-            >
+            <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
               <View
                 style={{
                   width: "100%",
+                  minHeight: 50,
                   padding: 5,
-                  paddingHorizontal: 10,
+                  paddingHorizontal: 15,
                   backgroundColor: Colors[theme].surface,
                   borderColor: Colors[theme].border,
-                  borderWidth: 3,
-                  borderRadius: 50,
+                  borderWidth: 1.5,
+                  borderRadius: 25,
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -156,20 +282,42 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               >
                 <TextInput
                   style={{
+                    flex: 1,
                     backgroundColor: "transparent",
                     fontFamily: "NunitoBold",
+                    color: Colors[theme].text,
+                    paddingVertical: 10,
                   }}
-                  placeholder="Describe what you want..."
+                  placeholder="Ask Habibee anything..."
+                  placeholderTextColor={Colors[theme].text_secondary}
+                  value={input}
+                  onChangeText={setInput}
                 />
 
-                <Image
-                  source={require("../../assets/icons/send.png")}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    tintColor: Colors[theme].primary,
+                <Pressable
+                  onPress={() => {
+                    haptics.impact();
+                    showCustomAlert("Coming soon!", "warning");
                   }}
-                />
+                  style={{
+                    backgroundColor: accentColor + "cc",
+                    width: 35,
+                    height: 35,
+                    borderRadius: 18,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginLeft: 10,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/icons/send.png")}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      tintColor: "white",
+                    }}
+                  />
+                </Pressable>
               </View>
             </View>
           </KeyboardStickyView>
@@ -180,5 +328,3 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 };
 
 export default AIChatModal;
-
-const styles = StyleSheet.create({});

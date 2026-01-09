@@ -7,7 +7,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import * as Haptics from "expo-haptics";
 
@@ -19,14 +19,24 @@ import { useColorScheme } from "@/components/useColorScheme";
 import CustomInput from "@/components/account/CustomInput";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useUser } from "@/context/UserContext";
 
 const PersonalInfo = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+  const { signedIn } = useUser();
 
-  const [fullname, setFullname] = useState<string>("Oputa Lawrence");
-  const [username, setUsername] = useState<string>("lawrencejr");
-  const [email, setEmail] = useState<string>("oputalawrence@gmail.com");
+  const [fullname, setFullname] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+
+  useEffect(() => {
+    if (signedIn) {
+      setFullname(signedIn.fullname || "");
+      setUsername(signedIn.username || "");
+      setEmail(signedIn.email || "");
+    }
+  }, [signedIn]);
 
   return (
     <ThemedView
