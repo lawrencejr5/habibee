@@ -134,7 +134,13 @@ const Home = () => {
         <View style={styles.user_container}>
           <Image
             source={require("../../assets/images/avatar.png")}
-            style={{ width: 40, height: 40, borderRadius: 20 }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              borderColor: Colors[theme].text,
+              borderWidth: 1,
+            }}
           />
           <View>
             <ThemedText style={styles.greeting_user}>

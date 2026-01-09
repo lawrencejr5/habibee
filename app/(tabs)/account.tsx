@@ -67,7 +67,13 @@ export default function Account() {
           >
             <Image
               source={require("@/assets/images/avatar.png")}
-              style={{ height: 70, width: 70, borderRadius: 50 }}
+              style={{
+                height: 70,
+                width: 70,
+                borderRadius: 50,
+                borderColor: Colors[theme].text,
+                borderWidth: 1,
+              }}
             />
             <View>
               <Text

@@ -73,13 +73,15 @@ export default function TabLayout() {
             <Image
               source={require("../../assets/images/avatar.png")}
               style={{
-                height: 40,
-                width: 40,
+                height: 35,
+                width: 35,
                 borderRadius: 25,
                 alignSelf: "center",
                 marginBottom: -15,
-                borderColor: Colors[theme].border,
-                borderWidth: focused ? 3 : 1,
+                borderColor: focused
+                  ? Colors[theme].text
+                  : Colors[theme].text_secondary,
+                borderWidth: focused ? 1 : 1,
               }}
               resizeMode="contain"
             />
