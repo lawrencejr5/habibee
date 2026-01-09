@@ -22,15 +22,19 @@ import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
 import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
 import { useHapitcs } from "@/context/HapticsContext";
+
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
 import { HabitType } from "@/constants/Types";
 import { useTheme } from "@/context/ThemeContext";
+import { ActivityIndicator } from "react-native";
 
 interface HabitDetailsModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  habit_id: string;
+  habit_id: Id<"habits">;
 }
 
 const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
@@ -42,38 +46,64 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const haptics = useHapitcs();
   const { theme } = useTheme();
 
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const today = new Date().toLocaleDateString("en-CA");
 
   const habitsData = useQuery(api.habits.get_user_habits);
+  const habitEnteries = useQuery(api.habits.get_habit_enteries, { habit_id });
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
 
   // Generate heat map data (365 days) — memoized so it only runs when `habit_id` changes
-  const heatMapData = useMemo(() => {
-    const data: { date: string; completed: number }[] = [];
-    const today = new Date();
-    for (let i = 364; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      // Random completion for demo (0 = not done, 1 = done)
-      const completed = Math.random() > 0.3 ? 1 : 0;
-      data.push({
-        date: date.toISOString().split("T")[0],
-        completed,
-      });
-    }
-    return data;
-  }, [habit_id]);
+  const weeks = useMemo(() => {
+    if (!habitEnteries) return [];
 
-  // Group heat map data by weeks (7 days each) — memoized from heatMapData
-  const weeks: any[][] = useMemo(() => {
-    const out: any[][] = [];
-    for (let i = 0; i < heatMapData.length; i += 7) {
-      out.push(heatMapData.slice(i, i + 7));
+    const grid: { date: string; completed: boolean }[][] = [];
+    let currentWeek: { date: string; completed: boolean }[] = [];
+    const totalDays = 364; // 52 weeks * 7 days
+
+    // 1. Create the fast lookup set
+    const completedSet = new Set(
+      habitEnteries.filter((e) => e.status === "completed").map((e) => e.date)
+    );
+
+    const today = new Date();
+
+    // 2. Find the "End Date" (This coming Saturday)
+    // today.getDay(): 0 = Sun, 1 = Mon ... 3 = Wed ... 6 = Sat
+    // If today is Wed (3), we add 3 days to reach Sat (6).
+    const dayOfWeek = today.getDay();
+    const daysUntilSaturday = 6 - dayOfWeek;
+
+    const gridEndDate = new Date(today);
+    gridEndDate.setDate(today.getDate() + daysUntilSaturday);
+
+    // 3. Find the "Start Date" (52 weeks ago Sunday)
+    const startDate = new Date(gridEndDate);
+    startDate.setDate(gridEndDate.getDate() - totalDays + 1);
+
+    // 4. Loop from Start (Sunday) to End (Saturday)
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(startDate);
+      d.setDate(startDate.getDate() + i);
+
+      const dateStr = d.toLocaleDateString("en-CA");
+
+      // Check the set. Future dates naturally won't be in the set, so they return false.
+      const isCompleted = completedSet.has(dateStr);
+
+      currentWeek.push({ date: dateStr, completed: isCompleted });
+
+      if (currentWeek.length === 7) {
+        grid.push(currentWeek);
+        currentWeek = [];
+      }
     }
-    return out;
-  }, [heatMapData]);
+
+    return grid;
+  }, [habitEnteries]);
 
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
@@ -385,28 +415,56 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   Activity
                 </ThemedText>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View>
-                    <View style={{ flexDirection: "row", gap: 3 }}>
-                      {weeks.map((week, weekIndex) => (
-                        <View key={weekIndex} style={{ gap: 3 }}>
-                          {week.map((day, dayIndex) => (
-                            <View
-                              key={dayIndex}
-                              style={{
-                                width: 12,
-                                height: 12,
-                                borderRadius: 2,
-                                backgroundColor: day.completed
-                                  ? habit.theme + "cc"
-                                  : Colors[theme].border,
-                              }}
-                            />
-                          ))}
-                        </View>
-                      ))}
-                    </View>
-                    <View
+                {weeks.length === 0 ? (
+                  <View
+                    style={{
+                      backgroundColor: Colors[theme].surface,
+                      height: 100,
+                      width: "100%", // This now works because it's inside a normal View, not a ScrollView
+                      borderRadius: 10,
+                      justifyContent: "center", // Optional: centers text/icon if you add one
+                      alignItems: "center",
+                      marginBottom: 15,
+                    }}
+                  >
+                    <ActivityIndicator color={Colors[theme].text_secondary} />
+                  </View>
+                ) : (
+                  <ScrollView
+                    horizontal
+                    ref={scrollViewRef}
+                    showsHorizontalScrollIndicator={false}
+                    onContentSizeChange={() =>
+                      scrollViewRef.current?.scrollToEnd({ animated: false })
+                    }
+                  >
+                    <View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          gap: 3,
+                          marginBottom: 15,
+                        }}
+                      >
+                        {weeks.map((week, weekIndex) => (
+                          <View key={weekIndex} style={{ gap: 3 }}>
+                            {week.map((day, dayIndex) => (
+                              <View
+                                key={dayIndex}
+                                style={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: 2,
+                                  backgroundColor: day.completed
+                                    ? habit.theme + "cc"
+                                    : Colors[theme].border,
+                                }}
+                              />
+                            ))}
+                          </View>
+                        ))}
+                      </View>
+                      {/* <View
                       style={{
                         flexDirection: "row",
                         justifyContent: "space-between",
@@ -431,9 +489,10 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       >
                         Dec
                       </Text>
+                    </View> */}
                     </View>
-                  </View>
-                </ScrollView>
+                  </ScrollView>
+                )}
               </View>
             </ScrollView>
 

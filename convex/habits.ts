@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-import { getDaysDifference, getFirstDayOfTheWeek } from "./utils";
+import { getDaysDifference } from "./utils";
 
 // Available habit icons that can be suggested by AI
 const AVAILABLE_ICONS = [
@@ -285,6 +285,21 @@ export const check_streak_and_reset = mutation({
 
     const diff = getDaysDifference(user.last_streak_date, args.today);
     if (diff > 1) await ctx.db.patch(user_id, { streak: 0 });
+  },
+});
+
+export const get_habit_enteries = query({
+  args: { habit_id: v.id("habits") },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("User not authenticated");
+
+    const enteries = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_habit_date", (q) => q.eq("habit", args.habit_id))
+      .collect();
+
+    return enteries;
   },
 });
 

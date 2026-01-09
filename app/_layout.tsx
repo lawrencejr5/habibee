@@ -88,7 +88,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const performStreakCheck = async () => {
     // setAppLoading(true);
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toLocaleDateString("en-CA");
       await checkStreak({ today });
     } catch (err) {
       console.log(err);

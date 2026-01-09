@@ -25,6 +25,8 @@ import { useUser } from "@/context/UserContext";
 
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
 import { HabitType } from "@/constants/Types";
 import AIChatModal from "@/components/home/AIChatModal";
 
@@ -56,7 +58,9 @@ const Home = () => {
   } | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] =
     useState<boolean>(false);
-  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
+  const [selectedHabitId, setSelectedHabitId] = useState<Id<"habits"> | null>(
+    null
+  );
 
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -423,11 +427,13 @@ const Home = () => {
           habitData.find((habit) => habit._id === selectedHabitId) as HabitType
         }
       />
-      <HabitDetaillsModal
-        visible={detailsModalVisible}
-        setVisible={setDetailsModalVisible}
-        habit_id={selectedHabitId!}
-      />
+      {selectedHabitId && (
+        <HabitDetaillsModal
+          visible={detailsModalVisible}
+          setVisible={setDetailsModalVisible}
+          habit_id={selectedHabitId!}
+        />
+      )}
     </View>
   );
 };
