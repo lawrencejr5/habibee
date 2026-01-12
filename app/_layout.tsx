@@ -9,13 +9,12 @@ import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
-import { AppState, AppStateStatus } from "react-native";
+import { AppState } from "react-native";
 
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { api } from "@/convex/_generated/api";
 
-// 1. Remove ConvexProvider, keep only ConvexAuthProvider and useConvexAuth
 import { ConvexReactClient, useConvexAuth, useMutation } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
@@ -98,13 +97,17 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
     // }
   };
 
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { signedIn } = useUser();
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
   useEffect(() => {
     performStreakCheck();
 
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
+        nextAppState === "active" && isAuthenticated
       ) {
         // App has come to the foreground!
         console.log("App active - Checking for dead streaks...");
@@ -115,12 +118,8 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [isAuthenticated]);
 
-  // 4. Move useConvexAuth HERE (Child of Provider)
-  const { isAuthenticated, isLoading } = useConvexAuth();
-  const { signedIn } = useUser();
-  const [showSplash, setShowSplash] = useState<boolean>(true);
 
   // Handle Splash Screen hiding
   useEffect(() => {

@@ -264,10 +264,7 @@ export const check_streak_and_reset = mutation({
   args: { today: v.string() },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
-    if (!user_id) {
-      console.log("User is not authenticated");
-      return
-    };
+    if (!user_id) throw new Error("User not authenticated");
 
     const habits = await ctx.db
       .query("habits")

@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "react-native";
 
@@ -14,6 +13,7 @@ import { Link } from "expo-router";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useMutation } from "convex/react";
 
 const SigninPage = () => {
   const { theme } = useTheme();
@@ -41,6 +41,7 @@ const SigninPage = () => {
       formData.append("flow", "signIn");
 
       await signIn("password", formData);
+
       showCustomAlert("Signed in successfully", "success");
     } catch (err) {
       showCustomAlert("An error occured", "danger");
