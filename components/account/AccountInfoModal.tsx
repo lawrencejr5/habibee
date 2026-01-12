@@ -14,7 +14,6 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "../useColorScheme";
 import { AntDesign, Feather } from "@expo/vector-icons";
 
 import { router } from "expo-router";
@@ -24,6 +23,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { ActivityIndicator } from "react-native";
 import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface AccountModalProps {
   visible: boolean;
@@ -31,7 +31,7 @@ interface AccountModalProps {
 }
 
 const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   const { showCustomAlert } = useCustomAlert();
@@ -226,7 +226,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             >
               Edit Details
             </Text>
-            <Feather name="edit" size={16} color={Colors[theme].text} />
+            <Feather name="edit" size={16} color={"#eee"} />
           </Pressable>
           <Pressable
             disabled={signingOut}

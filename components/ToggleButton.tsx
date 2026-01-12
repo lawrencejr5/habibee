@@ -3,6 +3,7 @@ import React from "react";
 import { Animated, Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "./useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface ToggleButtonProps {
   isOn: boolean;
@@ -10,7 +11,7 @@ interface ToggleButtonProps {
 }
 
 const ToggleButton: React.FC<ToggleButtonProps> = ({ isOn, onToggle }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   const animatedValue = React.useRef(new Animated.Value(isOn ? 1 : 0)).current;

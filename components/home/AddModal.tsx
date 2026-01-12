@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View as ThemedView } from "../Themed";
 
 import ToggleButton from "@/components/ToggleButton";
-import IconColorPicker from "@/components/home/IconColorPicker";
+import IconColorPicker, { DEFAULT_COLORS } from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
@@ -36,8 +36,14 @@ const AddModal: React.FC<{
   const { showCustomAlert } = useCustomAlert();
 
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
+
+  const getRandomColor = () => {
+    const colors = DEFAULT_COLORS.filter((c) => c !== "#c5c9cc");
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const [selectedIcon, setSelectedIcon] = useState<string>("default");
-  const [selectedColor, setSelectedColor] = useState<string>("#c5c9cc");
+  const [selectedColor, setSelectedColor] = useState<string>(getRandomColor());
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
@@ -58,8 +64,8 @@ const AddModal: React.FC<{
     setHabit("");
     setDuration("");
     setGoal("");
-    setStrict(true);
-    setSelectedColor("#c5c9cc");
+    setStrict(false);
+    setSelectedColor(getRandomColor());
     setSelectedIcon("default");
   };
 

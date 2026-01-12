@@ -4,7 +4,7 @@ import { View, TextInput } from "react-native";
 import { View as ThemedView, Text as ThemedText } from "@/components/Themed";
 
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
+import { useTheme } from "@/context/ThemeContext";
 
 interface CustomInputProps {
   label: string;
@@ -25,7 +25,7 @@ const CustomInput: FC<CustomInputProps> = ({
   password = false,
   big = false,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
 
   return (
     <View style={{ marginTop: 25 }}>

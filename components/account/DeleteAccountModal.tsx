@@ -13,8 +13,8 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface DeleteAccountModalProps {
   visible: boolean;
@@ -25,7 +25,7 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
   visible,
   setVisible,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   const bottomSheetRef = useRef<BottomSheet>(null);

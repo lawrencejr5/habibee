@@ -13,9 +13,10 @@ import { Link } from "expo-router";
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const SigninPage = () => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { showCustomAlert } = useCustomAlert();
 

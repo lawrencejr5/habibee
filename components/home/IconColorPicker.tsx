@@ -9,11 +9,11 @@ import {
   Text,
 } from "react-native";
 
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useHapitcs } from "@/context/HapticsContext";
 import { habitIcons } from "@/data/habits";
+import { useTheme } from "@/context/ThemeContext";
 
 type Props = {
   visible: boolean;
@@ -23,15 +23,16 @@ type Props = {
   onSelect: (icon: any, color: string) => void;
 };
 
-const DEFAULT_COLORS = [
-  "#c5c9cc",
+export const DEFAULT_COLORS = [
   "#9b59b6",
   "#e74c3c",
   "#3498db",
-  "#1abc9c",
+  "#10947aff",
+  "#f1c40f",
+  "#2ecc71",
+  "#e91e63",
   "#e67e22",
 ];
-
 export default function IconColorPicker({
   visible,
   icons,
@@ -39,7 +40,7 @@ export default function IconColorPicker({
   onClose,
   onSelect,
 }: Props) {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   const [color, setColor] = React.useState<string>(
@@ -81,7 +82,7 @@ export default function IconColorPicker({
               borderColor: Colors[theme].border,
             },
           ]}
-          onPress={() => {}}
+          onPress={() => { }}
         >
           <View style={styles.headerRow}>
             <Text
@@ -133,7 +134,7 @@ export default function IconColorPicker({
                 onPress={() => setColor(c)}
                 style={[
                   styles.swatch,
-                  { backgroundColor: c, borderWidth: color === c ? 3 : 0 },
+                  { backgroundColor: c, borderWidth: color === c ? 2 : 0, borderColor: Colors[theme].text },
                 ]}
               />
             ))}
@@ -232,10 +233,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   swatch: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    borderColor: "#fff",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
   actionRow: {
     flexDirection: "row",

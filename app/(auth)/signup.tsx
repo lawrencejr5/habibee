@@ -6,16 +6,16 @@ import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useAuthActions } from "@convex-dev/auth/react";
 
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "react-native";
 
 import CustomInput from "@/components/auth/CustomInput";
 import { Link, router } from "expo-router";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const SignUpPage = () => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const { showCustomAlert } = useCustomAlert();

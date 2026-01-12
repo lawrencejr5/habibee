@@ -4,6 +4,7 @@ import React, { Dispatch, FC, SetStateAction } from "react";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
 import { Image } from "react-native";
+import { useTheme } from "@/context/ThemeContext";
 
 interface CustomInputProps {
   value: string;
@@ -21,7 +22,7 @@ const CustomInput: FC<CustomInputProps> = ({
   placeHolder,
   password = false,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   return (
     <View style={{ marginBottom: 10 }}>
       <View

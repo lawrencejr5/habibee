@@ -15,12 +15,12 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useColorScheme } from "../useColorScheme";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface TaskTimerModalProps {
   visible: boolean;
@@ -33,7 +33,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   setVisible,
   habit,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();

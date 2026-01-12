@@ -118,8 +118,8 @@ export const add_habit = mutation({
       habit,
       icon,
       theme,
-      duration,
-      goal,
+      duration: Math.max(1, duration),
+      goal: Math.max(1, goal),
       strict,
       current_streak: 0,
       highest_streak: 0,
@@ -223,8 +223,9 @@ export const update_habit = mutation({
 
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
-    if (args.duration !== undefined) fields_to_update.duration = args.duration;
-    if (args.goal !== undefined) fields_to_update.goal = args.goal;
+    if (args.duration !== undefined)
+      fields_to_update.duration = Math.max(1, args.duration);
+    if (args.goal !== undefined) fields_to_update.goal = Math.max(1, args.goal);
     if (args.strict !== undefined) fields_to_update.strict = args.strict;
     if (args.icon !== undefined) fields_to_update.icon = args.icon;
     if (args.theme !== undefined) fields_to_update.theme = args.theme;
@@ -263,7 +264,10 @@ export const check_streak_and_reset = mutation({
   args: { today: v.string() },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
-    if (!user_id) throw new Error("User is not authenticated");
+    if (!user_id) {
+      console.log("User is not authenticated");
+      return
+    };
 
     const habits = await ctx.db
       .query("habits")

@@ -1,6 +1,6 @@
-import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Entypo } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -131,7 +131,7 @@ const SearchFriendsModal: React.FC<SearchFriendsModalProps> = ({
   setVisible,
 }) => {
   const insets = useSafeAreaInsets();
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -385,148 +385,148 @@ const PersonCard: React.FC<{
   isAdded,
   onAdd,
 }) => {
-  const theme = useColorScheme();
+    const { theme } = useTheme();
 
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: Colors[theme].surface,
-        padding: 15,
-        borderRadius: 15,
-        marginBottom: 12,
-        borderWidth: 2,
-        borderColor: Colors[theme].border,
-      }}
-    >
+    return (
       <View
-        style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: Colors[theme].surface,
+          padding: 15,
+          borderRadius: 15,
+          marginBottom: 12,
+          borderWidth: 2,
+          borderColor: Colors[theme].border,
+        }}
       >
-        <Image
-          source={avatar}
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-          }}
-        />
-        <View style={{ flex: 1 }}>
-          <View
+        <View
+          style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}
+        >
+          <Image
+            source={avatar}
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
+              width: 50,
+              height: 50,
+              borderRadius: 25,
             }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: "NunitoBold",
-                fontSize: 16,
-                color: Colors[theme].text,
-              }}
-            >
-              {name}
-            </Text>
-            {isFriend && (
-              <View
-                style={{
-                  backgroundColor: Colors[theme].primary + "20",
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  borderRadius: 10,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 10,
-                    color: Colors[theme].primary,
-                  }}
-                >
-                  Friend
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text
-            style={{
-              fontFamily: "NunitoRegular",
-              fontSize: 13,
-              color: Colors[theme].text_secondary,
-              marginTop: 2,
-            }}
-          >
-            {username}
-          </Text>
-          {isFriend && streak !== undefined && (
+          />
+          <View style={{ flex: 1 }}>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 5,
-                marginTop: 5,
+                gap: 8,
               }}
             >
-              <Image
-                source={require("../assets/icons/fire.png")}
-                style={{ width: 12, height: 12 }}
-              />
               <Text
+                numberOfLines={1}
                 style={{
                   fontFamily: "NunitoBold",
-                  fontSize: 12,
-                  color: Colors[theme].accent1,
+                  fontSize: 16,
+                  color: Colors[theme].text,
                 }}
               >
-                {streak} day streak
+                {name}
               </Text>
+              {isFriend && (
+                <View
+                  style={{
+                    backgroundColor: Colors[theme].primary + "20",
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 10,
+                      color: Colors[theme].primary,
+                    }}
+                  >
+                    Friend
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-          {!isFriend && mutualFriends !== undefined && (
             <Text
               style={{
                 fontFamily: "NunitoRegular",
-                fontSize: 12,
+                fontSize: 13,
                 color: Colors[theme].text_secondary,
-                marginTop: 3,
+                marginTop: 2,
               }}
             >
-              {mutualFriends} mutual friends
+              {username}
             </Text>
-          )}
+            {isFriend && streak !== undefined && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  marginTop: 5,
+                }}
+              >
+                <Image
+                  source={require("../assets/icons/fire.png")}
+                  style={{ width: 12, height: 12 }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 12,
+                    color: Colors[theme].accent1,
+                  }}
+                >
+                  {streak} day streak
+                </Text>
+              </View>
+            )}
+            {!isFriend && mutualFriends !== undefined && (
+              <Text
+                style={{
+                  fontFamily: "NunitoRegular",
+                  fontSize: 12,
+                  color: Colors[theme].text_secondary,
+                  marginTop: 3,
+                }}
+              >
+                {mutualFriends} mutual friends
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
-      {!isFriend && (
-        <Pressable
-          onPress={onAdd}
-          disabled={isAdded}
-          style={{
-            backgroundColor: isAdded
-              ? Colors[theme].surface
-              : Colors[theme].primary,
-            paddingVertical: 8,
-            paddingHorizontal: 20,
-            borderRadius: 20,
-            borderWidth: isAdded ? 2 : 0,
-            borderColor: Colors[theme].border,
-          }}
-        >
-          <Text
+        {!isFriend && (
+          <Pressable
+            onPress={onAdd}
+            disabled={isAdded}
             style={{
-              fontFamily: "NunitoBold",
-              fontSize: 13,
-              color: isAdded ? Colors[theme].text_secondary : "#fff",
+              backgroundColor: isAdded
+                ? Colors[theme].surface
+                : Colors[theme].primary,
+              paddingVertical: 8,
+              paddingHorizontal: 20,
+              borderRadius: 20,
+              borderWidth: isAdded ? 2 : 0,
+              borderColor: Colors[theme].border,
             }}
           >
-            {isAdded ? "Added" : "Add"}
-          </Text>
-        </Pressable>
-      )}
-    </View>
-  );
-};
+            <Text
+              style={{
+                fontFamily: "NunitoBold",
+                fontSize: 13,
+                color: isAdded ? Colors[theme].text_secondary : "#fff",
+              }}
+            >
+              {isAdded ? "Added" : "Add"}
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  };
 
 export default SearchFriendsModal;

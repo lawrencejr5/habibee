@@ -15,6 +15,7 @@ import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useTheme } from "@/context/ThemeContext";
 
 type DeleteHabitModalProps = {
   visible: boolean;
@@ -27,7 +28,7 @@ const DeleteHabitModal: React.FC<DeleteHabitModalProps> = ({
   onClose,
   habit,
 }) => {
-  const theme = useColorScheme();
+  const { theme } = useTheme();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
 
@@ -71,7 +72,7 @@ const DeleteHabitModal: React.FC<DeleteHabitModalProps> = ({
               borderColor: Colors[theme].border,
             },
           ]}
-          onPress={() => {}}
+          onPress={() => { }}
         >
           <View style={styles.headerRow}>
             <Text
