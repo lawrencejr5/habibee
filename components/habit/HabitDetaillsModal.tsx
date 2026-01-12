@@ -123,11 +123,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Habit not found</Text>
-      </View>
-    );
+    return null
   }
 
   return (
