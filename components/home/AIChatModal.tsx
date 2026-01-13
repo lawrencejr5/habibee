@@ -6,7 +6,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Pressable, View, TextInput, Dimensions, Keyboard } from "react-native";
+import {
+  Pressable,
+  View,
+  TextInput,
+  Dimensions,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,7 +35,11 @@ interface AIChatModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }
-type AiChatMsgType = { role: "user" | "model"; parts: { text: string }[] };
+type AiChatMsgType = {
+  role: "user" | "model";
+  parts: { text: string }[];
+  thoughtTime?: number;
+};
 
 const { width } = Dimensions.get("window");
 
@@ -46,16 +57,43 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   const generate_habit = useAction(api.habits.generate_habit_ai);
 
   const sendMessage = async () => {
+    if (!input.trim()) return;
+
     setGenerating(true);
     haptics.impact();
+    const startTime = Date.now();
+    const userMsg = input; // Store input to use after clearing
+
     try {
-      const new_message = { role: "user", parts: [{ text: input }] };
-      setMessages((prev: any) => {
-        return [...prev, new_message];
+      // Add user message immediately
+      const new_message: AiChatMsgType = {
+        role: "user",
+        parts: [{ text: userMsg }]
+      };
+
+      setMessages((prev) => [...prev, new_message]);
+      setInput(""); // Clear input immediately
+
+      const response = await generate_habit({
+        messages: [...messages, new_message].map(m => ({
+          role: m.role,
+          parts: m.parts
+        }))
       });
-      await generate_habit({ messages });
+
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+
+      const ai_message: AiChatMsgType = {
+        role: "model",
+        parts: [{ text: response }],
+        thoughtTime: duration,
+      };
+
+      setMessages((prev) => [...prev, ai_message]);
     } catch (err: any) {
       showCustomAlert("An error occured", "danger");
+      console.error(err);
     } finally {
       setGenerating(false);
     }
@@ -136,7 +174,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             {/* Header */}
             <View
               style={{
-                paddingHorizontal: 20,
+                paddingHorizontal: 15,
                 paddingTop: 20,
                 flexDirection: "row",
                 alignItems: "center",
@@ -182,52 +220,50 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               </Pressable>
             </View>
 
-            {/* Greeting & Suggestions Area */}
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 20,
-                marginTop: -40,
-              }}
-            >
-              {/* Greeting */}
-              <View style={{ marginBottom: 40, alignItems: "flex-start" }}>
-                <ThemedText
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 28,
-                    textAlign: "left",
-                    marginBottom: 5,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  Hey, {signedIn?.username}! 👋
-                </ThemedText>
-                <ThemedText
-                  style={{
-                    fontFamily: "NunitoRegular",
-                    fontSize: 16,
-                    color: Colors[theme].text_secondary,
-                    textAlign: "left",
-                  }}
-                >
-                  How can I help you stay on track today?
-                </ThemedText>
-              </View>
-
-              {/* Suggestions Grid */}
+            {/* Content Display */}
+            {messages.length === 0 ? (
               <View
                 style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  gap: 15,
+                  flex: 1,
+                  alignItems: "center",
                   justifyContent: "center",
+                  paddingHorizontal: 20,
+                  marginTop: 40,
                 }}
               >
-                {messages.length === 0 ? (
-                  suggestions.map((item) => (
+                <View style={{ marginBottom: 40, alignItems: "flex-start", width: "100%" }}>
+                  <ThemedText
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 28,
+                      textAlign: "left",
+                      marginBottom: 5,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    Hey, {signedIn?.username}! 👋
+                  </ThemedText>
+                  <ThemedText
+                    style={{
+                      fontFamily: "NunitoRegular",
+                      fontSize: 16,
+                      color: Colors[theme].text_secondary,
+                      textAlign: "left",
+                    }}
+                  >
+                    How can I help you stay on track today?
+                  </ThemedText>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: 15,
+                    justifyContent: "center",
+                  }}
+                >
+                  {suggestions.map((item) => (
                     <Pressable
                       key={item.id}
                       onPress={() => {
@@ -274,12 +310,60 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                         {item.label}
                       </ThemedText>
                     </Pressable>
-                  ))
-                ) : (
-                  <></>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
+                {messages.map((msg, index) => (
+                  msg.role === "user" ? (
+                    <UserChat key={index} text={msg.parts[0].text} />
+                  ) : (
+                    <ModelChat
+                      key={index}
+                      text={msg.parts[0].text}
+                      thoughtTime={msg.thoughtTime}
+                    />
+                  )
+                ))}
+
+                {generating && (
+                  <View
+                    style={{
+                      padding: 15,
+                      borderRadius: 15,
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    <View
+                      style={{
+                        marginBottom: 10,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                    >
+                      <View style={{ position: 'relative', width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color={accentColor} style={{ position: 'absolute' }} />
+                        <Image
+                          source={require("@/assets/images/ai-icon.png")}
+                          style={{ width: 20, height: 20, borderRadius: 10 }}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          color: Colors[theme].text_secondary,
+                          fontFamily: "NunitoBold",
+                          fontSize: 12
+                        }}
+                      >
+                        Thinking...
+                      </Text>
+                    </View>
+                  </View>
                 )}
               </View>
-            </View>
+            )}
           </ScrollView>
 
           {/* Input Area - Fixed at bottom */}
@@ -293,7 +377,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             }}
             offset={{ opened: 60, closed: 0 }} // Adjusted for bottom sheet
           >
-            <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+            <View style={{ paddingHorizontal: 15, paddingBottom: 10 }}>
               <View
                 style={{
                   width: "100%",
@@ -321,12 +405,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   placeholderTextColor={Colors[theme].text_secondary}
                   value={input}
                   onChangeText={setInput}
+                  onSubmitEditing={sendMessage}
                 />
 
                 <Pressable
                   onPress={sendMessage}
+                  disabled={generating}
                   style={{
-                    backgroundColor: accentColor + "cc",
+                    backgroundColor: generating ? Colors[theme].border : accentColor,
                     width: 35,
                     height: 35,
                     borderRadius: 18,
@@ -335,14 +421,18 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                     marginLeft: 10,
                   }}
                 >
-                  <Image
-                    source={require("../../assets/icons/send.png")}
-                    style={{
-                      width: 16,
-                      height: 16,
-                      tintColor: "white",
-                    }}
-                  />
+                  {generating ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Image
+                      source={require("../../assets/icons/send.png")}
+                      style={{
+                        width: 16,
+                        height: 16,
+                        tintColor: "white",
+                      }}
+                    />
+                  )}
                 </Pressable>
               </View>
             </View>
@@ -350,6 +440,85 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         </View>
       </BottomSheetView>
     </BottomSheet>
+  );
+};
+
+const UserChat: FC<{ text: string }> = ({ text }) => {
+  const { theme } = useTheme();
+  return (
+    <View
+      style={{
+        backgroundColor: Colors[theme].surface,
+        maxWidth: "80%", // Limit width
+        padding: 15,
+        marginBottom: 20,
+        borderRadius: 20,
+        borderBottomRightRadius: 5, // Chat bubble effect
+        alignSelf: "flex-end",
+      }}
+    >
+      <Text
+        style={{
+          color: Colors[theme].text,
+          fontFamily: "NunitoRegular",
+          fontSize: 16
+        }}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+};
+
+const ModelChat: FC<{ text: string, thoughtTime?: number }> = ({ text, thoughtTime }) => {
+  const { theme } = useTheme();
+  return (
+    <View
+      style={{
+        padding: 5,
+        borderRadius: 15,
+        alignSelf: "flex-start",
+        marginBottom: 20,
+        maxWidth: "100%"
+      }}
+    >
+      <View
+        style={{
+          marginBottom: 8,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <Image
+          source={require("@/assets/images/ai-icon.png")}
+          style={{ width: 24, height: 24, borderRadius: 10 }}
+        />
+        {thoughtTime !== undefined && (
+          <Text
+            style={{
+              color: Colors[theme].text_secondary,
+              fontFamily: "NunitoBold",
+              fontSize: 12
+            }}
+          >
+            Thought for {thoughtTime.toFixed(1)}s
+          </Text>
+        )}
+      </View>
+      <View style={{ paddingLeft: 32 }}>
+        <Text
+          style={{
+            color: Colors[theme].text,
+            fontFamily: "NunitoRegular",
+            fontSize: 16,
+            lineHeight: 22
+          }}
+        >
+          {text}
+        </Text>
+      </View>
+    </View>
   );
 };
 

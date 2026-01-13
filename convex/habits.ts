@@ -299,7 +299,6 @@ export const generate_habit_ai = action({
     });
 
     const response = result.response.text();
-    console.log(response);
     return response;
   },
 });
