@@ -18,7 +18,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View as ThemedView } from "../Themed";
 
 import ToggleButton from "@/components/ToggleButton";
-import IconColorPicker, { DEFAULT_COLORS } from "@/components/home/IconColorPicker";
+import IconColorPicker, {
+  DEFAULT_COLORS,
+} from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
@@ -326,6 +328,7 @@ const AddModal: React.FC<{
                           fontFamily: "NunitoMedium",
                           color: Colors[theme].text,
                         }}
+                        placeholder="365"
                         value={goal}
                         keyboardType="numeric"
                         onChangeText={setGoal}

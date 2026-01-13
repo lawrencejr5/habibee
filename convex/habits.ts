@@ -1,6 +1,8 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { getDaysDifference } from "./utils";
 
@@ -33,57 +35,9 @@ const AVAILABLE_COLORS = [
   "#e67e22",
 ];
 
-// Habit suggestions database - maps keywords to habit data
-const HABIT_SUGGESTIONS: Record<
-  string,
-  {
-    habit: string;
-    icon: string;
-    duration: number;
-    goal: number;
-  }[]
-> = {
-  fitness: [
-    { habit: "Morning Workout", icon: "gym", duration: 30, goal: 1 },
-    { habit: "Running", icon: "steps", duration: 30, goal: 1 },
-    { habit: "Yoga", icon: "meditate", duration: 21, goal: 1 },
-  ],
-  reading: [
-    { habit: "Read Daily", icon: "book", duration: 30, goal: 1 },
-    { habit: "Read Before Sleep", icon: "book", duration: 30, goal: 1 },
-  ],
-  productivity: [
-    { habit: "Coding Practice", icon: "code", duration: 30, goal: 1 },
-    { habit: "Write Daily", icon: "write", duration: 21, goal: 1 },
-    { habit: "Journal", icon: "note", duration: 30, goal: 1 },
-  ],
-  health: [
-    { habit: "Drink Water", icon: "water", duration: 30, goal: 8 },
-    { habit: "Meditation", icon: "meditate", duration: 21, goal: 1 },
-    { habit: "Sleep Early", icon: "brain", duration: 21, goal: 1 },
-  ],
-  mindfulness: [
-    { habit: "Daily Meditation", icon: "meditate", duration: 30, goal: 1 },
-    { habit: "Gratitude Practice", icon: "note", duration: 30, goal: 1 },
-  ],
-  creative: [
-    { habit: "Painting", icon: "paint", duration: 21, goal: 1 },
-    { habit: "Drawing", icon: "paint", duration: 30, goal: 1 },
-    { habit: "Creative Writing", icon: "write", duration: 21, goal: 1 },
-  ],
-  learning: [
-    { habit: "Learn Something New", icon: "brain", duration: 30, goal: 1 },
-    { habit: "Online Course", icon: "code", duration: 60, goal: 1 },
-  ],
-  financial: [
-    { habit: "Save Money", icon: "save", duration: 30, goal: 1 },
-    { habit: "Budget Review", icon: "money", duration: 30, goal: 1 },
-  ],
-  spiritual: [
-    { habit: "Prayer", icon: "pray", duration: 30, goal: 1 },
-    { habit: "Spiritual Reading", icon: "book", duration: 21, goal: 1 },
-  ],
-};
+const genAI = new GoogleGenerativeAI(
+  process.env.GOOGLE_GEMINI_API_KEY as string
+);
 
 export const get_user_habits = query({
   args: {},
@@ -304,12 +258,49 @@ export const get_habit_enteries = query({
   },
 });
 
-export const generate_habit_ai = mutation({
+export const generate_habit_ai = action({
   args: {
-    userInput: v.string(),
+    messages: v.array(
+      v.object({
+        role: v.union(v.literal("user"), v.literal("model")),
+        parts: v.array(
+          v.object({
+            text: v.string(),
+          })
+        ),
+      })
+    ),
   },
   handler: async (ctx, args) => {
-    return;
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      systemInstruction: {
+        parts: [
+          {
+            text: `
+          You are Habibee, an intelligent Habit Coach and productivity assistant. 
+          Your goal is to help the user build consistent, trackable routines.
+
+          YOUR RULES:
+          1. BE CONCISE: The user is on a mobile app. Keep responses short and easy to read.
+          2. BE INQUISITIVE: If a user shares a vague goal (e.g., "I want to be stronger"), do not just list habits. First, ask clarifying questions (e.g., "Do you have access to a gym, or do you prefer home workouts?").
+          3. BE STRUCTURED: When suggesting habits, always imply a frequency (daily, weekly).
+          4. TONE: Energetic, disciplined, and supportive. Use emojis occasionally (💪, 🚀).
+          5. IDENTITY: Your name is Habibee. You are a Habit Machine.
+        `,
+          },
+        ],
+        role: "model",
+      },
+    });
+
+    const result = await model.generateContent({
+      contents: [...args.messages],
+    });
+
+    const response = result.response.text();
+    console.log(response);
+    return response;
   },
 });
 

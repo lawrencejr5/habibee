@@ -21,11 +21,14 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface AIChatModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }
+type AiChatMsgType = { role: "user" | "model"; parts: { text: string }[] };
 
 const { width } = Dimensions.get("window");
 
@@ -37,6 +40,26 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   const { showCustomAlert } = useCustomAlert();
 
   const [input, setInput] = useState<string>("");
+  const [messages, setMessages] = useState<AiChatMsgType[]>([]);
+  const [generating, setGenerating] = useState<boolean>(false);
+
+  const generate_habit = useAction(api.habits.generate_habit_ai);
+
+  const sendMessage = async () => {
+    setGenerating(true);
+    haptics.impact();
+    try {
+      const new_message = { role: "user", parts: [{ text: input }] };
+      setMessages((prev: any) => {
+        return [...prev, new_message];
+      });
+      await generate_habit({ messages });
+    } catch (err: any) {
+      showCustomAlert("An error occured", "danger");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["100%"], []);
@@ -203,52 +226,58 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   justifyContent: "center",
                 }}
               >
-                {suggestions.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => {
-                      haptics.impact();
-                      setInput(item.prompt);
-                    }}
-                    style={({ pressed }) => ({
-                      width: (width - 60) / 2, // 2 columns with padding calc
-                      aspectRatio: 1.1, // Slightly taller than square
-                      backgroundColor: Colors[theme].surface,
-                      borderRadius: 20,
-                      padding: 15,
-                      justifyContent: "space-between",
-                      borderWidth: 1,
-                      borderColor: pressed ? accentColor : Colors[theme].border,
-                      transform: [{ scale: pressed ? 0.98 : 1 }],
-                    })}
-                  >
-                    <View
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        backgroundColor: accentColor + "15", // 15% opacity orange
-                        justifyContent: "center",
-                        alignItems: "center",
+                {messages.length === 0 ? (
+                  suggestions.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => {
+                        haptics.impact();
+                        setInput(item.prompt);
                       }}
+                      style={({ pressed }) => ({
+                        width: (width - 60) / 2, // 2 columns with padding calc
+                        aspectRatio: 1.1, // Slightly taller than square
+                        backgroundColor: Colors[theme].surface,
+                        borderRadius: 20,
+                        padding: 15,
+                        justifyContent: "space-between",
+                        borderWidth: 1,
+                        borderColor: pressed
+                          ? accentColor
+                          : Colors[theme].border,
+                        transform: [{ scale: pressed ? 0.98 : 1 }],
+                      })}
                     >
-                      <MaterialCommunityIcons
-                        name={item.icon as any}
-                        size={22}
-                        color={accentColor}
-                      />
-                    </View>
-                    <ThemedText
-                      style={{
-                        fontFamily: "NunitoBold",
-                        fontSize: 15,
-                        lineHeight: 20,
-                      }}
-                    >
-                      {item.label}
-                    </ThemedText>
-                  </Pressable>
-                ))}
+                      <View
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 10,
+                          backgroundColor: accentColor + "15", // 15% opacity orange
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name={item.icon as any}
+                          size={22}
+                          color={accentColor}
+                        />
+                      </View>
+                      <ThemedText
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 15,
+                          lineHeight: 20,
+                        }}
+                      >
+                        {item.label}
+                      </ThemedText>
+                    </Pressable>
+                  ))
+                ) : (
+                  <></>
+                )}
               </View>
             </View>
           </ScrollView>
@@ -295,10 +324,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 />
 
                 <Pressable
-                  onPress={() => {
-                    haptics.impact();
-                    showCustomAlert("Coming soon!", "warning");
-                  }}
+                  onPress={sendMessage}
                   style={{
                     backgroundColor: accentColor + "cc",
                     width: 35,

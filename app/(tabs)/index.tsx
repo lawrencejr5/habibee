@@ -52,10 +52,6 @@ const Home = () => {
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
-  const [selectedHabit, setSelectedHabit] = useState<{
-    title: string;
-    duration: string;
-  } | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] =
     useState<boolean>(false);
   const [selectedHabitId, setSelectedHabitId] = useState<Id<"habits"> | null>(
@@ -270,7 +266,7 @@ const Home = () => {
               {displayedText}
               {isTyping &&
                 displayedText.length <
-                  motivationalMsgs![currentMessageIndex].text.length && (
+                motivationalMsgs![currentMessageIndex].text.length && (
                   <Text style={{ color: Colors[theme].primary }}>|</Text>
                 )}
             </Text>
@@ -504,160 +500,160 @@ const HabitCard: React.FC<{
   onFireIconPress,
   onCardPress,
 }) => {
-  const { theme } = useTheme();
+    const { theme } = useTheme();
 
-  const haptics = useHapitcs();
+    const haptics = useHapitcs();
 
-  return (
-    <Pressable
-      onPress={onCardPress}
-      onLongPress={() => {
-        haptics.impact();
-      }}
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        backgroundColor: Colors[theme].surface,
-        paddingVertical: 15,
-        paddingHorizontal: 5,
-        marginTop: 15,
-        borderRadius: 15,
-        borderWidth: 2,
-        borderColor: Colors[theme].border,
-      }}
-    >
-      <View
+    return (
+      <Pressable
+        onPress={onCardPress}
+        onLongPress={() => {
+          haptics.impact();
+        }}
         style={{
           flexDirection: "row",
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: 15,
-          marginLeft: 5,
-          flex: 1,
+          width: "100%",
+          backgroundColor: Colors[theme].surface,
+          paddingVertical: 15,
+          paddingHorizontal: 5,
+          marginTop: 15,
+          borderRadius: 15,
+          borderWidth: 2,
+          borderColor: Colors[theme].border,
         }}
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            backgroundColor: themeColor + "20",
-            justifyContent: "center",
+            flexDirection: "row",
             alignItems: "center",
-            // borderWidth: 0.5,
-            borderColor: themeColor,
+            gap: 15,
+            marginLeft: 5,
+            flex: 1,
           }}
         >
-          <Image
-            source={habitIcons[habitType]}
-            style={{
-              width: 20,
-              height: 20,
-              tintColor: themeColor,
-            }}
-          />
-        </View>
-
-        <View>
-          <ThemedText
-            numberOfLines={1}
-            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
-          >
-            {title}
-          </ThemedText>
           <View
             style={{
-              flexDirection: "row",
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              backgroundColor: themeColor + "20",
+              justifyContent: "center",
               alignItems: "center",
-              gap: 15,
-              marginTop: 10,
+              // borderWidth: 0.5,
+              borderColor: themeColor,
             }}
           >
+            <Image
+              source={habitIcons[habitType]}
+              style={{
+                width: 20,
+                height: 20,
+                tintColor: themeColor,
+              }}
+            />
+          </View>
+
+          <View>
+            <ThemedText
+              numberOfLines={1}
+              style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
+            >
+              {title}
+            </ThemedText>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 5,
-                width: 80,
+                gap: 15,
+                marginTop: 10,
               }}
             >
-              <Image
-                source={require("../../assets/icons/clock.png")}
+              <View
                 style={{
-                  tintColor: Colors[theme].text_secondary,
-                  width: 14,
-                  height: 14,
-                }}
-              />
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 12,
-                  color: Colors[theme].text_secondary,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  width: 80,
                 }}
               >
-                {duration} min(s)
-              </ThemedText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 7,
-              }}
-            >
-              <Image
-                source={require("../../assets/icons/fire.png")}
+                <Image
+                  source={require("../../assets/icons/clock.png")}
+                  style={{
+                    tintColor: Colors[theme].text_secondary,
+                    width: 14,
+                    height: 14,
+                  }}
+                />
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                  }}
+                >
+                  {duration} min(s)
+                </ThemedText>
+              </View>
+              <View
                 style={{
-                  tintColor: !done ? Colors[theme].text_secondary : undefined,
-                  width: 14,
-                  height: 14,
-                }}
-              />
-              <ThemedText
-                style={{
-                  color: done
-                    ? Colors[theme].accent1
-                    : Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 7,
                 }}
               >
-                {streak}
-              </ThemedText>
+                <Image
+                  source={require("../../assets/icons/fire.png")}
+                  style={{
+                    tintColor: !done ? Colors[theme].text_secondary : undefined,
+                    width: 14,
+                    height: 14,
+                  }}
+                />
+                <ThemedText
+                  style={{
+                    color: done
+                      ? Colors[theme].accent1
+                      : Colors[theme].text_secondary,
+                    fontFamily: "NunitoBold",
+                  }}
+                >
+                  {streak}
+                </ThemedText>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <Pressable
-        onPress={() => {
-          haptics.impact();
-          onFireIconPress();
-        }}
-        style={{
-          borderLeftWidth: 3,
-          borderColor: Colors[theme].border,
-          width: 50,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          paddingHorizontal: 10,
-        }}
-      >
-        <Image
-          source={require("../../assets/icons/fire.png")}
-          style={{
-            tintColor: !done ? Colors[theme].text_secondary : undefined,
-            width: 30,
-            height: 30,
+        <Pressable
+          onPress={() => {
+            haptics.impact();
+            onFireIconPress();
           }}
-        />
+          style={{
+            borderLeftWidth: 3,
+            borderColor: Colors[theme].border,
+            width: 50,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            paddingHorizontal: 10,
+          }}
+        >
+          <Image
+            source={require("../../assets/icons/fire.png")}
+            style={{
+              tintColor: !done ? Colors[theme].text_secondary : undefined,
+              width: 30,
+              height: 30,
+            }}
+          />
+        </Pressable>
       </Pressable>
-    </Pressable>
-  );
-};
+    );
+  };
 
 export default Home;
 
