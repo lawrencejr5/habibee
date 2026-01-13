@@ -44,7 +44,13 @@ const SigninPage = () => {
 
       showCustomAlert("Signed in successfully", "success");
     } catch (err) {
-      showCustomAlert("An error occured", "danger");
+      if (err instanceof Error && err.message.includes("InvalidAccountId")) {
+        showCustomAlert("User does not exist", "danger")
+      } else if (err instanceof Error && err.message.includes("InvalidSecret")) {
+        showCustomAlert("Password not correct", "danger");
+      } else {
+        showCustomAlert("An error occured", "danger");
+      }
     } finally {
       setBtnLoading(false);
     }

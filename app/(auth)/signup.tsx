@@ -13,6 +13,7 @@ import CustomInput from "@/components/auth/CustomInput";
 import { Link, router } from "expo-router";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
+import { ConvexError } from "convex/values";
 
 const SignUpPage = () => {
   const { theme } = useTheme();
@@ -44,8 +45,15 @@ const SignUpPage = () => {
 
       await signIn("password", formData);
       showCustomAlert("Signed up successfully", "success");
-    } catch (err) {
-      showCustomAlert("An error occured", "danger");
+    } catch (err: any) {
+
+      if (err instanceof ConvexError) {
+        showCustomAlert(err.data, "danger");
+      } else if (err instanceof Error && err.message.includes("already exists")) {
+        showCustomAlert("Email already in use", "danger");
+      } else {
+        showCustomAlert("An unexpected error occurred", "danger");
+      }
     } finally {
       setBtnLoading(false);
     }
