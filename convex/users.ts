@@ -29,6 +29,76 @@ export const get_current_user = query({
 });
 
 
+export const update_user_details = mutation({
+  args: { fullname: v.string(), username: v.optional(v.string()) },
+  handler: async (ctx, { fullname, username }) => {
+    const user_id = await getAuthUserId(ctx);
+    if (user_id === null) throw new Error("User not authenticated");
+
+    const patch: any = { fullname };
+    if (username !== undefined) patch.username = username;
+
+    await ctx.db.patch(user_id, patch);
+  },
+});
+
+
+export const delete_account = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("User not authenticated");
+
+    // 1. Delete habit entries
+    const habitEntries = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_user_date", (q) => q.eq("user", userId))
+      .collect();
+    for (const entry of habitEntries) {
+      await ctx.db.delete(entry._id);
+    }
+
+    // 2. Delete habits
+    const habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", userId))
+      .collect();
+    for (const habit of habits) {
+      await ctx.db.delete(habit._id);
+    }
+
+    // 3. Delete weekly stats
+    const weeklyStats = await ctx.db
+      .query("weekly_stats")
+      .withIndex("by_user_weekday", (q) => q.eq("user", userId))
+      .collect();
+    for (const stat of weeklyStats) {
+      await ctx.db.delete(stat._id);
+    }
+
+    // 4. Delete auth accounts and sessions
+    const authAccounts = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", userId))
+      .collect();
+    for (const account of authAccounts) {
+      await ctx.db.delete(account._id);
+    }
+
+    const authSessions = await ctx.db
+      .query("authSessions")
+      .withIndex("userId", (q) => q.eq("userId", userId))
+      .collect();
+    for (const session of authSessions) {
+      await ctx.db.delete(session._id);
+    }
+
+    // 5. Delete the user
+    await ctx.db.delete(userId);
+  },
+});
+
+
 export const getUserByEmail = internalQuery({
   args: { email: v.string() },
   handler: async (ctx, args) => {

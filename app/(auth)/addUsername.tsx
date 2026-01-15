@@ -38,7 +38,7 @@ const AddUsername = () => {
         showCustomAlert("Username cannot be empty", "warning");
         return;
       }
-      await add_username({ username: username.trim() });
+      await add_username({ username: username.trim().toLowerCase() });
       showCustomAlert("Username set successfully", "success");
       router.replace("/(tabs)");
     } catch (err) {

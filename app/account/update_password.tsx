@@ -19,14 +19,44 @@ import CustomInput from "@/components/account/CustomInput";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const UpdatePassword = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+  const { showCustomAlert } = useCustomAlert();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [oldPass, setOldPass] = useState<string>("");
   const [newPass, setNewPass] = useState<string>("");
   const [confirmPass, setConfirmPass] = useState<string>("");
+
+  const handleUpdate = async () => {
+    if (!oldPass || !newPass || !confirmPass) {
+      showCustomAlert("Please fill in all fields", "warning");
+      return;
+    }
+    if (newPass !== confirmPass) {
+      showCustomAlert("New passwords do not match", "warning");
+      return;
+    }
+    if (newPass.length < 6) {
+      showCustomAlert("Password must be at least 6 characters", "warning");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // TODO: Implement backend password update mutation
+      // For now, we simulate a delay and show a message
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      showCustomAlert("Password update feature coming soon!", "warning");
+    } catch (err) {
+      showCustomAlert("Failed to update password", "danger");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemedView
@@ -92,11 +122,14 @@ const UpdatePassword = () => {
         </ScrollView>
       </KeyboardAvoidingView>
       <Pressable
+        onPress={handleUpdate}
+        disabled={isLoading}
         style={{
           width: "100%",
           backgroundColor: Colors[theme].primary,
           paddingVertical: 15,
           borderRadius: 50,
+          opacity: isLoading ? 0.7 : 1,
         }}
       >
         <Text
@@ -107,7 +140,7 @@ const UpdatePassword = () => {
             textAlign: "center",
           }}
         >
-          Update password
+          {isLoading ? "Updating..." : "Update password"}
         </Text>
       </Pressable>
     </ThemedView>

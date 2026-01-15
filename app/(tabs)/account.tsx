@@ -75,7 +75,7 @@ export default function Account() {
                 borderWidth: 2,
               }}
             />
-            <View>
+            <View style={{ width: 220 }}>
               <Text
                 style={{
                   fontFamily: "NunitoExtraBold",
@@ -83,6 +83,7 @@ export default function Account() {
                   fontSize: 22,
                   textTransform: "capitalize",
                 }}
+                numberOfLines={1}
               >
                 {signedIn.fullname}
               </Text>

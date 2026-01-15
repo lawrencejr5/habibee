@@ -19,12 +19,19 @@ import { useColorScheme } from "@/components/useColorScheme";
 import CustomInput from "@/components/account/CustomInput";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useCustomAlert } from "@/context/AlertContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { useUser } from "@/context/UserContext";
+
 
 const PersonalInfo = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
   const { signedIn } = useUser();
+  const { showCustomAlert } = useCustomAlert();
+  const updateUserDetails = useMutation(api.users.update_user_details);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [fullname, setFullname] = useState<string>("");
   const [username, setUsername] = useState<string>("");
@@ -37,6 +44,28 @@ const PersonalInfo = () => {
       setEmail(signedIn.email || "");
     }
   }, [signedIn]);
+
+  const handleSave = async () => {
+    if (!fullname || !username) {
+      showCustomAlert("Please fill in all fields", "warning");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await updateUserDetails({
+        fullname: fullname.trim().toLowerCase(),
+        username: username.trim().toLowerCase()
+      });
+      showCustomAlert("Profile updated successfully", "success");
+      router.back();
+    } catch (err: any) {
+      const message =
+        err.message || (typeof err === "string" ? err : "") || JSON.stringify(err);
+      showCustomAlert("Failed to update profile", "danger");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemedView
@@ -103,11 +132,14 @@ const PersonalInfo = () => {
         </ScrollView>
       </KeyboardAvoidingView>
       <Pressable
+        onPress={handleSave}
+        disabled={isLoading}
         style={{
           width: "100%",
           backgroundColor: Colors[theme].primary,
           paddingVertical: 15,
           borderRadius: 50,
+          opacity: isLoading ? 0.7 : 1,
         }}
       >
         <Text
@@ -118,7 +150,7 @@ const PersonalInfo = () => {
             textAlign: "center",
           }}
         >
-          Save Changes
+          {isLoading ? "Saving..." : "Save Changes"}
         </Text>
       </Pressable>
     </ThemedView>

@@ -38,8 +38,8 @@ const SignUpPage = () => {
       }
 
       const formData = new FormData();
-      formData.append("fullname", fullname.trim());
-      formData.append("email", email.trim());
+      formData.append("fullname", fullname.trim().toLowerCase());
+      formData.append("email", email.trim().toLowerCase());
       formData.append("password", password);
       formData.append("flow", flow);
 

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import React, {
   Dispatch,
   FC,
@@ -6,7 +6,12 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
+import { useMutation } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useCustomAlert } from "@/context/AlertContext";
+import { api } from "@/convex/_generated/api";
 
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -46,9 +51,26 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
     />
   );
 
-  const handleDeletePress = () => {
+  const { signOut } = useAuthActions();
+  const deleteAccount = useMutation(api.users.delete_account);
+  const { showCustomAlert } = useCustomAlert();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeletePress = async () => {
     haptics.impact("heavy");
-    bottomSheetRef.current?.close();
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      await signOut();
+      showCustomAlert("Account deleted successfully", "success");
+      bottomSheetRef.current?.close();
+      setVisible(false);
+    } catch (err: any) {
+      const message =
+        err.message || (typeof err === "string" ? err : "") || JSON.stringify(err);
+      showCustomAlert("Failed to delete account: " + message, "danger");
+      setIsDeleting(false);
+    }
   };
 
   if (!visible) return null;
@@ -140,23 +162,31 @@ const DeleteAccountModal: FC<DeleteAccountModalProps> = ({
 
           <Pressable
             onPress={handleDeletePress}
+            disabled={isDeleting}
             style={{
               backgroundColor: "#e74c3c",
               paddingVertical: 12,
               borderRadius: 12,
               flex: 1,
+              opacity: isDeleting ? 0.7 : 1,
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <Text
-              style={{
-                fontFamily: "NunitoBold",
-                fontSize: 14,
-                color: "#fff",
-                textAlign: "center",
-              }}
-            >
-              Delete Account
-            </Text>
+            {isDeleting ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 14,
+                  color: "#fff",
+                  textAlign: "center",
+                }}
+              >
+                Delete Account
+              </Text>
+            )}
           </Pressable>
         </View>
       </BottomSheetView>
