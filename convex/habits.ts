@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { action, mutation, query } from "./_generated/server";
+import { action, mutation, query, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -272,6 +273,25 @@ export const generate_habit_ai = action({
     ),
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    let userContextString = "";
+
+    if (userId) {
+      const userData = await ctx.runQuery(internal.habits.get_user_context_data, {
+        userId,
+      });
+
+      if (userData) {
+        userContextString = `
+          USER CONTEXT:
+          - Name: ${userData.fullname}
+          - Current Daily Streak: ${userData.streak} days
+          - Total Habits: ${userData.totalHabits}
+          - Active Habits: ${userData.habitsSummary}
+        `;
+      }
+    }
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       systemInstruction: {
@@ -280,6 +300,8 @@ export const generate_habit_ai = action({
             text: `
           You are Habibee, an intelligent Habit Coach developed by Lawjun technologies owned by Oputa Lawrence.
           
+          ${userContextString}
+
           RESPONSE FORMAT INSTRUCTIONS:
           You must ALWAYS return a valid JSON object.
           
@@ -310,11 +332,12 @@ export const generate_habit_ai = action({
 
           RULES:
           1. Mix "text" and "habit" parts naturally. 
-          2. YOU ARE ALLOWED TO ASK QUESTIONS. If you need more info just return a "text" part.
+          2. YOU ARE INQUISITIVE. If you need more info just return a "text" part.
           3. ONLY return a "habit" part if you are proposing a concrete habit for the user to save.
           4. "goal" usually implies target days (e.g. 100 days). "duration" is minutes per day.
           5. Keep text CONCISE, supportive, and energetic.
           6. IMPORTANT: Do not include markdown code blocks. Return ONLY raw JSON.
+          7. When creating habits, except the user is being specific, generate up to 3 habits so that the user can have options
         `,
           },
         ],
@@ -332,9 +355,7 @@ export const generate_habit_ai = action({
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     let cleanResponse = jsonMatch ? jsonMatch[0] : response;
 
-    // Remove invalid control characters (like U+001F) that might break JSON parsing
-    // Preserving: \t (09), \n (0A), \r (0D)
-    // Removing: 00-08, 0B, 0C, 0E-1F, 7F
+
     cleanResponse = cleanResponse.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
 
     return cleanResponse;
@@ -366,6 +387,34 @@ export const create_habit = mutation({
       highest_streak: 0,
     });
 
+
     return habit_id;
+  },
+});
+
+export const get_user_context_data = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) return null;
+
+    const habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", args.userId))
+      .collect();
+
+    const habitsSummary = habits
+      .map(
+        (h) =>
+          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}, Duration: ${h.duration}m)`
+      )
+      .join("\n");
+
+    return {
+      fullname: user.fullname,
+      streak: user.streak || 0,
+      totalHabits: habits.length,
+      habitsSummary: habitsSummary || "No active habits yet.",
+    };
   },
 });
