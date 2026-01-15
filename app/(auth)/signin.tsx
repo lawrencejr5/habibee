@@ -43,13 +43,18 @@ const SigninPage = () => {
       await signIn("password", formData);
 
       showCustomAlert("Signed in successfully", "success");
-    } catch (err) {
-      if (err instanceof Error && err.message.includes("InvalidAccountId")) {
-        showCustomAlert("User does not exist", "danger")
-      } else if (err instanceof Error && err.message.includes("InvalidSecret")) {
-        showCustomAlert("Password not correct", "danger");
+    } catch (err: any) {
+      console.log("Login Error:", err); // Helpful to see the real string in logs
+
+      const message = err.message || (typeof err === "string" ? err : "") || JSON.stringify(err);
+
+      if (message.includes("InvalidAccountId") || message.includes("User not found")) {
+        showCustomAlert("Account does not exist. Please sign up.", "danger");
+      } else if (message.includes("InvalidSecret") || message.includes("Invalid password")) {
+        showCustomAlert("Incorrect password", "danger");
       } else {
-        showCustomAlert("An error occured", "danger");
+        // Fallback for network errors or other weird states
+        showCustomAlert("Invalid email or password", "danger");
       }
     } finally {
       setBtnLoading(false);

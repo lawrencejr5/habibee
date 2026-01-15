@@ -47,11 +47,22 @@ const SignUpPage = () => {
       showCustomAlert("Signed up successfully", "success");
     } catch (err: any) {
 
-      if (err instanceof ConvexError) {
+      console.log("Registration Error:", JSON.stringify(err)); // Helpful for debugging in adb logcat
+
+      // 1. Duck Typing: Check for 'data' property directly instead of 'instanceof'
+      // This works even if the class name was mangled during minification.
+      if (err.data !== undefined) {
         showCustomAlert(err.data, "danger");
-      } else if (err instanceof Error && err.message.includes("already exists")) {
+        return;
+      }
+
+      // 2. Check for the string in the generic message
+      const message = err.message || err.toString();
+
+      if (message.includes("already exists")) {
         showCustomAlert("Email already in use", "danger");
       } else {
+        // Optional: In prod, you might want to log the specific message to tools like Sentry
         showCustomAlert("An unexpected error occurred", "danger");
       }
     } finally {

@@ -755,7 +755,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "NunitoExtraBold",
     textTransform: "capitalize",
-    width: "100%",
   },
   date_time: {
     fontFamily: "NunitoRegular",
