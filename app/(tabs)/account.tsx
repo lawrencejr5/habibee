@@ -426,7 +426,10 @@ export default function Account() {
                 ]}
               >
                 <Pressable
-                  onPress={() => haptics.impact()}
+                  onPress={() => {
+                    haptics.impact();
+                    router.push("/account/about");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
@@ -447,7 +450,10 @@ export default function Account() {
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() => haptics.impact()}
+                  onPress={() => {
+                    haptics.impact();
+                    router.push("/account/terms");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
@@ -468,7 +474,10 @@ export default function Account() {
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() => haptics.impact()}
+                  onPress={() => {
+                    haptics.impact();
+                    router.push("/account/privacy");
+                  }}
                   style={[styles.row]}
                 >
                   <Feather
