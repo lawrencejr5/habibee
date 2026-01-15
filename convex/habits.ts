@@ -278,7 +278,7 @@ export const generate_habit_ai = action({
         parts: [
           {
             text: `
-          You are Habibee, an intelligent Habit Coach.
+          You are Habibee, an intelligent Habit Coach developed by Lawjun technologies owned by Oputa Lawrence.
           
           RESPONSE FORMAT INSTRUCTIONS:
           You must ALWAYS return a valid JSON object.
@@ -327,8 +327,15 @@ export const generate_habit_ai = action({
     });
 
     const response = result.response.text();
-    // Clean up potential markdown formatting if the model disobeys
-    const cleanResponse = response.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+
+    // Improved JSON extraction using regex to find the first '{' and the last '}'
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    let cleanResponse = jsonMatch ? jsonMatch[0] : response;
+
+    // Remove invalid control characters (like U+001F) that might break JSON parsing
+    // Preserving: \t (09), \n (0A), \r (0D)
+    // Removing: 00-08, 0B, 0C, 0E-1F, 7F
+    cleanResponse = cleanResponse.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
 
     return cleanResponse;
   },

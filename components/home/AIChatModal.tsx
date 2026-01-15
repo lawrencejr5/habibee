@@ -117,10 +117,19 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 
       let parsedResponse: { response: ChatPart[] };
       try {
-        parsedResponse = JSON.parse(responseString);
+        // Attempt to clean the response string on the client side as a failsafe
+        const cleanJsonMatch = responseString.match(/\{[\s\S]*\}/);
+        let jsonToParse = cleanJsonMatch ? cleanJsonMatch[0] : responseString;
+
+        // Remove invalid control characters that might break JSON parsing
+        // Preserving: \t (09), \n (0A), \r (0D)
+        // Removing: 00-08, 0B, 0C, 0E-1F, 7F
+        jsonToParse = jsonToParse.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+
+        parsedResponse = JSON.parse(jsonToParse);
       } catch (e) {
         console.error("Failed to parse JSON", e);
-        // Fallback if parsing fails (treat mostly as text)
+        // Fallback: Treat the entire raw string as a text response
         parsedResponse = {
           response: [{ type: "text", content: responseString }],
         };
