@@ -5,8 +5,11 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useEffect
 } from "react";
 import {
+  Platform,
+  Keyboard,
   Pressable,
   View,
   TextInput,
@@ -39,6 +42,7 @@ type AiChatMsgType = {
   role: "user" | "model";
   parts: { text: string }[];
   thoughtTime?: number;
+  shouldAnimate?: boolean;
 };
 
 const { width } = Dimensions.get("window");
@@ -68,17 +72,17 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       // Add user message immediately
       const new_message: AiChatMsgType = {
         role: "user",
-        parts: [{ text: userMsg }]
+        parts: [{ text: userMsg }],
       };
 
       setMessages((prev) => [...prev, new_message]);
       setInput(""); // Clear input immediately
 
       const response = await generate_habit({
-        messages: [...messages, new_message].map(m => ({
+        messages: [...messages, new_message].map((m) => ({
           role: m.role,
-          parts: m.parts
-        }))
+          parts: m.parts,
+        })),
       });
 
       const endTime = Date.now();
@@ -88,6 +92,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         role: "model",
         parts: [{ text: response }],
         thoughtTime: duration,
+        shouldAnimate: true,
       };
 
       setMessages((prev) => [...prev, ai_message]);
@@ -97,6 +102,16 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const markMessageAsAnimated = (index: number) => {
+    setMessages((prev) => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], shouldAnimate: false };
+      }
+      return updated;
+    });
   };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -133,6 +148,40 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     },
   ];
 
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const onShow = (e: any) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    };
+    const onHide = () => setKeyboardHeight(0);
+
+
+    const showListener = Keyboard.addListener(showEvent, onShow);
+    const hideListener = Keyboard.addListener(hideEvent, onHide);
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
   if (!visible) return null;
 
   return (
@@ -163,62 +212,64 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             backgroundColor: Colors[theme].background,
           }}
         >
+          {/* Header */}
+          <View
+            style={{
+              paddingHorizontal: 15,
+              paddingTop: 20,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <Image
+                source={require("../../assets/images/ai-icon.png")}
+                style={{
+                  width: 35,
+                  height: 35,
+                  borderRadius: 12, // Slightly squarer for modern look
+                }}
+              />
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 18,
+                }}
+              >
+                Habibee AI
+              </ThemedText>
+            </View>
+
+            <Pressable
+              style={{
+                paddingHorizontal: 8,
+                paddingBottom: 8,
+              }}
+              onPress={() => {
+                haptics.impact();
+                bottomSheetRef.current?.close();
+              }}
+            >
+              <Feather
+                name="chevron-down"
+                size={30}
+                color={Colors[theme].text}
+              />
+            </Pressable>
+          </View>
           {/* Main Content */}
           <ScrollView
+            ref={scrollViewRef}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               flexGrow: 1,
-              paddingBottom: 100, // Space for sticky input
+              paddingBottom: messages.length > 0 ? 100 + keyboardHeight : 100, // Dynamic space for sticky input + keyboard
             }}
           >
-            {/* Header */}
-            <View
-              style={{
-                paddingHorizontal: 15,
-                paddingTop: 20,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-              >
-                <Image
-                  source={require("../../assets/images/ai-icon.png")}
-                  style={{
-                    width: 35,
-                    height: 35,
-                    borderRadius: 12, // Slightly squarer for modern look
-                  }}
-                />
-                <ThemedText
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 18,
-                  }}
-                >
-                  Habibee AI
-                </ThemedText>
-              </View>
 
-              <Pressable
-                style={{
-                  paddingHorizontal: 8,
-                  paddingBottom: 8,
-                }}
-                onPress={() => {
-                  haptics.impact();
-                  bottomSheetRef.current?.close();
-                }}
-              >
-                <Feather
-                  name="chevron-down"
-                  size={30}
-                  color={Colors[theme].text}
-                />
-              </Pressable>
-            </View>
 
             {/* Content Display */}
             {messages.length === 0 ? (
@@ -315,7 +366,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               </View>
             ) : (
               <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
-                {messages.map((msg, index) => (
+                {messages.map((msg, index) =>
                   msg.role === "user" ? (
                     <UserChat key={index} text={msg.parts[0].text} />
                   ) : (
@@ -323,9 +374,11 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                       key={index}
                       text={msg.parts[0].text}
                       thoughtTime={msg.thoughtTime}
+                      shouldAnimate={msg.shouldAnimate}
+                      onAnimationComplete={() => markMessageAsAnimated(index)}
                     />
                   )
-                ))}
+                )}
 
                 {generating && (
                   <View
@@ -470,8 +523,39 @@ const UserChat: FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const ModelChat: FC<{ text: string, thoughtTime?: number }> = ({ text, thoughtTime }) => {
+const ModelChat: FC<{
+  text: string;
+  thoughtTime?: number;
+  shouldAnimate?: boolean;
+  onAnimationComplete?: () => void;
+}> = ({ text, thoughtTime, shouldAnimate, onAnimationComplete }) => {
   const { theme } = useTheme();
+  const haptics = useHapitcs();
+  const [displayedText, setDisplayedText] = useState(shouldAnimate ? "" : text);
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayedText(text);
+      return;
+    }
+
+    let index = 0;
+    const intervalId = setInterval(() => {
+      setDisplayedText((prev) => text.slice(0, index + 1));
+      haptics.impact("light");
+      index++;
+
+      if (index >= text.length) {
+        clearInterval(intervalId);
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+      }
+    }, .1); // Adjust speed here
+
+    return () => clearInterval(intervalId);
+  }, [shouldAnimate, text]);
+
   return (
     <View
       style={{
@@ -479,7 +563,7 @@ const ModelChat: FC<{ text: string, thoughtTime?: number }> = ({ text, thoughtTi
         borderRadius: 15,
         alignSelf: "flex-start",
         marginBottom: 20,
-        maxWidth: "100%"
+        maxWidth: "100%",
       }}
     >
       <View
@@ -499,7 +583,7 @@ const ModelChat: FC<{ text: string, thoughtTime?: number }> = ({ text, thoughtTi
             style={{
               color: Colors[theme].text_secondary,
               fontFamily: "NunitoBold",
-              fontSize: 12
+              fontSize: 12,
             }}
           >
             Thought for {thoughtTime.toFixed(1)}s
@@ -512,10 +596,10 @@ const ModelChat: FC<{ text: string, thoughtTime?: number }> = ({ text, thoughtTi
             color: Colors[theme].text,
             fontFamily: "NunitoRegular",
             fontSize: 16,
-            lineHeight: 22
+            lineHeight: 22,
           }}
         >
-          {text}
+          {displayedText}
         </Text>
       </View>
     </View>
