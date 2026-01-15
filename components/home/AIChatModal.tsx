@@ -523,6 +523,23 @@ const UserChat: FC<{ text: string }> = ({ text }) => {
   );
 };
 
+// Text Parsing Helper
+const parseText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return {
+        type: "bold",
+        content: part.slice(2, -2),
+      };
+    }
+    return {
+      type: "text",
+      content: part,
+    };
+  });
+};
+
 const ModelChat: FC<{
   text: string;
   thoughtTime?: number;
@@ -531,30 +548,65 @@ const ModelChat: FC<{
 }> = ({ text, thoughtTime, shouldAnimate, onAnimationComplete }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
-  const [displayedText, setDisplayedText] = useState(shouldAnimate ? "" : text);
+
+  const parsedText = useMemo(() => parseText(text), [text]);
+  const totalLength = useMemo(() => parsedText.reduce((acc, part) => acc + part.content.length, 0), [parsedText]);
+
+  const [visibleCount, setVisibleCount] = useState(shouldAnimate ? 0 : totalLength);
 
   useEffect(() => {
     if (!shouldAnimate) {
-      setDisplayedText(text);
+      setVisibleCount(totalLength);
       return;
     }
 
-    let index = 0;
+    let currentCount = 0;
     const intervalId = setInterval(() => {
-      setDisplayedText((prev) => text.slice(0, index + 1));
-      haptics.impact("light");
-      index++;
+      currentCount += 4;
+      haptics.impact("light")
+      setVisibleCount(Math.min(currentCount, totalLength));
 
-      if (index >= text.length) {
+      if (currentCount >= totalLength) {
         clearInterval(intervalId);
         if (onAnimationComplete) {
           onAnimationComplete();
         }
       }
-    }, .1); // Adjust speed here
+    }, 10);
 
     return () => clearInterval(intervalId);
-  }, [shouldAnimate, text]);
+  }, [shouldAnimate, totalLength]);
+
+  // Render logic based on visibleCount
+  const renderContent = () => {
+    let currentRenderCount = visibleCount;
+    return parsedText.map((part, index) => {
+      if (currentRenderCount <= 0) return null;
+
+      const partLength = part.content.length;
+      let textToShow = part.content;
+
+      if (currentRenderCount < partLength) {
+        textToShow = part.content.slice(0, currentRenderCount);
+      }
+
+      currentRenderCount -= partLength;
+
+      return (
+        <Text
+          key={index}
+          style={{
+            color: Colors[theme].text,
+            fontFamily: part.type === "bold" ? "NunitoBold" : "NunitoRegular",
+            fontSize: 16,
+            lineHeight: 22,
+          }}
+        >
+          {textToShow}
+        </Text>
+      );
+    });
+  };
 
   return (
     <View
@@ -591,15 +643,8 @@ const ModelChat: FC<{
         )}
       </View>
       <View style={{ paddingLeft: 32 }}>
-        <Text
-          style={{
-            color: Colors[theme].text,
-            fontFamily: "NunitoRegular",
-            fontSize: 16,
-            lineHeight: 22,
-          }}
-        >
-          {displayedText}
+        <Text style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {renderContent()}
         </Text>
       </View>
     </View>
