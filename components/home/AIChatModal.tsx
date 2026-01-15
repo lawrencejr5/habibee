@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useEffect
+  useEffect,
 } from "react";
 import {
   Platform,
@@ -31,16 +31,31 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
-import { useAction } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { habitIcons } from "@/data/habits";
 
 interface AIChatModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }
+
+type HabitData = {
+  habit: string;
+  duration: number;
+  goal: number;
+  icon: string;
+  theme: string;
+  strict: boolean;
+};
+
+type ChatPart =
+  | { type: "text"; content: string }
+  | { type: "habit"; content: HabitData };
+
 type AiChatMsgType = {
   role: "user" | "model";
-  parts: { text: string }[];
+  parts: ChatPart[];
   thoughtTime?: number;
   shouldAnimate?: boolean;
 };
@@ -60,6 +75,19 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 
   const generate_habit = useAction(api.habits.generate_habit_ai);
 
+  // Serialize messages for the API (convert back to simple styling for context)
+  const serializeMessagesForApi = (msgs: AiChatMsgType[]) => {
+    return msgs.map((m) => ({
+      role: m.role,
+      parts: m.parts.map((p) => ({
+        text:
+          p.type === "text"
+            ? p.content
+            : `[Suggested Habit: ${p.content.habit}]`,
+      })),
+    }));
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -72,25 +100,35 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       // Add user message immediately
       const new_message: AiChatMsgType = {
         role: "user",
-        parts: [{ text: userMsg }],
+        parts: [{ type: "text", content: userMsg }],
       };
 
       setMessages((prev) => [...prev, new_message]);
       setInput(""); // Clear input immediately
 
-      const response = await generate_habit({
-        messages: [...messages, new_message].map((m) => ({
-          role: m.role,
-          parts: m.parts,
-        })),
+      // Send context to AI
+      const apiMessages = serializeMessagesForApi([...messages, new_message]);
+      const responseString = await generate_habit({
+        messages: apiMessages,
       });
 
       const endTime = Date.now();
       const duration = (endTime - startTime) / 1000;
 
+      let parsedResponse: { response: ChatPart[] };
+      try {
+        parsedResponse = JSON.parse(responseString);
+      } catch (e) {
+        console.error("Failed to parse JSON", e);
+        // Fallback if parsing fails (treat mostly as text)
+        parsedResponse = {
+          response: [{ type: "text", content: responseString }],
+        };
+      }
+
       const ai_message: AiChatMsgType = {
         role: "model",
-        parts: [{ text: response }],
+        parts: parsedResponse.response,
         thoughtTime: duration,
         shouldAnimate: true,
       };
@@ -368,11 +406,11 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
                 {messages.map((msg, index) =>
                   msg.role === "user" ? (
-                    <UserChat key={index} text={msg.parts[0].text} />
+                    <UserChat key={index} text={(msg.parts[0].content as string)} />
                   ) : (
                     <ModelChat
                       key={index}
-                      text={msg.parts[0].text}
+                      parts={msg.parts}
                       thoughtTime={msg.thoughtTime}
                       shouldAnimate={msg.shouldAnimate}
                       onAnimationComplete={() => markMessageAsAnimated(index)}
@@ -540,16 +578,161 @@ const parseText = (text: string) => {
   });
 };
 
+const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
+  const { theme } = useTheme();
+  const createHabit = useMutation(api.habits.create_habit);
+  const { showCustomAlert } = useCustomAlert();
+  const haptics = useHapitcs();
+  const [saved, setSaved] = useState(false);
+
+  const onSave = async () => {
+    haptics.impact();
+    try {
+      await createHabit({
+        habit: data.habit,
+        duration: data.duration,
+        goal: data.goal,
+        icon: data.icon,
+        theme: data.theme,
+        strict: data.strict
+      });
+      setSaved(true);
+      showCustomAlert("Habit saved successfully!", "success");
+    } catch (e) {
+      showCustomAlert("Failed to save habit", "danger");
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={() => haptics.impact()}
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+        backgroundColor: Colors[theme].surface,
+        paddingVertical: 15,
+        paddingHorizontal: 5,
+        marginVertical: 15,
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: Colors[theme].border,
+        maxWidth: 300
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 15,
+          marginLeft: 5,
+          flex: 1,
+        }}
+      >
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            backgroundColor: data.theme + "20",
+            justifyContent: "center",
+            alignItems: "center",
+            borderColor: data.theme,
+          }}
+        >
+          <Image
+            source={habitIcons[data.icon] || habitIcons["default"]}
+            style={{
+              width: 20,
+              height: 20,
+              tintColor: data.theme,
+            }}
+          />
+        </View>
+
+        <View>
+          <ThemedText
+            numberOfLines={1}
+            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 150 }}
+          >
+            {data.habit}
+          </ThemedText>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 15,
+              marginTop: 10,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                width: 100,
+              }}
+            >
+              <Image
+                source={require("@/assets/icons/clock.png")}
+                style={{
+                  tintColor: Colors[theme].text_secondary,
+                  width: 14,
+                  height: 14,
+                }}
+              />
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 12,
+                  color: Colors[theme].text_secondary,
+                }}
+                numberOfLines={1}
+              >
+                {data.duration} mins daily
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <Pressable
+        onPress={saved ? undefined : onSave}
+        style={{
+          borderLeftWidth: 3,
+          borderColor: Colors[theme].border,
+          width: 50,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          paddingHorizontal: 10,
+        }}
+      >
+        <MaterialCommunityIcons
+          name={saved ? "check-circle" : "download"}
+          size={24}
+          color={saved ? Colors[theme].primary : Colors[theme].text_secondary}
+        />
+      </Pressable>
+    </Pressable>
+  );
+};
+
 const ModelChat: FC<{
-  text: string;
+  parts: ChatPart[];
   thoughtTime?: number;
   shouldAnimate?: boolean;
   onAnimationComplete?: () => void;
-}> = ({ text, thoughtTime, shouldAnimate, onAnimationComplete }) => {
+}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete }) => {
   const { theme } = useTheme();
-  const haptics = useHapitcs();
 
-  const parsedText = useMemo(() => parseText(text), [text]);
+  // Combine all text parts for animation calculation
+  const textParts = parts.filter(p => p.type === 'text') as { type: 'text', content: string }[];
+  const fullText = textParts.map(p => p.content).join('');
+
+  const parsedText = useMemo(() => parseText(fullText), [fullText]);
   const totalLength = useMemo(() => parsedText.reduce((acc, part) => acc + part.content.length, 0), [parsedText]);
 
   const [visibleCount, setVisibleCount] = useState(shouldAnimate ? 0 : totalLength);
@@ -563,7 +746,6 @@ const ModelChat: FC<{
     let currentCount = 0;
     const intervalId = setInterval(() => {
       currentCount += 4;
-      haptics.impact("light")
       setVisibleCount(Math.min(currentCount, totalLength));
 
       if (currentCount >= totalLength) {
@@ -577,36 +759,8 @@ const ModelChat: FC<{
     return () => clearInterval(intervalId);
   }, [shouldAnimate, totalLength]);
 
-  // Render logic based on visibleCount
-  const renderContent = () => {
-    let currentRenderCount = visibleCount;
-    return parsedText.map((part, index) => {
-      if (currentRenderCount <= 0) return null;
-
-      const partLength = part.content.length;
-      let textToShow = part.content;
-
-      if (currentRenderCount < partLength) {
-        textToShow = part.content.slice(0, currentRenderCount);
-      }
-
-      currentRenderCount -= partLength;
-
-      return (
-        <Text
-          key={index}
-          style={{
-            color: Colors[theme].text,
-            fontFamily: part.type === "bold" ? "NunitoBold" : "NunitoRegular",
-            fontSize: 16,
-            lineHeight: 22,
-          }}
-        >
-          {textToShow}
-        </Text>
-      );
-    });
-  };
+  // Render logic
+  let currentRenderCount = visibleCount;
 
   return (
     <View
@@ -643,9 +797,48 @@ const ModelChat: FC<{
         )}
       </View>
       <View style={{ paddingLeft: 32 }}>
-        <Text style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {renderContent()}
-        </Text>
+        {parts.map((part, index) => {
+          if (part.type === 'habit') {
+            return <HabitCard key={index} data={part.content} />;
+          }
+
+          const partParsed = parseText(part.content);
+          const realLength = partParsed.reduce((acc, p) => acc + p.content.length, 0);
+
+          let visibleForPart = 0;
+          if (currentRenderCount > 0) {
+            visibleForPart = Math.min(currentRenderCount, realLength);
+            currentRenderCount -= visibleForPart;
+          }
+
+          if (visibleForPart <= 0) return null;
+
+          let localCounter = visibleForPart;
+          return (
+            <Text key={index} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
+              {partParsed.map((token, tIndex) => {
+                if (localCounter <= 0) return null;
+                const tokenLen = token.content.length;
+                const showLen = Math.min(localCounter, tokenLen);
+                localCounter -= showLen;
+
+                return (
+                  <Text
+                    key={tIndex}
+                    style={{
+                      color: Colors[theme].text,
+                      fontFamily: token.type === "bold" ? "NunitoBold" : "NunitoRegular",
+                      fontSize: 16,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {token.content.slice(0, showLen)}
+                  </Text>
+                )
+              })}
+            </Text>
+          );
+        })}
       </View>
     </View>
   );
