@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet } from "react-native";
+import { Image, Pressable, StyleSheet, ScrollView as RNScrollView } from "react-native";
+import { useRef } from "react";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -61,6 +62,17 @@ const Home = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
+
+  const scrollRef = useRef<RNScrollView | null>(null);
+  const tasksSectionY = useRef<number>(0);
+
+  const scrollToTasks = () => {
+    haptics.impact();
+    scrollRef.current?.scrollTo({
+      y: tasksSectionY.current,
+      animated: true,
+    });
+  };
 
   // Check if we're on the index page
   const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
@@ -218,6 +230,7 @@ const Home = () => {
       </ThemedView>
 
       <ScrollView
+        ref={scrollRef}
         style={[
           styles.container,
           {
@@ -359,7 +372,12 @@ const Home = () => {
         </Pressable>
 
         {/* Tasks */}
-        <View style={{ marginTop: 40 }}>
+        <View
+          onLayout={(event) => {
+            tasksSectionY.current = event.nativeEvent.layout.y;
+          }}
+          style={{ marginTop: 40 }}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -371,6 +389,7 @@ const Home = () => {
               Daily Habibees
             </ThemedText>
             <Pressable
+              onPress={scrollToTasks}
               style={{
                 paddingVertical: 5,
                 paddingHorizontal: 10,

@@ -88,13 +88,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     }));
   };
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+  const sendMessage = async (customInput?: string) => {
+    const messageContent = typeof customInput === "string" ? customInput : input;
+    if (!messageContent.trim()) return;
 
     setGenerating(true);
     haptics.impact();
     const startTime = Date.now();
-    const userMsg = input; // Store input to use after clearing
+    const userMsg = messageContent; // Store message to use
 
     try {
       // Add user message immediately
@@ -269,7 +270,11 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               justifyContent: "space-between",
             }}
           >
-            <View
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setMessages([]);
+              }}
               style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
             >
               <Image
@@ -288,7 +293,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               >
                 Habibee AI
               </ThemedText>
-            </View>
+            </Pressable>
 
             <Pressable
               style={{
@@ -365,8 +370,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                     <Pressable
                       key={item.id}
                       onPress={() => {
-                        haptics.impact();
-                        setInput(item.prompt);
+                        sendMessage(item.prompt);
                       }}
                       style={({ pressed }) => ({
                         width: (width - 60) / 2, // 2 columns with padding calc
@@ -482,6 +486,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 style={{
                   width: "100%",
                   minHeight: 50,
+                  maxHeight: 150,
                   padding: 5,
                   paddingHorizontal: 15,
                   backgroundColor: Colors[theme].surface,
@@ -489,7 +494,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   borderWidth: 1.5,
                   borderRadius: 25,
                   flexDirection: "row",
-                  alignItems: "center",
+                  alignItems: "flex-end", // Align items to bottom as it grows
                   justifyContent: "space-between",
                 }}
               >
@@ -500,16 +505,19 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                     fontFamily: "NunitoBold",
                     color: Colors[theme].text,
                     paddingVertical: 10,
+                    maxHeight: 130, // Limit internal growth
                   }}
                   placeholder="Ask Habibee anything..."
                   placeholderTextColor={Colors[theme].text_secondary}
                   value={input}
                   onChangeText={setInput}
-                  onSubmitEditing={sendMessage}
+                  multiline={true}
+                  blurOnSubmit={true}
+                  onSubmitEditing={() => sendMessage()}
                 />
 
                 <Pressable
-                  onPress={sendMessage}
+                  onPress={() => sendMessage()}
                   disabled={generating}
                   style={{
                     backgroundColor: generating ? Colors[theme].border : accentColor,
