@@ -107,6 +107,15 @@ const Home = () => {
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Morning";
+    if (hour < 17) return "Afternoon";
+    return "Evening";
+  };
+
+  const greeting = getGreeting();
+
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
 
@@ -140,7 +149,7 @@ const Home = () => {
           />
           <View>
             <ThemedText style={styles.greeting_user}>
-              Morning, {signedIn.username}
+              {greeting}, {signedIn.username}
             </ThemedText>
             <Text
               style={[
@@ -293,6 +302,61 @@ const Home = () => {
             </Pressable>
           </View>
         </View>
+
+        {/* Habibee AI Ad Card */}
+        <Pressable
+          onPress={() => {
+            setAiChatModalVisible(true);
+            haptics.impact();
+          }}
+          style={{
+            backgroundColor: Colors[theme].surface,
+            borderWidth: 1.5,
+            borderColor: Colors[theme].primary,
+            borderRadius: 15,
+            padding: 15,
+            marginTop: 15,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+
+          <Image
+            source={require("../../assets/images/ai-icon.png")}
+            style={{ width: 40, height: 40, borderRadius: 20 }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 14,
+                color: Colors[theme].text,
+              }}
+            >
+              Try Habibee AI for free! 🚀
+            </Text>
+            <Text
+              style={{
+                fontFamily: "NunitoRegular",
+                fontSize: 12,
+                color: Colors[theme].text_secondary,
+                marginTop: 2,
+              }}
+            >
+              Get personalized habit recommendations and support.
+            </Text>
+          </View>
+          <Image
+            source={require("../../assets/icons/chevron-down.png")}
+            style={{
+              width: 16,
+              height: 16,
+              tintColor: Colors[theme].primary,
+              transform: [{ rotate: "-90deg" }],
+            }}
+          />
+        </Pressable>
 
         {/* Tasks */}
         <View style={{ marginTop: 40 }}>
