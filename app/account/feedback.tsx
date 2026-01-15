@@ -1,5 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useCustomAlert } from "@/context/AlertContext";
 
 import * as Haptics from "expo-haptics";
 
@@ -15,8 +18,32 @@ import { router } from "expo-router";
 const FeedbackPage = () => {
   const insets = useSafeAreaInsets();
   const theme = useColorScheme();
+  const { showCustomAlert } = useCustomAlert();
+  const sendFeedback = useMutation(api.feedback.send_feedback);
 
-  const [fullname, setFullname] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!message.trim()) {
+      showCustomAlert("Please enter a message", "warning");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await sendFeedback({ message: message.trim() });
+      showCustomAlert("Feedback sent! Thank you.", "success");
+      setMessage("");
+      router.back();
+    } catch (err: any) {
+      const errorMsg =
+        err.message || (typeof err === "string" ? err : "") || JSON.stringify(err);
+      showCustomAlert("Failed to send feedback: " + errorMsg, "danger");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemedView
@@ -54,28 +81,38 @@ const FeedbackPage = () => {
           label="Feedback"
           placeholder="Describe your issue or message..."
           big={true}
-          value={fullname}
-          setValue={setFullname}
+          value={message}
+          setValue={setMessage}
         />
       </View>
       <Pressable
+        onPress={handleSubmit}
+        disabled={isLoading}
         style={{
           width: "100%",
           backgroundColor: Colors[theme].primary,
           paddingVertical: 15,
           borderRadius: 50,
+          opacity: isLoading ? 0.7 : 1,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        <Text
-          style={{
-            fontFamily: "NunitoBold",
-            fontSize: 16,
-            color: "#eee",
-            textAlign: "center",
-          }}
-        >
-          Save Changes
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator color="#eee" size="small" />
+        ) : (
+          <Text
+            style={{
+              fontFamily: "NunitoBold",
+              fontSize: 16,
+              color: "#eee",
+              textAlign: "center",
+            }}
+          >
+            Send
+          </Text>
+        )}
       </Pressable>
     </ThemedView>
   );

@@ -46,6 +46,12 @@ const schema = defineSchema({
   })
     .index("by_habit_date", ["habit", "date"])
     .index("by_user_date", ["user", "date"]),
+
+  feedback: defineTable({
+    user: v.id("users"),
+    message: v.string(),
+    createdAt: v.string(),
+  }).index("by_user", ["user"]),
 });
 
 export default schema;

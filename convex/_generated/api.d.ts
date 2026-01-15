@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as feedback from "../feedback.js";
 import type * as habits from "../habits.js";
 import type * as http from "../http.js";
 import type * as motivationa_messages from "../motivationa_messages.js";
@@ -24,6 +25,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  feedback: typeof feedback;
   habits: typeof habits;
   http: typeof http;
   motivationa_messages: typeof motivationa_messages;
