@@ -426,12 +426,13 @@ const Home = () => {
                   streak={habit.current_streak}
                   habitType={habit.icon ?? "default"}
                   themeColor={habit.theme ?? "#eee"}
+                  timer_start_time={habit.timer_start_time}
+                  timer_elapsed={habit.timer_elapsed}
+                  target_duration={habit.duration}
                   onFireIconPress={() => {
-                    // setSelectedHabit({
-                    //   title: habit.habit,
-                    //   duration: String(habit.duration),
-                    // });
-                    // setTimerModalVisible(true);
+                    haptics.impact();
+                    setSelectedHabitId(habit._id);
+                    setTimerModalVisible(true);
                   }}
                   onCardPress={() => {
                     haptics.impact();
@@ -572,6 +573,9 @@ const HabitCard: React.FC<{
   id: string;
   onFireIconPress: () => void;
   onCardPress: () => void;
+  timer_start_time?: number;
+  timer_elapsed?: number;
+  target_duration: number;
 }> = ({
   duration,
   title,
@@ -582,11 +586,57 @@ const HabitCard: React.FC<{
   id,
   onFireIconPress,
   onCardPress,
+  timer_start_time,
+  timer_elapsed,
+  target_duration,
 }) => {
     const { theme } = useTheme();
 
     const haptics = useHapitcs();
 
+    const [currentTime, setCurrentTime] = useState<number>(0);
+
+    const calculateCurrentTime = () => {
+      const elapsed = timer_elapsed || 0;
+      const currentSession = timer_start_time
+        ? Math.floor((Date.now() - timer_start_time) / 1000)
+        : 0;
+      const total = elapsed + currentSession;
+      const maxSeconds = target_duration * 60;
+      return Math.min(total, maxSeconds);
+    };
+
+    useEffect(() => {
+      // Periodic update if the timer is running
+      if (timer_start_time) {
+        const interval = setInterval(() => {
+          setCurrentTime(calculateCurrentTime());
+        }, 1000);
+        setCurrentTime(calculateCurrentTime());
+        return () => clearInterval(interval);
+      } else {
+        setCurrentTime(calculateCurrentTime());
+      }
+    }, [timer_start_time, timer_elapsed, target_duration]);
+
+    const formatTime = (totalSeconds: number) => {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      if (hours > 0) {
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )}:${String(secs).padStart(2, "0")}`;
+      }
+      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
+        2,
+        "0"
+      )}`;
+    };
+
+    const isTimerActive = !!timer_start_time || (timer_elapsed || 0) > 0;
     return (
       <Pressable
         onPress={onCardPress}
@@ -676,7 +726,7 @@ const HabitCard: React.FC<{
                     color: Colors[theme].text_secondary,
                   }}
                 >
-                  {duration} min(s)
+                  {isTimerActive ? formatTime(currentTime) : `${duration} min(s)`}
                 </ThemedText>
               </View>
               <View
