@@ -40,6 +40,72 @@ const genAI = new GoogleGenerativeAI(
   process.env.GOOGLE_GEMINI_API_KEY as string
 );
 
+export const update_habit_timer = mutation({
+  args: {
+    habit_id: v.id("habits"),
+    timer_start_time: v.optional(v.union(v.number(), v.null())),
+    timer_elapsed: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated");
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (!habit) throw new Error("Habit not found");
+
+    if (habit.user !== user_id) throw new Error("Unauthorized");
+
+    const fields_to_update: any = {};
+    if (args.timer_start_time !== undefined)
+      fields_to_update.timer_start_time = args.timer_start_time;
+    // We allow setting timer_start_time to null explicitly if passed as null (for pausing),
+    // but Convex v.optional(v.number()) might not strictly support null if not unioned with v.null().
+    // However, usually omitting it or setting undefined is how optional works.
+    // To support "pausing" (clearing start time), we might need to handle null.
+    // Let's rely on args logic: if we want to "unset" it, we might need a specific handling or just use 0 or undefined.
+    // Wait, v.optional(v.number()) means number | undefined. It doesn't include null.
+    // If I want to clear it, I should probably use undefined.
+    // But how do I send "undefined" from client?
+    // Let's check how Convex handles partial updates. `db.patch` will update fields present in the object.
+    // If I want to "delete" a field or set it to undefined, usually I just send undefined?
+    // Actually, to remove a field in Convex, you usually set it to undefined in patch.
+    // Let's refine the mutation args to allow clearing.
+
+    // Re-reading Convex docs approach:
+    // Ideally use v.union(v.number(), v.null()) if we want to explicitly set null.
+    // Or just v.optional(v.number()).
+    // Let's stick to the plan: pass `null` or `undefined`.
+    // If I want to PAUSE, I need `timer_start_time` to be cleared.
+    // Code below assumes `args.timer_start_time` can be null?
+    // `v.optional(v.number())` validation will fail if I pass null.
+    // So I should use `v.union(v.number(), v.null())` if I want to pass null.
+    // Or simpler: I'll use a specific flag or just expect `undefined`.
+    // But can I pass `undefined` over the wire? No, JSON doesn't produce undefined. It produces null or missing key.
+    // So correct schema for a nullable field is `v.optional(v.union(v.number(), v.null()))` or just `v.union(v.number(), v.null())`.
+    // BUT, `v.optional` in `schema.ts` usually just means the field might be missing.
+    // If I want to WRITE a "missing" state, I might need to follow specific Convex pattern.
+    // Actually simpler: `timer_start_time` is number. If 0, it's not started? No timestamp can be anything.
+    // Let's look at `schema.ts` again. I defined it as `v.optional(v.number())`.
+    // In `update_habit_timer`, I'll define args as `timer_start_time: v.optional(v.union(v.number(), v.null()))`.
+    // And if null, I set it to undefined in the patch?
+
+    // Let's try `v.optional(v.number())` strictly first. If I want to "pause", I won't send `timer_start_time`?
+    // No, I need to UPDATE it to be empty.
+    // The previous `update_habit` mutation does `if (args.habit !== undefined)`.
+    // If I want to UNSET `timer_start_time`, I need to receive a signal.
+    // Let's use `v.union(v.number(), v.null())` for `timer_start_time` in arguments so I can explicitly pass `null`.
+
+    if (args.timer_start_time !== undefined) {
+      fields_to_update.timer_start_time = args.timer_start_time === null ? undefined : args.timer_start_time;
+    }
+
+    if (args.timer_elapsed !== undefined)
+      fields_to_update.timer_elapsed = args.timer_elapsed;
+
+    await ctx.db.patch(args.habit_id, fields_to_update);
+  },
+});
+
 export const get_user_habits = query({
   args: {},
   handler: async (ctx, args) => {

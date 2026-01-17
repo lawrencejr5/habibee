@@ -509,7 +509,7 @@ const Home = () => {
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
         habit={
-          habitData.find((habit) => habit._id === selectedHabitId) as HabitType
+          habitData.find((habit) => habit._id === selectedHabitId)
         }
       />
       {selectedHabitId && (

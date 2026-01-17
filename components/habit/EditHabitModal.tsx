@@ -62,8 +62,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   const [goal, setGoal] = useState<string>(String(habit.goal));
   const [strict, setStrict] = useState<boolean>(habit.strict);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<string>(habit.icon);
-  const [selectedColor, setSelectedColor] = useState<string>(habit.theme);
+  const [selectedIcon, setSelectedIcon] = useState<string>(habit.icon ?? "default");
+  const [selectedColor, setSelectedColor] = useState<string>(habit.theme ?? "#999");
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
@@ -101,8 +101,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
     setHabitName(habit.habit);
     setDuration(String(habit.duration));
     setGoal(String(habit.goal));
-    setSelectedIcon(habit.icon);
-    setSelectedColor(habit.theme);
+    setSelectedIcon(habit.icon ?? "default");
+    setSelectedColor(habit.theme ?? "#999");
   }, [visible, habit]);
 
   const renderBackdrop = (props: any) => (

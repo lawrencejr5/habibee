@@ -281,11 +281,11 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     width: 100,
                     height: 100,
                     borderRadius: 50,
-                    backgroundColor: habit.theme + "20",
+                    backgroundColor: (habit.theme ?? Colors[theme].primary) + "20",
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
-                    borderColor: habit.theme,
+                    borderColor: habit.theme ?? Colors[theme].primary,
                   }}
                 >
                   <Image
@@ -293,7 +293,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     style={{
                       width: 50,
                       height: 50,
-                      tintColor: habit.theme,
+                      tintColor: habit.theme ?? Colors[theme].primary,
                     }}
                   />
                 </View>
@@ -452,7 +452,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                                   height: 12,
                                   borderRadius: 2,
                                   backgroundColor: day.completed
-                                    ? habit.theme + "cc"
+                                    ? (habit.theme ?? Colors[theme].primary) + "cc"
                                     : Colors[theme].border,
                                 }}
                               />
@@ -505,7 +505,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 onPress={handleStart}
                 disabled={isDone}
                 style={{
-                  backgroundColor: habit.theme,
+                  backgroundColor: habit.theme ?? Colors[theme].primary,
                   paddingVertical: 16,
                   borderRadius: 50,
                   alignItems: "center",
@@ -537,12 +537,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
-        habit={habit as HabitType}
+        habit={habit}
       />
       <EditHabitModal
         visible={editModalVisible}
         setVisible={setEditModalVisible}
-        habit={habit as HabitType}
+        habit={habit}
       />
       {/* Delete Habit Modal */}
       <DeleteHabitModal
@@ -550,7 +550,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         onClose={() => {
           setDeleteModalVisible(false);
         }}
-        habit={habit as HabitType}
+        habit={habit}
       />
     </>
   );

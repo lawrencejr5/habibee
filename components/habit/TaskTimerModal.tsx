@@ -25,7 +25,7 @@ import { useTheme } from "@/context/ThemeContext";
 interface TaskTimerModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  habit: HabitType;
+  habit?: HabitType;
 }
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
@@ -45,45 +45,89 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     weekday: "short",
   });
 
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
+  const record_streak = useMutation(api.habits.record_streak);
+  const update_timer = useMutation(api.habits.update_habit_timer);
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
-  const [isStrict, setIsStrict] = useState(habit ? habit.strict : false);
 
-  const record_streak = useMutation(api.habits.record_streak);
+  const calculateTotalSeconds = () => {
+    if (!habit) return 0;
+    const elapsed = habit.timer_elapsed || 0;
+    const currentSession = habit.timer_start_time
+      ? Math.floor((Date.now() - habit.timer_start_time) / 1000)
+      : 0;
+    const total = elapsed + currentSession;
+    const maxSeconds = habit.duration * 60;
+    return Math.min(total, maxSeconds);
+  };
+
+  // Auto-start timer on fresh open
+  useEffect(() => {
+    if (visible && habit && !habit.timer_start_time && (habit.timer_elapsed || 0) === 0) {
+      update_timer({
+        habit_id: habit._id,
+        timer_elapsed: 0,
+        timer_start_time: Date.now(),
+      }).catch((err) => console.error("Auto-start failed", err));
+    }
+  }, [visible]);
+
+  const [displaySeconds, setDisplaySeconds] = useState(0);
 
   const snapPoints = useMemo(() => ["90%"], []);
+
+  const isRunning = !!habit?.timer_start_time;
+
+  // Update display timer locally when running
+  useEffect(() => {
+    if (!visible || !habit) return;
+
+    // Sync immediately
+    setDisplaySeconds(calculateTotalSeconds());
+
+    let interval: any;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setDisplaySeconds(calculateTotalSeconds());
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, visible, habit?.timer_start_time, habit?.timer_elapsed]);
 
   useEffect(() => {
     if (visible) {
       bottomSheetRef.current?.snapToIndex(0);
-      setSeconds(0);
-      setIsRunning(true);
     } else {
       bottomSheetRef.current?.close();
     }
   }, [visible]);
 
-  useEffect(() => {
-    let interval: any;
-    if (isRunning && visible) {
-      interval = setInterval(() => {
-        setSeconds((prev) => {
-          const duration = habit.duration * 60;
-          const new_second = prev + 1;
+  const toggleTimer = async () => {
+    if (!habit) return;
+    haptics.impact("light");
+    const currentTotal = calculateTotalSeconds();
 
-          if (new_second >= duration) {
-            clearInterval(interval);
-            setIsStrict(false);
-          }
-
-          return new_second;
+    try {
+      if (isRunning) {
+        // Pause: save accumulated time, clear start time
+        await update_timer({
+          habit_id: habit._id,
+          timer_elapsed: currentTotal,
+          timer_start_time: null,
         });
-      }, 1000);
+      } else {
+        // Resume/Start: save current timestamp
+        await update_timer({
+          habit_id: habit._id,
+          timer_elapsed: currentTotal,
+          timer_start_time: Date.now(),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to toggle timer", err);
+      showCustomAlert("Failed to update timer", "danger");
     }
-    return () => clearInterval(interval);
-  }, [isRunning, visible]);
+  };
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -103,6 +147,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   };
 
   const handleFinish = async () => {
+    if (!habit) return;
     haptics.impact("success");
     setBtnLoading(true);
     try {
@@ -111,13 +156,20 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         current_date: today,
         week_day,
       });
+
+      // Reset timer on finish
+      await update_timer({
+        habit_id: habit._id,
+        timer_elapsed: 0,
+        timer_start_time: null,
+      });
+
       showCustomAlert("Streak increased for this habit", "success");
     } catch (err) {
       console.log(err);
       showCustomAlert("Couldn't count this streak", "danger");
     } finally {
       setBtnLoading(false);
-      setIsRunning(false);
       bottomSheetRef.current?.close();
     }
   };
@@ -132,7 +184,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     />
   );
 
-  if (!visible) return null;
+  if (!visible || !habit) return null;
 
   return (
     <BottomSheet
@@ -201,7 +253,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
               borderRadius: 140,
               backgroundColor: Colors[theme].surface,
               borderWidth: 8,
-              borderColor: habit.theme,
+              borderColor: habit.theme ?? Colors[theme].primary,
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -213,7 +265,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
                 color: Colors[theme].text,
               }}
             >
-              {formatTime(seconds)}
+              {formatTime(displaySeconds)}
             </Text>
             <Text
               style={{
@@ -231,10 +283,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         {/* Control Buttons */}
         <View style={{ gap: 15 }}>
           <Pressable
-            onPress={() => {
-              setIsRunning(!isRunning);
-              haptics.impact("light");
-            }}
+            onPress={toggleTimer}
             style={{
               backgroundColor: Colors[theme].surface,
               paddingVertical: 15,
@@ -257,13 +306,13 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
           <Pressable
             onPress={handleFinish}
-            disabled={btnLoading || isStrict}
+            disabled={btnLoading}
             style={{
-              backgroundColor: habit.theme,
+              backgroundColor: habit.theme ?? Colors[theme].primary,
               paddingVertical: 15,
               borderRadius: 50,
               alignItems: "center",
-              opacity: btnLoading || isStrict ? 0.5 : 1,
+              opacity: btnLoading ? 0.5 : 1,
             }}
           >
             {btnLoading ? (

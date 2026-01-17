@@ -36,6 +36,8 @@ const schema = defineSchema({
     current_streak: v.number(),
     highest_streak: v.number(),
     lastCompleted: v.optional(v.string()),
+    timer_start_time: v.optional(v.number()), // Timestamp when timer started
+    timer_elapsed: v.optional(v.number()), // Accumulated elapsed time in seconds
   }).index("by_user", ["user"]),
 
   habit_enteries: defineTable({
