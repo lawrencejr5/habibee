@@ -16,6 +16,7 @@ import {
   View,
   ScrollView,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 
 import BottomSheet, {
@@ -95,6 +96,22 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
     if (visible) bottomSheetRef.current?.snapToIndex(0);
     else bottomSheetRef.current?.close();
   }, [visible]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        bottomSheetRef.current?.close()
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [visible, setVisible]);
 
   useEffect(() => {
     if (!visible) return;

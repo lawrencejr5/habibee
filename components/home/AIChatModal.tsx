@@ -16,6 +16,7 @@ import {
   Dimensions,
   Text,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
@@ -229,6 +230,23 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       }, 100);
     }
   }, [messages]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        bottomSheetRef.current?.close()
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [visible, setVisible]);
 
   if (!visible) return null;
 

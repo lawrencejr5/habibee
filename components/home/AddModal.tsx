@@ -1,6 +1,7 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Image,
   Modal,
   Pressable,
@@ -98,6 +99,23 @@ const AddModal: React.FC<{
       resetForm();
     }
   };
+
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        setVisible(false);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [visible, setVisible]);
 
   return (
     <>

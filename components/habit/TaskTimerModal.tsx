@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, BackHandler, Pressable, Text, View } from "react-native";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -101,6 +101,23 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       bottomSheetRef.current?.close();
     }
   }, [visible]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        bottomSheetRef.current?.close()
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [visible, setVisible]);
 
   const toggleTimer = async () => {
     if (!habit) return;

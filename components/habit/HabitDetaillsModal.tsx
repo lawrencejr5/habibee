@@ -2,11 +2,12 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Text as ThemedText } from "../Themed";
 
@@ -109,6 +110,23 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [showEditButton, setShowEditButton] = useState<boolean>(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false); // State for delete modal
+
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        bottomSheetRef.current?.close()
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [visible, setVisible]);
 
   const handleStart = () => {
     haptics.impact();
