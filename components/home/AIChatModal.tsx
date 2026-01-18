@@ -633,8 +633,14 @@ const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
       });
       setSaved(true);
       showCustomAlert("Habit saved successfully!", "success");
-    } catch (e) {
-      showCustomAlert("Failed to save habit", "danger");
+    } catch (e: any) {
+      console.log(e);
+      const errorMessage = e.message || "An error occurred";
+      if (errorMessage.includes("habit with same name already exists")) {
+        showCustomAlert("Habit with same name already exists", "danger");
+      } else {
+        showCustomAlert("Failed to save habit", "danger");
+      }
     }
   };
 

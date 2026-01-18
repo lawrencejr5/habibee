@@ -38,7 +38,9 @@ const schema = defineSchema({
     lastCompleted: v.optional(v.string()),
     timer_start_time: v.optional(v.number()), // Timestamp when timer started
     timer_elapsed: v.optional(v.number()), // Accumulated elapsed time in seconds
-  }).index("by_user", ["user"]),
+  })
+    .index("by_user", ["user"])
+    .index("by_user_habit", ["user", "habit"]),
 
   habit_enteries: defineTable({
     user: v.id("users"),

@@ -90,13 +90,18 @@ const AddModal: React.FC<{
       });
 
       showCustomAlert("Habit created successfully", "success");
+      resetForm();
       setVisible(false);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      showCustomAlert("An error occured", "success");
+      const errorMessage = error.message || "An error occurred";
+      if (errorMessage.includes("habit with same name already exists")) {
+        showCustomAlert("Habit with same name already exists", "danger");
+      } else {
+        showCustomAlert(errorMessage, "danger");
+      }
     } finally {
       setBtnLoading(false);
-      resetForm();
     }
   };
 

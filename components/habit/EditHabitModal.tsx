@@ -85,8 +85,15 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         strict,
       });
       showCustomAlert("Habit updated successfully!", "success");
-    } catch (err) {
-      showCustomAlert("An error occurred!", "success");
+      setVisible(false);
+    } catch (err: any) {
+      console.log(err);
+      const errorMessage = err.message || "An error occurred";
+      if (errorMessage.includes("habit with same name already exists")) {
+        showCustomAlert("Habit with same name already exists", "danger");
+      } else {
+        showCustomAlert(errorMessage, "danger");
+      }
     } finally {
       setBtnLoading(false);
     }

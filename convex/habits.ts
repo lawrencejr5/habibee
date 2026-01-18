@@ -134,6 +134,15 @@ export const add_habit = mutation({
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
+    const existing = await ctx.db
+      .query("habits")
+      .withIndex("by_user_habit", (q) => q.eq("user", user).eq("habit", habit))
+      .unique();
+
+    if (existing) {
+      throw new Error("habit with same name already exists");
+    }
+
     const habit_id = await ctx.db.insert("habits", {
       user,
       habit,
@@ -241,6 +250,19 @@ export const update_habit = mutation({
     if (!habit_exists) throw new Error("Habit not found");
 
     if (user_id !== habit_exists.user) throw new Error("");
+
+    if (args.habit !== undefined && args.habit !== habit_exists.habit) {
+      const existing = await ctx.db
+        .query("habits")
+        .withIndex("by_user_habit", (q) =>
+          q.eq("user", user_id).eq("habit", args.habit!)
+        )
+        .unique();
+
+      if (existing) {
+        throw new Error("habit with same name already exists");
+      }
+    }
 
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
@@ -440,6 +462,15 @@ export const create_habit = mutation({
   handler: async (ctx, { habit, icon, theme, duration, goal, strict }) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
+
+    const existing = await ctx.db
+      .query("habits")
+      .withIndex("by_user_habit", (q) => q.eq("user", user).eq("habit", habit))
+      .unique();
+
+    if (existing) {
+      throw new Error("habit with same name already exists");
+    }
 
     const habit_id = await ctx.db.insert("habits", {
       user,
