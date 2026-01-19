@@ -75,7 +75,7 @@ const AddModal: React.FC<{
   const handleSubmit = async () => {
     setBtnLoading(true);
     try {
-      if (!habit || !duration || !goal) {
+      if (!habit || !goal) {
         showCustomAlert("Fill in the details for this habit", "warning");
         return;
       }
@@ -86,19 +86,16 @@ const AddModal: React.FC<{
         theme: (selectedColor as string) ?? "#c5c9cc",
         strict,
         goal: Number(goal),
-        duration: Number(duration),
+        duration: duration ? Number(duration) : undefined,
       });
 
       showCustomAlert("Habit created successfully", "success");
       resetForm();
       setVisible(false);
-    } catch (error: any) {
-      console.log(error);
-      const errorMessage = error.message || "An error occurred";
-      if (errorMessage.includes("habit with same name already exists")) {
-        showCustomAlert("Habit with same name already exists", "danger");
-      } else {
-        showCustomAlert(errorMessage, "danger");
+    } catch (err: any) {
+      if (err.data !== undefined) {
+        showCustomAlert(err.data, "danger");
+        return;
       }
     } finally {
       setBtnLoading(false);
@@ -269,15 +266,26 @@ const AddModal: React.FC<{
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontFamily: "NunitoBold",
-                        fontSize: 16,
-                        color: Colors[theme].text_secondary,
-                      }}
-                    >
-                      Duration
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 16,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        Duration
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoMedium",
+                          fontSize: 12,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        (optional)
+                      </Text>
+                    </View>
                     <View
                       style={[
                         {
@@ -384,7 +392,7 @@ const AddModal: React.FC<{
                       fontSize: 16,
                     }}
                   >
-                    Streak counts after timer ends
+                    Lock completion until timer ends
                   </Text>
                   <ToggleButton
                     isOn={strict}

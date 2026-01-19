@@ -59,7 +59,9 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   const update_habit = useMutation(api.habits.update_habit);
 
   const [habitName, setHabitName] = useState(habit.habit);
-  const [duration, setDuration] = useState<string>(String(habit.duration));
+  const [duration, setDuration] = useState<string>(
+    habit.duration ? String(habit.duration) : ""
+  );
   const [goal, setGoal] = useState<string>(String(habit.goal));
   const [strict, setStrict] = useState<boolean>(habit.strict);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
@@ -71,7 +73,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   const handle_submit = async () => {
     setBtnLoading(true);
     try {
-      if (!habitName || !duration || !goal) {
+      if (!habitName || !goal) {
         showCustomAlert("Fill in the details for this habit", "warning");
         return;
       }
@@ -80,7 +82,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         habit: habitName,
         icon: selectedIcon,
         theme: selectedColor,
-        duration: Number(duration),
+        duration: duration ? Number(duration) : undefined,
         goal: Number(goal),
         strict,
       });
@@ -123,7 +125,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   useEffect(() => {
     if (!visible) return;
     setHabitName(habit.habit);
-    setDuration(String(habit.duration));
+    setDuration(habit.duration ? String(habit.duration) : "");
     setGoal(String(habit.goal));
     setSelectedIcon(habit.icon ?? "default");
     setSelectedColor(habit.theme ?? "#999");
@@ -281,15 +283,28 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 16,
-                    color: Colors[theme].text_secondary,
-                  }}
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
                 >
-                  Duration
-                </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 16,
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    Duration
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoMedium",
+                      fontSize: 12,
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    (optional)
+                  </Text>
+                </View>
                 <View
                   style={[
                     {
@@ -385,7 +400,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                   fontSize: 16,
                 }}
               >
-                Streak counts after timer ends
+                Lock completion until timer ends
               </Text>
               <ToggleButton isOn={strict} onToggle={() => setStrict(!strict)} />
             </View>

@@ -29,7 +29,7 @@ const schema = defineSchema({
     icon: v.optional(v.string()),
     theme: v.optional(v.string()),
     habit: v.string(),
-    duration: v.number(),
+    duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
     user: v.id("users"),

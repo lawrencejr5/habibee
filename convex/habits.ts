@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { action, mutation, query, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
@@ -126,7 +126,7 @@ export const add_habit = mutation({
     habit: v.string(),
     icon: v.string(),
     theme: v.string(),
-    duration: v.number(),
+    duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
   },
@@ -140,7 +140,7 @@ export const add_habit = mutation({
       .unique();
 
     if (existing) {
-      throw new Error("habit with same name already exists");
+      throw new ConvexError("Habit with same name already exists");
     }
 
     const habit_id = await ctx.db.insert("habits", {
@@ -148,7 +148,7 @@ export const add_habit = mutation({
       habit,
       icon,
       theme,
-      duration: Math.max(1, duration),
+      duration: duration && Math.max(1, duration),
       goal: Math.max(1, goal),
       strict,
       current_streak: 0,
@@ -177,8 +177,8 @@ export const record_streak = mutation({
       .unique();
 
     if (streak_recorded)
-      throw new Error(
-        "Streak has already been counted for today " + `${args.current_date}`
+      throw new ConvexError(
+        "Streak already counted for today"
       );
 
     const habit = await ctx.db.get(args.habit_id);
@@ -260,14 +260,14 @@ export const update_habit = mutation({
         .unique();
 
       if (existing) {
-        throw new Error("habit with same name already exists");
+        throw new ConvexError("Habit with same name already exists");
       }
     }
 
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
     if (args.duration !== undefined)
-      fields_to_update.duration = Math.max(1, args.duration);
+      fields_to_update.duration = args.duration ? Math.max(1, args.duration) : undefined;
     if (args.goal !== undefined) fields_to_update.goal = Math.max(1, args.goal);
     if (args.strict !== undefined) fields_to_update.strict = args.strict;
     if (args.icon !== undefined) fields_to_update.icon = args.icon;
@@ -455,7 +455,7 @@ export const create_habit = mutation({
     habit: v.string(),
     icon: v.string(),
     theme: v.string(),
-    duration: v.number(),
+    duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
   },
@@ -469,7 +469,7 @@ export const create_habit = mutation({
       .unique();
 
     if (existing) {
-      throw new Error("habit with same name already exists");
+      throw new ConvexError("Habit with same name already exists");
     }
 
     const habit_id = await ctx.db.insert("habits", {
@@ -477,7 +477,7 @@ export const create_habit = mutation({
       habit,
       icon,
       theme,
-      duration,
+      duration: duration ? Math.max(1, duration) : undefined,
       goal,
       strict,
       current_streak: 0,
@@ -503,7 +503,7 @@ export const get_user_context_data = internalQuery({
     const habitsSummary = habits
       .map(
         (h) =>
-          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}, Duration: ${h.duration}m)`
+          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}${h.duration ? `, Duration: ${h.duration}m` : ""})`
       )
       .join("\n");
 

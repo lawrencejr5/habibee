@@ -5,7 +5,7 @@ export interface HabitType {
   habit: string;
   icon?: string;
   theme?: string;
-  duration: number;
+  duration?: number;
   goal: number;
   strict: boolean;
   user: Id<"users">;

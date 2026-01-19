@@ -24,18 +24,19 @@ import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
 import { useUser } from "@/context/UserContext";
 
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
-import { HabitType } from "@/constants/Types";
 import AIChatModal from "@/components/home/AIChatModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
+import { useCustomAlert } from "@/context/AlertContext";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { showCustomAlert } = useCustomAlert()
   const haptics = useHapitcs();
 
   const { signedIn } = useUser();
@@ -58,6 +59,8 @@ const Home = () => {
   const [selectedHabitId, setSelectedHabitId] = useState<Id<"habits"> | null>(
     null
   );
+
+  const record_streak = useMutation(api.habits.record_streak);
 
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -429,10 +432,27 @@ const Home = () => {
                   timer_start_time={habit.timer_start_time}
                   timer_elapsed={habit.timer_elapsed}
                   target_duration={habit.duration}
-                  onFireIconPress={() => {
+                  onFireIconPress={async () => {
                     haptics.impact();
-                    setSelectedHabitId(habit._id);
-                    setTimerModalVisible(true);
+                    if (!habit.duration) {
+                      try {
+                        await record_streak({
+                          habit_id: habit._id,
+                          current_date: today,
+                          week_day: new Date().toLocaleDateString("en-US", {
+                            weekday: "short",
+                          }),
+                        });
+                        showCustomAlert("Streak recorded", "success")
+                      } catch (error: any) {
+                        if (error.data)
+                          showCustomAlert(error.data, "danger")
+                        else showCustomAlert("An error occured", "danger")
+                      }
+                    } else {
+                      setSelectedHabitId(habit._id);
+                      setTimerModalVisible(true);
+                    }
                   }}
                   onCardPress={() => {
                     haptics.impact();
@@ -575,7 +595,7 @@ const HabitCard: React.FC<{
   onCardPress: () => void;
   timer_start_time?: number;
   timer_elapsed?: number;
-  target_duration: number;
+  target_duration?: number;
 }> = ({
   duration,
   title,
@@ -583,7 +603,6 @@ const HabitCard: React.FC<{
   streak,
   habitType,
   themeColor,
-  id,
   onFireIconPress,
   onCardPress,
   timer_start_time,
@@ -602,7 +621,7 @@ const HabitCard: React.FC<{
         ? Math.floor((Date.now() - timer_start_time) / 1000)
         : 0;
       const total = elapsed + currentSession;
-      const maxSeconds = target_duration * 60;
+      const maxSeconds = (target_duration || 0) * 60;
       return Math.min(total, maxSeconds);
     };
 
@@ -674,7 +693,6 @@ const HabitCard: React.FC<{
               backgroundColor: themeColor + "20",
               justifyContent: "center",
               alignItems: "center",
-              // borderWidth: 0.5,
               borderColor: themeColor,
             }}
           >
@@ -726,7 +744,11 @@ const HabitCard: React.FC<{
                     color: Colors[theme].text_secondary,
                   }}
                 >
-                  {isTimerActive ? formatTime(currentTime) : `${duration} min(s)`}
+                  {isTimerActive
+                    ? formatTime(currentTime)
+                    : duration && duration !== "undefined"
+                      ? `${duration} min(s)`
+                      : "daily"}
                 </ThemedText>
               </View>
               <View

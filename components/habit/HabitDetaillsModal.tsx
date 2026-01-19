@@ -24,13 +24,13 @@ import EditHabitModal from "./EditHabitModal";
 import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
 import { useHapitcs } from "@/context/HapticsContext";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
-import { HabitType } from "@/constants/Types";
 import { useTheme } from "@/context/ThemeContext";
 import { ActivityIndicator } from "react-native";
+import { useCustomAlert } from "@/context/AlertContext";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -45,6 +45,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
+  const { showCustomAlert } = useCustomAlert()
   const { theme } = useTheme();
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -128,9 +129,24 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     return () => backHandler.remove();
   }, [visible, setVisible]);
 
-  const handleStart = () => {
+  const record_streak = useMutation(api.habits.record_streak);
+
+  const handleStart = async () => {
     haptics.impact();
-    setTimerModalVisible(true);
+    if (habit && !habit?.duration) {
+      try {
+        await record_streak({
+          habit_id: habit._id,
+          current_date: today,
+          week_day: new Date().toLocaleDateString("en-US", { weekday: "short" }),
+        });
+        showCustomAlert("Streak recorded", "success")
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      setTimerModalVisible(true);
+    }
   };
 
   // Render nothing when not visible to avoid mounting BottomSheet in a closed/half state
@@ -334,7 +350,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     marginTop: 5,
                   }}
                 >
-                  {String(habit.duration)} min(s) daily
+                  {habit.duration ? `${habit.duration} min(s) daily` : "Direct Task"}
                 </Text>
               </View>
 
@@ -538,15 +554,24 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   opacity: isDone ? 0.5 : 1,
                 }}
               >
-                <Text
+                {habit.duration ? <Text
                   style={{
                     fontFamily: "NunitoExtraBold",
                     fontSize: 16,
                     color: "#fff",
                   }}
                 >
-                  {isDone ? "Completed for today" : "Start task"}
-                </Text>
+                  {isDone ? "Completed for today" : "Start timer"}
+                </Text> : <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 16,
+                    color: "#fff",
+                  }}
+                >
+                  Record streak
+                </Text>}
+
               </Pressable>
             </View>
           </View>

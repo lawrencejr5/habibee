@@ -43,7 +43,7 @@ interface AIChatModalProps {
 
 type HabitData = {
   habit: string;
-  duration: number;
+  duration?: number;
   goal: number;
   icon: string;
   theme: string;
@@ -731,7 +731,7 @@ const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
                 }}
                 numberOfLines={1}
               >
-                {data.duration} mins daily
+                {data.duration ? `${data.duration} mins daily` : "Direct Task"}
               </ThemedText>
             </View>
           </View>
