@@ -53,7 +53,7 @@ const AddModal: React.FC<{
   const [habit, setHabit] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [goal, setGoal] = useState<string>("");
-  const [strict, setStrict] = useState<boolean>(false);
+  const [strict, setStrict] = useState<boolean>(true);
 
   const close = () => {
     haptics.impact();
@@ -222,7 +222,7 @@ const AddModal: React.FC<{
                       color: Colors[theme].text_secondary,
                     }}
                   >
-                    Name ur habit
+                    Name ur habit *
                   </Text>
                   <View
                     style={[
@@ -266,26 +266,15 @@ const AddModal: React.FC<{
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoBold",
-                          fontSize: 16,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        Duration
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoMedium",
-                          fontSize: 12,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        (optional)
-                      </Text>
-                    </View>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 16,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      Time per day
+                    </Text>
                     <View
                       style={[
                         {
@@ -333,7 +322,7 @@ const AddModal: React.FC<{
                         color: Colors[theme].text_secondary,
                       }}
                     >
-                      Goal
+                      Goal *
                     </Text>
                     <View
                       style={[

@@ -62,6 +62,11 @@ export const update_profile_image = mutation({
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthorized");
 
+    const user = await ctx.db.get(user_id);
+    if (user?.profile_pic) {
+      await ctx.storage.delete(user.profile_pic);
+    }
+
     await ctx.db.patch(user_id, {
       profile_pic: args.storageId,
     });
@@ -119,7 +124,13 @@ export const delete_account = mutation({
       await ctx.db.delete(session._id);
     }
 
-    // 5. Delete the user
+    // 5. Delete profile picture from storage if exists
+    const user = await ctx.db.get(userId);
+    if (user?.profile_pic) {
+      await ctx.storage.delete(user.profile_pic as any);
+    }
+
+    // 6. Delete the user
     await ctx.db.delete(userId);
   },
 });

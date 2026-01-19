@@ -733,14 +733,22 @@ const HabitCard: React.FC<{
                   width: 80,
                 }}
               >
-                <Image
+                {duration && duration !== "undefined" ? <Image
                   source={require("../../assets/icons/clock.png")}
                   style={{
                     tintColor: Colors[theme].text_secondary,
                     width: 14,
                     height: 14,
                   }}
-                />
+                /> : <Image
+                  source={require("../../assets/icons/calendar.png")}
+                  style={{
+                    tintColor: Colors[theme].text_secondary,
+                    width: 14,
+                    height: 14,
+                  }}
+                />}
+
                 <ThemedText
                   style={{
                     fontFamily: "NunitoBold",
@@ -752,7 +760,7 @@ const HabitCard: React.FC<{
                     ? formatTime(currentTime)
                     : duration && duration !== "undefined"
                       ? `${duration} min(s)`
-                      : "daily"}
+                      : "Daily"}
                 </ThemedText>
               </View>
               <View
