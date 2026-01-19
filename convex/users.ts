@@ -24,7 +24,14 @@ export const get_current_user = query({
     if (user_id === null) return null;
 
     const user = await ctx.db.get(user_id);
-    return user;
+    if (!user) return null;
+
+    let profile_url = null;
+    if (user.profile_pic) {
+      profile_url = await ctx.storage.getUrl(user.profile_pic);
+    }
+
+    return { ...user, profile_url };
   },
 });
 
@@ -39,6 +46,25 @@ export const update_user_details = mutation({
     if (username !== undefined) patch.username = username;
 
     await ctx.db.patch(user_id, patch);
+  },
+});
+
+export const report_image_upload_url = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const update_profile_image = mutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthorized");
+
+    await ctx.db.patch(user_id, {
+      profile_pic: args.storageId,
+    });
   },
 });
 

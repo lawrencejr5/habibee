@@ -25,6 +25,10 @@ import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
 
+import * as ImagePicker from "expo-image-picker";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
 interface AccountModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
@@ -41,6 +45,10 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
 
   const { signOut } = useAuthActions();
   const [signingOut, setSigninOut] = useState<boolean>(false);
+  const [uploading, setUploading] = useState(false);
+
+  const generateUploadUrl = useMutation(api.users.report_image_upload_url);
+  const updateProfileImage = useMutation(api.users.update_profile_image);
 
   const handleSignout = async () => {
     setSigninOut(true);
@@ -53,6 +61,53 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
       showCustomAlert("An error occured!", "danger");
     } finally {
       setSigninOut(false);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    setUploading(true);
+    try {
+      // 1. Get upload URL
+      const postUrl = await generateUploadUrl();
+
+      // 2. Convert URI to Blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // 3. POST to Convex
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": blob.type },
+        body: blob,
+      });
+      const { storageId } = await result.json();
+
+      // 4. Update user profile
+      await updateProfileImage({ storageId });
+      showCustomAlert("Profile picture updated!", "success");
+    } catch (error) {
+      console.error(error);
+      showCustomAlert("Failed to upload image", "danger");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log(err);
+      showCustomAlert("Failed to pick image", "danger");
     }
   };
 
@@ -111,10 +166,37 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
             flex: 1,
           }}
         >
-          <Image
-            source={require("@/assets/images/avatar.png")}
-            style={{ width: 120, height: 120, borderRadius: 75 }}
-          />
+          <View style={{ position: "relative" }}>
+            <Image
+              source={
+                signedIn?.profile_url
+                  ? { uri: signedIn.profile_url }
+                  : require("@/assets/images/avatar.png")
+              }
+              style={{ width: 120, height: 120, borderRadius: 75 }}
+            />
+            <Pressable
+              onPress={pickImage}
+              disabled={uploading}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                backgroundColor: Colors[theme].primary,
+                padding: 8,
+                borderRadius: 20,
+                borderWidth: 3,
+                borderColor: Colors[theme].background,
+              }}
+            >
+              {uploading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Feather name="edit-2" size={16} color="#fff" />
+              )}
+            </Pressable>
+          </View>
+
           <Text
             style={{
               fontFamily: "NunitoExtraBold",

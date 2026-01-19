@@ -153,7 +153,11 @@ const Home = () => {
       >
         <View style={styles.user_container}>
           <Image
-            source={require("../../assets/images/avatar.png")}
+            source={
+              signedIn.profile_url
+                ? { uri: signedIn.profile_url }
+                : require("../../assets/images/avatar.png")
+            }
             style={{
               width: 40,
               height: 40,

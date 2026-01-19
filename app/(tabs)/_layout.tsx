@@ -7,12 +7,14 @@ import Colors from "@/constants/Colors";
 import { Image } from "react-native";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useUser } from "@/context/UserContext";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { theme } = useTheme();
 
   const haptics = useHapitcs();
+  const { signedIn } = useUser();
 
   return (
     <Tabs
@@ -71,7 +73,11 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ focused }) => (
             <Image
-              source={require("../../assets/images/avatar.png")}
+              source={
+                signedIn?.profile_url
+                  ? { uri: signedIn.profile_url }
+                  : require("../../assets/images/avatar.png")
+              }
               style={{
                 height: 35,
                 width: 35,

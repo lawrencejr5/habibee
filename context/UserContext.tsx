@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Doc } from "@/convex/_generated/dataModel";
 
-type UserData = Doc<"users">;
+type UserData = Doc<"users"> & { profile_url?: string | null };
 interface UserContextType {
   signedIn: UserData | undefined;
 }

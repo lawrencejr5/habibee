@@ -66,7 +66,11 @@ export default function Account() {
             }}
           >
             <Image
-              source={require("@/assets/images/avatar.png")}
+              source={
+                signedIn.profile_url
+                  ? { uri: signedIn.profile_url }
+                  : require("@/assets/images/avatar.png")
+              }
               style={{
                 height: 70,
                 width: 70,
