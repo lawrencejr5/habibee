@@ -307,7 +307,7 @@ export const check_streak_and_reset = mutation({
   args: { today: v.string() },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
-    if (!user_id) throw new Error("User not authenticated");
+    if (!user_id) { console.log("User not authenticated"); return };
 
     const habits = await ctx.db
       .query("habits")
@@ -508,7 +508,7 @@ export const get_user_context_data = internalQuery({
       .join("\n");
 
     return {
-      fullname: user.name,
+      fullname: user.fullname,
       streak: user.streak || 0,
       totalHabits: habits.length,
       habitsSummary: habitsSummary || "No active habits yet.",

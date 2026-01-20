@@ -7,14 +7,13 @@ const schema = defineSchema({
 
   users: defineTable({
     email: v.string(),
-    emailVerificationTime: v.optional(v.number()),
     image: v.optional(v.string()),
-    name: v.optional(v.string()),      // <- make optional
-    fullname: v.optional(v.string()),  // <- keep existing data
+    fullname: v.string(),
     username: v.optional(v.string()),
     profile_pic: v.optional(v.string()),
     streak: v.optional(v.number()),
     last_streak_date: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
   }).index("email", ["email"]),
 
   weekly_stats: defineTable({

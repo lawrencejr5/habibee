@@ -69,19 +69,41 @@ const SigninPage = () => {
   const handleGoogleSignin = async () => {
     setGoogleLoading(true);
     try {
+      // 1. Create the return URL (must match your app.json scheme)
       const redirectTo = makeRedirectUri({
         scheme: "com.lawrencejr.habibee",
-        path: "",
       });
 
-      const result = await signIn("google", { redirectTo: "com.lawrencejr.habibee:///signup" });
-
-      if (result.redirect) {
-        const authResult = await WebBrowser.openAuthSessionAsync(
-          result.redirect.toString(),
-          redirectTo
-        );
+      // 2. Start OAuth with Convex Auth, get redirect URL
+      const { redirect } = await signIn("google", { redirectTo });
+      if (!redirect) {
+        throw new Error("Authentication redirect URL not found.");
       }
+
+      // 3. Open browser session
+      const result = await WebBrowser.openAuthSessionAsync(
+        redirect.toString(),
+        redirectTo
+      );
+
+      if (result.type !== "success" || !result.url) {
+        throw new Error("Authentication cancelled or failed.");
+      }
+
+      // 4. Extract ?code= from callback URL
+      const code = new URL(result.url).searchParams.get("code");
+      if (!code) {
+        throw new Error("Authentication code not found in the URL.");
+      }
+
+      // 5. Complete sign‑in with the code
+      const final = await signIn("google", { code });
+
+      if (!final.signingIn) {
+        throw new Error("Authentication failed. Please try again.");
+      }
+
+
     } catch (error) {
       console.log("Sign-in error", error);
     } finally {
