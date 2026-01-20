@@ -1,6 +1,9 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import React, { useState } from "react";
 
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
+
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -15,6 +18,8 @@ import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
 import { ConvexError } from "convex/values";
 
+WebBrowser.maybeCompleteAuthSession();
+
 const SignUpPage = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -28,6 +33,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState<string>("");
   const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     setBtnLoading(true);
@@ -49,24 +55,48 @@ const SignUpPage = () => {
 
       console.log("Registration Error:", JSON.stringify(err)); // Helpful for debugging in adb logcat
 
-      // 1. Duck Typing: Check for 'data' property directly instead of 'instanceof'
-      // This works even if the class name was mangled during minification.
       if (err.data !== undefined) {
         showCustomAlert(err.data, "danger");
         return;
       }
 
-      // 2. Check for the string in the generic message
       const message = err.message || err.toString();
 
       if (message.includes("already exists")) {
         showCustomAlert("Email already in use", "danger");
       } else {
-        // Optional: In prod, you might want to log the specific message to tools like Sentry
         showCustomAlert("An unexpected error occurred", "danger");
       }
     } finally {
       setBtnLoading(false);
+    }
+  };
+
+  const handleGoogleSignin = async () => {
+    setGoogleLoading(true);
+    try {
+      // 1. Create the return URL (must match your app.json scheme)
+      const redirectTo = makeRedirectUri({
+        scheme: "com.lawrencejr.habibee",
+        path: "/signup", // Optional: only if you have specific routing logic here
+      });
+
+      // 2. Pass redirectTo INSIDE the signIn function
+      const result = await signIn("google", { redirectTo });
+
+      // 3. Open the browser session
+      if (result.redirect) {
+        await WebBrowser.openAuthSessionAsync(
+          result.redirect.toString(),
+        );
+
+
+
+      }
+    } catch (error) {
+      console.log("Sign-in error", error);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -127,6 +157,8 @@ const SignUpPage = () => {
         >
           {/* Continue with google */}
           <Pressable
+            onPress={handleGoogleSignin}
+            disabled={googleLoading || btnLoading}
             style={{
               backgroundColor: "#fff",
               borderWidth: theme === "dark" ? 3 : 2,
@@ -139,19 +171,24 @@ const SignUpPage = () => {
               justifyContent: "center",
               alignItems: "center",
               gap: 10,
+              opacity: googleLoading ? 0.6 : 1,
             }}
           >
-            <Image
-              source={require("@/assets/icons/google.png")}
-              style={{ height: 20, width: 20 }}
-            />
+            {googleLoading ? (
+              <ActivityIndicator size="small" color="#1f2428" />
+            ) : (
+              <Image
+                source={require("@/assets/icons/google.png")}
+                style={{ height: 20, width: 20 }}
+              />
+            )}
             <Text
               style={{
                 color: "#1f2428",
                 fontFamily: "NunitoBold",
               }}
             >
-              Continue with google
+              {googleLoading ? "Signing in..." : "Continue with google"}
             </Text>
           </Pressable>
           {/* ---- OR ---- */}

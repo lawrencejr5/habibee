@@ -27,8 +27,8 @@ export const get_current_user = query({
     if (!user) return null;
 
     let profile_url = null;
-    if (user.profile_pic) {
-      profile_url = await ctx.storage.getUrl(user.profile_pic);
+    if (user.image) {
+      profile_url = await ctx.storage.getUrl(user.image);
     }
 
     return { ...user, profile_url };
@@ -63,12 +63,12 @@ export const update_profile_image = mutation({
     if (!user_id) throw new Error("Unauthorized");
 
     const user = await ctx.db.get(user_id);
-    if (user?.profile_pic) {
-      await ctx.storage.delete(user.profile_pic);
+    if (user?.image) {
+      await ctx.storage.delete(user.image);
     }
 
     await ctx.db.patch(user_id, {
-      profile_pic: args.storageId,
+      image: args.storageId,
     });
   },
 });
@@ -126,8 +126,8 @@ export const delete_account = mutation({
 
     // 5. Delete profile picture from storage if exists
     const user = await ctx.db.get(userId);
-    if (user?.profile_pic) {
-      await ctx.storage.delete(user.profile_pic as any);
+    if (user?.image) {
+      await ctx.storage.delete(user.image as any);
     }
 
     // 6. Delete the user
@@ -141,7 +141,7 @@ export const getUserByEmail = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("email", (q) => q.eq("email", args.email))
       .unique();
   },
 });

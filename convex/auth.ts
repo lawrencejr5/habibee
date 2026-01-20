@@ -1,5 +1,6 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
+import Google from "@auth/core/providers/google";
 import { ConvexError } from "convex/values";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -23,6 +24,22 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         }
       },
     }),
+    Google,
   ],
+  callbacks: {
+    async redirect({ redirectTo }) {
+      // 1. Check if it's a local development URL
+      const isLocal = redirectTo.startsWith("http://localhost");
 
+      // 2. Check if it's your specific mobile app scheme
+      const isApp = redirectTo.startsWith("com.lawrencejr.habibee://");
+
+      if (isLocal || isApp) {
+        return redirectTo;
+      }
+
+      // 3. Block everything else
+      throw new Error(`Security Block: Invalid redirect to ${redirectTo}`);
+    },
+  },
 });

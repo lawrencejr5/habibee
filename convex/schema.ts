@@ -6,13 +6,16 @@ const schema = defineSchema({
   ...authTables,
 
   users: defineTable({
-    fullname: v.string(),
     email: v.string(),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
+    name: v.optional(v.string()),      // <- make optional
+    fullname: v.optional(v.string()),  // <- keep existing data
     username: v.optional(v.string()),
     profile_pic: v.optional(v.string()),
     streak: v.optional(v.number()),
     last_streak_date: v.optional(v.string()),
-  }).index("by_email", ["email"]),
+  }).index("email", ["email"]),
 
   weekly_stats: defineTable({
     user: v.id("users"),

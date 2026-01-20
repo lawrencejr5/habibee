@@ -2,6 +2,8 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import React, { useState } from "react";
 
 import { KeyboardStickyView } from "react-native-keyboard-controller";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,6 +17,8 @@ import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useMutation } from "convex/react";
 
+WebBrowser.maybeCompleteAuthSession();
+
 const SigninPage = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -26,6 +30,7 @@ const SigninPage = () => {
   const [password, setPassword] = useState<string>("");
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     setBtnLoading(true);
@@ -58,6 +63,29 @@ const SigninPage = () => {
       }
     } finally {
       setBtnLoading(false);
+    }
+  };
+
+  const handleGoogleSignin = async () => {
+    setGoogleLoading(true);
+    try {
+      const redirectTo = makeRedirectUri({
+        scheme: "com.lawrencejr.habibee",
+        path: "",
+      });
+
+      const result = await signIn("google", { redirectTo: "com.lawrencejr.habibee:///signup" });
+
+      if (result.redirect) {
+        const authResult = await WebBrowser.openAuthSessionAsync(
+          result.redirect.toString(),
+          redirectTo
+        );
+      }
+    } catch (error) {
+      console.log("Sign-in error", error);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -117,6 +145,8 @@ const SigninPage = () => {
         >
           {/* Continue with google */}
           <Pressable
+            onPress={handleGoogleSignin}
+            disabled={googleLoading || btnLoading}
             style={{
               backgroundColor: "#fff",
               borderWidth: theme === "dark" ? 3 : 2,
@@ -129,19 +159,24 @@ const SigninPage = () => {
               justifyContent: "center",
               alignItems: "center",
               gap: 10,
+              opacity: googleLoading ? 0.6 : 1,
             }}
           >
-            <Image
-              source={require("@/assets/icons/google.png")}
-              style={{ height: 20, width: 20 }}
-            />
+            {googleLoading ? (
+              <ActivityIndicator size="small" color="#1f2428" />
+            ) : (
+              <Image
+                source={require("@/assets/icons/google.png")}
+                style={{ height: 20, width: 20 }}
+              />
+            )}
             <Text
               style={{
                 color: "#1f2428",
                 fontFamily: "NunitoBold",
               }}
             >
-              Continue with google
+              {googleLoading ? "Signing in..." : "Continue with google"}
             </Text>
           </Pressable>
           {/* ---- OR ---- */}

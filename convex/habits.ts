@@ -508,7 +508,7 @@ export const get_user_context_data = internalQuery({
       .join("\n");
 
     return {
-      fullname: user.fullname,
+      fullname: user.name,
       streak: user.streak || 0,
       totalHabits: habits.length,
       habitsSummary: habitsSummary || "No active habits yet.",
