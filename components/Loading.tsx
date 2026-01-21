@@ -1,30 +1,122 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import React from "react";
-
-import { Text as ThemedText, View as ThemedView } from "./Themed";
+import React, { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
+  SharedValue,
+} from "react-native-reanimated";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
+import { View as ThemedView } from "./Themed";
 
 const Loading = () => {
   const { theme } = useTheme();
+
+  const scale1 = useSharedValue(1);
+  const scale2 = useSharedValue(1);
+  const scale3 = useSharedValue(1);
+
+  const opacity1 = useSharedValue(0.5);
+  const opacity2 = useSharedValue(0.5);
+  const opacity3 = useSharedValue(0.5);
+
+  useEffect(() => {
+    const animateDot = (
+      scale: SharedValue<number>,
+      opacity: SharedValue<number>,
+      delay: number
+    ) => {
+      scale.value = withDelay(
+        delay,
+        withRepeat(
+          withSequence(
+            withTiming(1.4, {
+              duration: 600,
+              easing: Easing.inOut(Easing.ease),
+            }),
+            withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) })
+          ),
+          -1,
+          true
+        )
+      );
+
+      opacity.value = withDelay(
+        delay,
+        withRepeat(
+          withSequence(
+            withTiming(1, { duration: 600 }),
+            withTiming(0.4, { duration: 600 })
+          ),
+          -1,
+          true
+        )
+      );
+    };
+
+    animateDot(scale1, opacity1, 0);
+    animateDot(scale2, opacity2, 200);
+    animateDot(scale3, opacity3, 400);
+  }, []);
+
+  const createDotStyle = (
+    scale: SharedValue<number>,
+    opacity: SharedValue<number>
+  ) =>
+    useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    }));
+
   return (
-    <ThemedView
-      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <ThemedText style={{ fontFamily: "NunitoMedium", fontSize: 16 }}>
-          If I'm loading, ur gay
-        </ThemedText>
-        <ActivityIndicator
-          color={Colors[theme].text}
-          size={"small"}
-          style={{ marginTop: 3 }}
+    <ThemedView style={styles.container}>
+      <View style={styles.row}>
+        <Animated.View
+          style={[
+            styles.dot,
+            { backgroundColor: "grey" },
+            createDotStyle(scale1, opacity1),
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.dot,
+            { backgroundColor: "grey" },
+            createDotStyle(scale2, opacity2),
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.dot,
+            { backgroundColor: "grey" },
+            createDotStyle(scale3, opacity3),
+          ]}
         />
       </View>
     </ThemedView>
   );
 };
 
-export default Loading;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  row: {
+    flexDirection: "row",
+    gap: 15,
+  },
+  dot: {
+    width: 15, // "Big" dots
+    height: 15,
+    borderRadius: 10,
+  },
+});
 
-const styles = StyleSheet.create({});
+export default Loading;
