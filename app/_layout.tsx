@@ -9,7 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
-import { AppState } from "react-native";
+import { AppState, Linking } from "react-native";
 import "react-native-url-polyfill/auto";
 
 import { KeyboardProvider } from "react-native-keyboard-controller";

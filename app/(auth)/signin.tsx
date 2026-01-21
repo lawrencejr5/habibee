@@ -72,6 +72,7 @@ const SigninPage = () => {
       // 1. Create the return URL (must match your app.json scheme)
       const redirectTo = makeRedirectUri({
         scheme: "com.lawrencejr.habibee",
+        path: "(auth)/signin"
       });
 
       // 2. Start OAuth with Convex Auth, get redirect URL
@@ -80,10 +81,15 @@ const SigninPage = () => {
         throw new Error("Authentication redirect URL not found.");
       }
 
-      // 3. Open browser session
+      // 3. Open browser session with dismissBrowser option
+      // This prevents the redirect from creating a new screen
       const result = await WebBrowser.openAuthSessionAsync(
         redirect.toString(),
-        redirectTo
+        redirectTo,
+        {
+          dismissButtonStyle: "close",
+          showInRecents: false,
+        }
       );
 
       if (result.type !== "success" || !result.url) {
@@ -103,11 +109,14 @@ const SigninPage = () => {
         throw new Error("Authentication failed. Please try again.");
       }
 
+      // Keep loading state active - let the auth navigation handle the redirect
+      // The loading will be visible while auth state updates and navigation occurs
 
     } catch (error) {
       console.log("Sign-in error", error);
-    } finally {
+      // Only reset loading on error
       setGoogleLoading(false);
+      showCustomAlert("Sign-in failed. Please try again.", "danger");
     }
   };
 

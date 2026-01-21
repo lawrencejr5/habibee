@@ -39,7 +39,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           id: googleProfile.sub,
           email: googleProfile.email,
           fullname: googleProfile.name,
-          image: googleProfile.picture,
+          image: googleProfile.image,
+          username: googleProfile.name.split(" ")[0]
         };
       },
     }),
