@@ -818,8 +818,16 @@ const HabitCard: React.FC<{
                 width: 80,
               }}
             >
-              {subHabitsCount > 0 ? (
-                <>
+              {subHabitsCount > 0 && !isTimerActive ? (
+                <Pressable
+                  onPress={onToggleExpand}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingRight: 10,
+                  }}
+                >
                   <Image
                     source={require("../../assets/icons/check-outline.png")}
                     style={{
@@ -837,7 +845,7 @@ const HabitCard: React.FC<{
                   >
                     {completedSubHabits}/{subHabitsCount}
                   </ThemedText>
-                </>
+                </Pressable>
               ) : (
                 <>
                   {duration && duration !== "undefined" ? (

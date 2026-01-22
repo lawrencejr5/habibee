@@ -45,7 +45,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
-  const { showCustomAlert } = useCustomAlert()
+  const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -68,7 +68,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
     // 1. Create the fast lookup set
     const completedSet = new Set(
-      habitEnteries.filter((e) => e.status === "completed").map((e) => e.date)
+      habitEnteries.filter((e) => e.status === "completed").map((e) => e.date),
     );
 
     const today = new Date();
@@ -115,7 +115,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   useEffect(() => {
     const backAction = () => {
       if (visible) {
-        bottomSheetRef.current?.close()
+        bottomSheetRef.current?.close();
         return true;
       }
       return false;
@@ -123,7 +123,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -138,9 +138,11 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         await record_streak({
           habit_id: habit._id,
           current_date: today,
-          week_day: new Date().toLocaleDateString("en-US", { weekday: "short" }),
+          week_day: new Date().toLocaleDateString("en-US", {
+            weekday: "short",
+          }),
         });
-        showCustomAlert("Streak recorded", "success")
+        showCustomAlert("Streak recorded", "success");
       } catch (error) {
         console.log(error);
       }
@@ -157,7 +159,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
-    return null
+    return null;
   }
 
   return (
@@ -315,7 +317,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     width: 100,
                     height: 100,
                     borderRadius: 50,
-                    backgroundColor: (habit.theme ?? Colors[theme].primary) + "20",
+                    backgroundColor:
+                      (habit.theme ?? Colors[theme].primary) + "20",
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
@@ -350,7 +353,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     marginTop: 5,
                   }}
                 >
-                  {habit.duration ? `${habit.duration} min(s) daily` : "Direct Task"}
+                  {habit.duration
+                    ? `${habit.duration} min(s) daily`
+                    : "Direct Task"}
                 </Text>
               </View>
 
@@ -425,7 +430,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     >
                       {Math.min(
                         Math.ceil((habit.current_streak / habit.goal) * 100),
-                        100
+                        100,
                       )}
                       %
                     </ThemedText>
@@ -486,7 +491,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                                   height: 12,
                                   borderRadius: 2,
                                   backgroundColor: day.completed
-                                    ? (habit.theme ?? Colors[theme].primary) + "cc"
+                                    ? (habit.theme ?? Colors[theme].primary) +
+                                      "cc"
                                     : Colors[theme].border,
                                 }}
                               />
@@ -554,24 +560,31 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   opacity: isDone ? 0.5 : 1,
                 }}
               >
-                {habit.duration ? <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 16,
-                    color: "#fff",
-                  }}
-                >
-                  {isDone ? "Completed for today" : "Start timer"}
-                </Text> : <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 16,
-                    color: "#fff",
-                  }}
-                >
-                  Record streak
-                </Text>}
-
+                {habit.duration ? (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    {isDone
+                      ? "Completed for today"
+                      : habit.timer_start_time || habit.timer_elapsed
+                        ? "Continue timer"
+                        : "Start timer"}
+                  </Text>
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    Record streak
+                  </Text>
+                )}
               </Pressable>
             </View>
           </View>

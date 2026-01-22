@@ -582,6 +582,8 @@ export const internal_record_habit_completion = internalMutation({
     await ctx.db.patch(args.habit_id, {
       current_streak: newStreak,
       highest_streak: newHighestStreak,
+      timer_start_time: undefined,
+      timer_elapsed: undefined,
       lastCompleted: args.current_date,
     });
 
