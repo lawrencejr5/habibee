@@ -351,6 +351,33 @@ export const check_streak_and_reset = mutation({
       .collect();
 
     for (const habit of habits) {
+      // Sub-habits daily reset
+      if (habit.last_daily_reset_date !== args.today) {
+        // Migration safety: If never reset (undefined) but completed today, assume valid progress
+        if (
+          !habit.last_daily_reset_date &&
+          habit.lastCompleted === args.today
+        ) {
+          await ctx.db.patch(habit._id, { last_daily_reset_date: args.today });
+        } else {
+          // Reset sub-habits
+          const sub_habits = await ctx.db
+            .query("sub_habits")
+            .withIndex("by_parent_habit", (q) =>
+              q.eq("parent_habit", habit._id),
+            )
+            .collect();
+
+          for (const sh of sub_habits) {
+            if (sh.completed) {
+              await ctx.db.patch(sh._id, { completed: false });
+            }
+          }
+          await ctx.db.patch(habit._id, { last_daily_reset_date: args.today });
+        }
+      }
+
+      // Streak Check
       if (!habit.lastCompleted || habit.current_streak === 0) continue;
 
       const diff = getDaysDifference(habit.lastCompleted, args.today);

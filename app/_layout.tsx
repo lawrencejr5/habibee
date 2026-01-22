@@ -86,16 +86,15 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
-    // setAppLoading(true);
+    setAppLoading(true);
     try {
       const today = new Date().toLocaleDateString("en-CA");
       await checkStreak({ today });
     } catch (err) {
       console.log(err);
+    } finally {
+      setAppLoading(false);
     }
-    // finally {
-    //   setAppLoading(false);
-    // }
   };
 
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -108,7 +107,8 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
-        nextAppState === "active" && isAuthenticated
+        nextAppState === "active" &&
+        isAuthenticated
       ) {
         // App has come to the foreground!
         console.log("App active - Checking for dead streaks...");
@@ -120,7 +120,6 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
       subscription.remove();
     };
   }, [isAuthenticated]);
-
 
   // Handle Splash Screen hiding
   useEffect(() => {
