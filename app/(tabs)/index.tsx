@@ -906,6 +906,7 @@ const HabitCard: React.FC<{
           haptics.impact();
           onFireIconPress();
         }}
+        disabled={done}
         style={{
           borderLeftWidth: 3,
           borderColor: Colors[theme].border,
@@ -989,6 +990,7 @@ const SubHabitItem: React.FC<{
           haptics.impact();
           onToggle();
         }}
+        disabled={subHabit.completed}
         style={{
           flex: 1,
           flexDirection: "row",
