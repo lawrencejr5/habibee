@@ -57,7 +57,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       ? Math.floor((Date.now() - habit.timer_start_time) / 1000)
       : 0;
     const total = elapsed + currentSession;
-    const maxSeconds = habit.duration * 60;
+    const maxSeconds = habit?.duration ?? 0 * 60;
     return Math.min(total, maxSeconds);
   };
 

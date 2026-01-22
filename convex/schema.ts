@@ -58,6 +58,12 @@ const schema = defineSchema({
     message: v.string(),
     createdAt: v.string(),
   }).index("by_user", ["user"]),
+
+  sub_habits: defineTable({
+    name: v.string(),
+    parent_habit: v.id("habits"),
+    completed: v.boolean(),
+  }).index("by_parent_habit", ["parent_habit"]),
 });
 
 export default schema;

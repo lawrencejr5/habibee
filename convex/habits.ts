@@ -184,6 +184,22 @@ export const record_streak = mutation({
     const habit = await ctx.db.get(args.habit_id);
     if (!habit) throw new Error("Habit does not exist");
 
+    // Check if habit has sub-habits
+    const sub_habits = await ctx.db
+      .query("sub_habits")
+      .withIndex("by_parent_habit", (q) => q.eq("parent_habit", args.habit_id))
+      .collect();
+
+    // If habit has sub-habits, verify all are completed
+    if (sub_habits.length > 0) {
+      const allCompleted = sub_habits.every((sh) => sh.completed);
+      if (!allCompleted) {
+        throw new ConvexError(
+          "All sub-habits must be completed before marking this habit as complete"
+        );
+      }
+    }
+
     await ctx.db.insert("habit_enteries", {
       user: user_id,
       habit: args.habit_id,
@@ -199,6 +215,13 @@ export const record_streak = mutation({
       highest_streak: newHighestStreak,
       lastCompleted: args.current_date,
     });
+
+    // Reset all sub-habits after successful completion
+    if (sub_habits.length > 0) {
+      for (const sub_habit of sub_habits) {
+        await ctx.db.patch(sub_habit._id, { completed: false });
+      }
+    }
 
     const user = await ctx.db.get(user_id);
     if (!user) throw new Error("User not found");
@@ -296,6 +319,16 @@ export const delete_habit = mutation({
       for (const entry of habit_enteries) {
         await ctx.db.delete(entry._id);
       }
+    }
+
+    // Delete all associated sub-habits
+    const sub_habits = await ctx.db
+      .query("sub_habits")
+      .withIndex("by_parent_habit", (q) => q.eq("parent_habit", args.habit_id))
+      .collect();
+
+    for (const sub_habit of sub_habits) {
+      await ctx.db.delete(sub_habit._id);
     }
 
     await ctx.db.delete(args.habit_id);
