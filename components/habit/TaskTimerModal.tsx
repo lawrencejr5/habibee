@@ -6,7 +6,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, BackHandler, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,13 +63,18 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       ? Math.floor((Date.now() - habit.timer_start_time) / 1000)
       : 0;
     const total = elapsed + currentSession;
-    const maxSeconds = habit?.duration ?? 0 * 60;
+    const maxSeconds = (habit?.duration ?? 0) * 60;
     return Math.min(total, maxSeconds);
   };
 
   // Auto-start timer on fresh open
   useEffect(() => {
-    if (visible && habit && !habit.timer_start_time && (habit.timer_elapsed || 0) === 0) {
+    if (
+      visible &&
+      habit &&
+      !habit.timer_start_time &&
+      (habit.timer_elapsed || 0) === 0
+    ) {
       update_timer({
         habit_id: habit._id,
         timer_elapsed: 0,
@@ -105,7 +116,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   useEffect(() => {
     const backAction = () => {
       if (visible) {
-        bottomSheetRef.current?.close()
+        bottomSheetRef.current?.close();
         return true;
       }
       return false;
@@ -113,7 +124,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -154,12 +165,12 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     if (hours > 0) {
       return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
         2,
-        "0"
+        "0",
       )}:${String(secs).padStart(2, "0")}`;
     }
     return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
       2,
-      "0"
+      "0",
     )}`;
   };
 
