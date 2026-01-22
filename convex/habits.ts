@@ -1,5 +1,11 @@
 import { ConvexError, v } from "convex/values";
-import { action, mutation, query, internalQuery } from "./_generated/server";
+import {
+  action,
+  mutation,
+  query,
+  internalQuery,
+  internalMutation,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -547,5 +553,138 @@ export const get_user_context_data = internalQuery({
       totalHabits: habits.length,
       habitsSummary: habitsSummary || "No active habits yet.",
     };
+  },
+});
+
+export const internal_record_habit_completion = internalMutation({
+  args: {
+    habit_id: v.id("habits"),
+    current_date: v.string(),
+    week_day: v.string(),
+    user_id: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // 1. Check if already recorded
+    const streak_recorded = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_habit_date", (q) =>
+        q.eq("habit", args.habit_id).eq("date", args.current_date),
+      )
+      .unique();
+
+    if (streak_recorded) return; // Already recorded
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (!habit) return;
+
+    await ctx.db.insert("habit_enteries", {
+      user: args.user_id,
+      habit: args.habit_id,
+      status: "completed",
+      date: args.current_date,
+    });
+
+    const newStreak = (habit.current_streak ?? 0) + 1;
+    const newHighestStreak = Math.max(newStreak, habit.highest_streak ?? 0);
+
+    await ctx.db.patch(args.habit_id, {
+      current_streak: newStreak,
+      highest_streak: newHighestStreak,
+      lastCompleted: args.current_date,
+    });
+
+    const user = await ctx.db.get(args.user_id);
+    if (!user) return;
+
+    if (user.last_streak_date !== args.current_date) {
+      const newUserStreak = (user.streak ?? 0) + 1;
+      await ctx.db.patch(args.user_id, {
+        streak: newUserStreak,
+        last_streak_date: args.current_date,
+      });
+
+      const user_weekly_stat = await ctx.db
+        .query("weekly_stats")
+        .withIndex("by_user_weekday", (q) =>
+          q.eq("user", args.user_id).eq("week_day", args.week_day),
+        )
+        .unique();
+
+      if (user_weekly_stat) {
+        await ctx.db.patch(user_weekly_stat._id, {
+          date: args.current_date,
+        });
+      } else {
+        await ctx.db.insert("weekly_stats", {
+          user: args.user_id,
+          week_day: args.week_day,
+          date: args.current_date,
+        });
+      }
+    }
+  },
+});
+
+export const internal_uncheck_habit_completion = internalMutation({
+  args: {
+    habit_id: v.id("habits"),
+    current_date: v.string(),
+    user_id: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // 1. Check if recorded today
+    const entry = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_habit_date", (q) =>
+        q.eq("habit", args.habit_id).eq("date", args.current_date),
+      )
+      .unique();
+
+    if (!entry) return; // Not completed today, nothing to undo
+
+    await ctx.db.delete(entry._id);
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (habit) {
+      const newStreak = Math.max(0, (habit.current_streak ?? 1) - 1);
+
+      // Find previous completion for lastCompleted
+      const prevEntry = await ctx.db
+        .query("habit_enteries")
+        .withIndex("by_habit_date", (q) => q.eq("habit", args.habit_id))
+        .order("desc")
+        .first();
+
+      await ctx.db.patch(args.habit_id, {
+        current_streak: newStreak,
+        lastCompleted: prevEntry?.date, // undefined if no previous
+      });
+    }
+
+    // Check User Streak
+    const otherEntriesToday = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_user_date", (q) =>
+        q.eq("user", args.user_id).eq("date", args.current_date),
+      )
+      .first();
+
+    if (!otherEntriesToday && habit) {
+      const user = await ctx.db.get(args.user_id);
+      if (user && user.last_streak_date === args.current_date) {
+        const newStreak = Math.max(0, (user.streak ?? 1) - 1);
+
+        const latestEntry = await ctx.db
+          .query("habit_enteries")
+          .withIndex("by_user_date", (q) => q.eq("user", args.user_id))
+          .order("desc")
+          .first();
+
+        await ctx.db.patch(args.user_id, {
+          streak: newStreak,
+          last_streak_date: latestEntry?.date,
+        });
+      }
+    }
   },
 });

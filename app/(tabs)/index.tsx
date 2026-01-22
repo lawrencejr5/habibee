@@ -516,7 +516,16 @@ const Home = () => {
                             key={sh._id}
                             subHabit={sh}
                             onToggle={() =>
-                              toggle_sub_habit({ sub_habit_id: sh._id })
+                              toggle_sub_habit({
+                                sub_habit_id: sh._id,
+                                current_date: today,
+                                week_day: new Date().toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "short",
+                                  },
+                                ),
+                              })
                             }
                             themeColor={habit.theme ?? "#eee"}
                             isLast={index === habitSubHabits.length - 1}

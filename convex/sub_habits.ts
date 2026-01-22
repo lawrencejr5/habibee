@@ -95,10 +95,14 @@ export const add_sub_habit = mutation({
   },
 });
 
+import { internal } from "./_generated/api";
+
 // Mutation to toggle sub-habit completion
 export const toggle_sub_habit = mutation({
   args: {
     sub_habit_id: v.id("sub_habits"),
+    current_date: v.optional(v.string()),
+    week_day: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
@@ -113,11 +117,47 @@ export const toggle_sub_habit = mutation({
     if (parent_habit.user !== user_id) throw new Error("Unauthorized");
 
     // Toggle the completed status
+    const newCompleted = !sub_habit.completed;
     await ctx.db.patch(args.sub_habit_id, {
-      completed: !sub_habit.completed,
+      completed: newCompleted,
     });
 
-    return { completed: !sub_habit.completed };
+    if (args.current_date && args.week_day) {
+      if (newCompleted) {
+        // Check if all sub-habits are now completed
+        const all_sub_habits = await ctx.db
+          .query("sub_habits")
+          .withIndex("by_parent_habit", (q) =>
+            q.eq("parent_habit", sub_habit.parent_habit),
+          )
+          .collect();
+
+        const allDone = all_sub_habits.every((sh) => sh.completed);
+        if (allDone) {
+          await ctx.runMutation(
+            internal.habits.internal_record_habit_completion,
+            {
+              habit_id: sub_habit.parent_habit,
+              user_id,
+              current_date: args.current_date,
+              week_day: args.week_day,
+            },
+          );
+        }
+      } else {
+        // If unchecked, unstreak the parent habit
+        await ctx.runMutation(
+          internal.habits.internal_uncheck_habit_completion,
+          {
+            habit_id: sub_habit.parent_habit,
+            user_id,
+            current_date: args.current_date,
+          },
+        );
+      }
+    }
+
+    return { completed: newCompleted };
   },
 });
 
