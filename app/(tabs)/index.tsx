@@ -701,21 +701,25 @@ const HabitCard: React.FC<{
       : 0;
     const total = elapsed + currentSession;
     const maxSeconds = (target_duration || 0) * 60;
+    if (maxSeconds === 0) return total;
     return Math.min(total, maxSeconds);
   };
 
+  const isRunning = !!timer_start_time;
   useEffect(() => {
     // Periodic update if the timer is running
-    if (timer_start_time) {
-      const interval = setInterval(() => {
+    setCurrentTime(calculateCurrentTime());
+    let interval: any;
+    if (isRunning) {
+      interval = setInterval(() => {
         setCurrentTime(calculateCurrentTime());
+        // console.log(calculateCurrentTime());
       }, 1000);
-      setCurrentTime(calculateCurrentTime());
       return () => clearInterval(interval);
     } else {
       setCurrentTime(calculateCurrentTime());
     }
-  }, [timer_start_time, timer_elapsed, target_duration]);
+  }, [timer_start_time, timer_elapsed, target_duration, isRunning]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -728,7 +732,7 @@ const HabitCard: React.FC<{
         "0",
       )}:${String(secs).padStart(2, "0")}`;
     }
-    return `${String(minutes).padStart(2, "0")}:${String(minutes).padStart(
+    return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
       2,
       "0",
     )}`;
