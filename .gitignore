@@ -42,3 +42,6 @@ yarn-error.*
 
 #convex
 convex/data.jsonl
+
+#gemini
+.gemini
