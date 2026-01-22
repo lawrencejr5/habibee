@@ -37,7 +37,7 @@ const AVAILABLE_COLORS = [
 ];
 
 const genAI = new GoogleGenerativeAI(
-  process.env.GOOGLE_GEMINI_API_KEY as string
+  process.env.GOOGLE_GEMINI_API_KEY as string,
 );
 
 export const update_habit_timer = mutation({
@@ -96,7 +96,8 @@ export const update_habit_timer = mutation({
     // Let's use `v.union(v.number(), v.null())` for `timer_start_time` in arguments so I can explicitly pass `null`.
 
     if (args.timer_start_time !== undefined) {
-      fields_to_update.timer_start_time = args.timer_start_time === null ? undefined : args.timer_start_time;
+      fields_to_update.timer_start_time =
+        args.timer_start_time === null ? undefined : args.timer_start_time;
     }
 
     if (args.timer_elapsed !== undefined)
@@ -172,14 +173,12 @@ export const record_streak = mutation({
     const streak_recorded = await ctx.db
       .query("habit_enteries")
       .withIndex("by_habit_date", (q) =>
-        q.eq("habit", args.habit_id).eq("date", args.current_date)
+        q.eq("habit", args.habit_id).eq("date", args.current_date),
       )
       .unique();
 
     if (streak_recorded)
-      throw new ConvexError(
-        "Streak already counted for today"
-      );
+      throw new ConvexError("Streak already counted for today");
 
     const habit = await ctx.db.get(args.habit_id);
     if (!habit) throw new Error("Habit does not exist");
@@ -195,7 +194,7 @@ export const record_streak = mutation({
       const allCompleted = sub_habits.every((sh) => sh.completed);
       if (!allCompleted) {
         throw new ConvexError(
-          "All sub-habits must be completed before marking this habit as complete"
+          "All sub-habits must be completed before marking this habit as complete",
         );
       }
     }
@@ -216,13 +215,6 @@ export const record_streak = mutation({
       lastCompleted: args.current_date,
     });
 
-    // Reset all sub-habits after successful completion
-    if (sub_habits.length > 0) {
-      for (const sub_habit of sub_habits) {
-        await ctx.db.patch(sub_habit._id, { completed: false });
-      }
-    }
-
     const user = await ctx.db.get(user_id);
     if (!user) throw new Error("User not found");
 
@@ -236,7 +228,7 @@ export const record_streak = mutation({
       const user_weekly_stat = await ctx.db
         .query("weekly_stats")
         .withIndex("by_user_weekday", (q) =>
-          q.eq("user", user_id).eq("week_day", args.week_day)
+          q.eq("user", user_id).eq("week_day", args.week_day),
         )
         .unique();
 
@@ -278,7 +270,7 @@ export const update_habit = mutation({
       const existing = await ctx.db
         .query("habits")
         .withIndex("by_user_habit", (q) =>
-          q.eq("user", user_id).eq("habit", args.habit!)
+          q.eq("user", user_id).eq("habit", args.habit!),
         )
         .unique();
 
@@ -290,7 +282,9 @@ export const update_habit = mutation({
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
     if (args.duration !== undefined)
-      fields_to_update.duration = args.duration ? Math.max(1, args.duration) : undefined;
+      fields_to_update.duration = args.duration
+        ? Math.max(1, args.duration)
+        : undefined;
     if (args.goal !== undefined) fields_to_update.goal = Math.max(1, args.goal);
     if (args.strict !== undefined) fields_to_update.strict = args.strict;
     if (args.icon !== undefined) fields_to_update.icon = args.icon;
@@ -340,7 +334,10 @@ export const check_streak_and_reset = mutation({
   args: { today: v.string() },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
-    if (!user_id) { console.log("User not authenticated"); return };
+    if (!user_id) {
+      console.log("User not authenticated");
+      return;
+    }
 
     const habits = await ctx.db
       .query("habits")
@@ -388,9 +385,9 @@ export const generate_habit_ai = action({
         parts: v.array(
           v.object({
             text: v.string(),
-          })
+          }),
         ),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -398,9 +395,12 @@ export const generate_habit_ai = action({
     let userContextString = "";
 
     if (userId) {
-      const userData = await ctx.runQuery(internal.habits.get_user_context_data, {
-        userId,
-      });
+      const userData = await ctx.runQuery(
+        internal.habits.get_user_context_data,
+        {
+          userId,
+        },
+      );
 
       if (userData) {
         userContextString = `
@@ -476,8 +476,10 @@ export const generate_habit_ai = action({
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     let cleanResponse = jsonMatch ? jsonMatch[0] : response;
 
-
-    cleanResponse = cleanResponse.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+    cleanResponse = cleanResponse.replace(
+      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,
+      "",
+    );
 
     return cleanResponse;
   },
@@ -517,7 +519,6 @@ export const create_habit = mutation({
       highest_streak: 0,
     });
 
-
     return habit_id;
   },
 });
@@ -536,7 +537,7 @@ export const get_user_context_data = internalQuery({
     const habitsSummary = habits
       .map(
         (h) =>
-          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}${h.duration ? `, Duration: ${h.duration}m` : ""})`
+          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}${h.duration ? `, Duration: ${h.duration}m` : ""})`,
       )
       .join("\n");
 
