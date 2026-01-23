@@ -143,6 +143,12 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
     }
   };
 
+  const [isAddFocused, setIsAddFocused] = useState(false);
+  const Container =
+    subHabits && subHabits.length > 0 && !isAddFocused
+      ? KeyboardStickyView
+      : View;
+
   return (
     <Modal transparent visible={visible} animationType="slide">
       <View
@@ -238,11 +244,69 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
               </Text>
             </View>
           )}
-          <KeyboardStickyView
+          {/* Add New Sub-Habit */}
+          <View style={{ marginBottom: 20, flexDirection: "row", gap: 10 }}>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: Colors[theme].surface,
+                borderWidth: 1,
+                borderColor: Colors[theme].border,
+                borderRadius: 10,
+                paddingHorizontal: 15,
+                paddingVertical: 5,
+              }}
+            >
+              <Feather
+                name="plus"
+                size={20}
+                color={Colors[theme].text_secondary}
+                style={{ marginRight: 10 }}
+              />
+              <TextInput
+                placeholder="Add new sub-habit"
+                placeholderTextColor={Colors[theme].text_secondary}
+                style={{
+                  flex: 1,
+                  fontFamily: "NunitoMedium",
+                  color: Colors[theme].text,
+                  fontSize: 16,
+                }}
+                value={newSubHabitName}
+                onChangeText={setNewSubHabitName}
+                onSubmitEditing={handleAdd}
+                editable={!adding}
+                onFocus={() => setIsAddFocused(true)}
+                onBlur={() => setIsAddFocused(false)}
+              />
+            </View>
+            <Pressable
+              onPress={handleAdd}
+              disabled={adding}
+              style={{
+                backgroundColor: themeColor,
+                width: 50,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: adding ? 0.5 : 1,
+              }}
+            >
+              {adding ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Feather name="plus" size={24} color="#fff" />
+              )}
+            </Pressable>
+          </View>
+
+          <Container
             style={{ flex: 1 }}
             offset={{
               closed: 0,
-              opened: subHabits && subHabits.length > 0 ? 150 : 0,
+              opened: 150,
             }}
           >
             <ScrollView
@@ -251,64 +315,12 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
               contentContainerStyle={{ paddingBottom: 20 }}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Add New Sub-Habit */}
-              <View style={{ marginBottom: 20, flexDirection: "row", gap: 10 }}>
-                <View
-                  style={{
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: Colors[theme].surface,
-                    borderWidth: 1,
-                    borderColor: Colors[theme].border,
-                    borderRadius: 10,
-                    paddingHorizontal: 15,
-                    paddingVertical: 5,
-                  }}
-                >
-                  <Feather
-                    name="plus"
-                    size={20}
-                    color={Colors[theme].text_secondary}
-                    style={{ marginRight: 10 }}
-                  />
-                  <TextInput
-                    placeholder="Add new sub-habit"
-                    placeholderTextColor={Colors[theme].text_secondary}
-                    style={{
-                      flex: 1,
-                      fontFamily: "NunitoMedium",
-                      color: Colors[theme].text,
-                      fontSize: 16,
-                    }}
-                    value={newSubHabitName}
-                    onChangeText={setNewSubHabitName}
-                    onSubmitEditing={handleAdd}
-                    editable={!adding}
-                  />
-                </View>
-                <Pressable
-                  onPress={handleAdd}
-                  disabled={adding}
-                  style={{
-                    backgroundColor: themeColor,
-                    width: 50,
-                    borderRadius: 10,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    opacity: adding ? 0.5 : 1,
-                  }}
-                >
-                  {adding ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Feather name="plus" size={24} color="#fff" />
-                  )}
-                </Pressable>
-              </View>
-
               {/* List Section */}
-              {subHabits && subHabits.length > 0 ? (
+              {subHabits === undefined ? (
+                <View style={{ paddingVertical: 40, alignItems: "center" }}>
+                  <ActivityIndicator color={themeColor} size={"large"} />
+                </View>
+              ) : subHabits.length > 0 ? (
                 <View
                   style={{
                     backgroundColor: Colors[theme].surface,
@@ -521,7 +533,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                 Close
               </Text>
             </Pressable>
-          </KeyboardStickyView>
+          </Container>
         </ThemedView>
       </View>
     </Modal>

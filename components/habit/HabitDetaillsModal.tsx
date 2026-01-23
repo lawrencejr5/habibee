@@ -487,9 +487,11 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                         color: Colors[theme].text_secondary,
                       }}
                     >
-                      {subHabits && subHabits.length > 0
-                        ? `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
-                        : "Add sub habits"}
+                      {subHabits === undefined
+                        ? "Loading..."
+                        : subHabits.length > 0
+                          ? `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
+                          : "Add sub habits"}
                     </Text>
                   </View>
                 </View>
