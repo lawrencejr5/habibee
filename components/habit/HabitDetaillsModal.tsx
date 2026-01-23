@@ -184,7 +184,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           width: 0,
           height: 0,
           backgroundColor: "grey",
-          marginTop: 10,
           borderRadius: 30,
         }}
       >
@@ -346,7 +345,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   style={{
                     fontFamily: "NunitoExtraBold",
                     fontSize: 24,
-                    marginTop: 20,
+                    marginTop: 10,
                   }}
                 >
                   {habit.habit}
@@ -357,7 +356,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     fontFamily: "NunitoRegular",
                     fontSize: 14,
                     color: Colors[theme].text_secondary,
-                    marginTop: 5,
                   }}
                 >
                   {habit.duration
@@ -370,7 +368,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               <View
                 style={{
                   marginHorizontal: 20,
-                  marginTop: 30,
+                  marginTop: 20,
                   backgroundColor: Colors[theme].surface,
                   borderWidth: 2,
                   borderColor: Colors[theme].border,
@@ -390,7 +388,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -407,7 +405,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       <ThemedText
                         style={{
                           fontFamily: "NunitoExtraBold",
-                          fontSize: 32,
+                          fontSize: 25,
                         }}
                       >
                         {habit.current_streak}
@@ -423,7 +421,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -432,7 +430,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <ThemedText
                       style={{
                         fontFamily: "NunitoExtraBold",
-                        fontSize: 32,
+                        fontSize: 25,
                         marginTop: 5,
                       }}
                     >
@@ -455,7 +453,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   }}
                   style={{
                     marginHorizontal: 20,
-                    marginTop: 30,
+                    marginTop: 20,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
