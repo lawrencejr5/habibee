@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  ScrollView,
 } from "react-native";
 
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -28,7 +29,8 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "@/context/ThemeContext";
 import { useCustomAlert } from "@/context/AlertContext";
-
+import { Id } from "@/convex/_generated/dataModel";
+import AddSubHabitModal from "../habit/AddSubHabitModal";
 const AddModal: React.FC<{
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
@@ -55,6 +57,10 @@ const AddModal: React.FC<{
   const [goal, setGoal] = useState<string>("");
   const [strict, setStrict] = useState<boolean>(true);
 
+  // Sub-habits state
+  const [subHabits, setSubHabits] = useState<string[]>([]);
+  const [subHabitModalVisible, setSubHabitModalVisible] = useState(false);
+
   const close = () => {
     haptics.impact();
     resetForm();
@@ -62,6 +68,7 @@ const AddModal: React.FC<{
   };
 
   const add_habit = useMutation(api.habits.add_habit);
+  const add_sub_habit = useMutation(api.sub_habits.add_sub_habit);
 
   const resetForm = () => {
     setHabit("");
@@ -70,6 +77,7 @@ const AddModal: React.FC<{
     setStrict(false);
     setSelectedColor(getRandomColor());
     setSelectedIcon("default");
+    setSubHabits([]);
   };
 
   const handleSubmit = async () => {
@@ -80,7 +88,7 @@ const AddModal: React.FC<{
         return;
       }
 
-      await add_habit({
+      const habit_id = await add_habit({
         habit,
         icon: (selectedIcon as string) ?? "default",
         theme: (selectedColor as string) ?? "#c5c9cc",
@@ -88,6 +96,16 @@ const AddModal: React.FC<{
         goal: Number(goal),
         duration: duration ? Number(duration) : undefined,
       });
+
+      // Add sub-habits if any
+      if (subHabits.length > 0) {
+        for (const subHabitName of subHabits) {
+          await add_sub_habit({
+            parent_habit_id: habit_id,
+            name: subHabitName,
+          });
+        }
+      }
 
       showCustomAlert("Habit created successfully", "success");
       resetForm();
@@ -101,6 +119,8 @@ const AddModal: React.FC<{
       setBtnLoading(false);
     }
   };
+
+
 
   useEffect(() => {
     const backAction = () => {
@@ -134,36 +154,39 @@ const AddModal: React.FC<{
             style={{ backgroundColor: Colors[theme].background, flex: 1 }}
             offset={{ opened: 250, closed: insets.bottom }}
           >
-            <Pressable
-              style={{
-                marginTop: 20,
-                backgroundColor: Colors[theme].surface,
-                alignSelf: "flex-end",
-                padding: 7,
-                borderWidth: 3,
-                borderColor: Colors[theme].border,
-                borderRadius: 50,
-              }}
-              onPress={close}
-            >
-              <Feather
-                name="x"
-                color={Colors[theme].text}
-                size={25}
-                style={{ textAlign: "right" }}
-              />
-            </Pressable>
-            <Text
-              style={{
-                color: Colors[theme].text,
-                fontFamily: "NunitoExtraBold",
-                fontSize: 26,
-              }}
-            >
-              New habit
-            </Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text
+                style={{
+                  color: Colors[theme].text,
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 26,
+                }}
+              >
+                New habit
+              </Text>
+              <Pressable
+                style={{
+                  backgroundColor: Colors[theme].surface,
+                  padding: 7,
+                  borderWidth: 3,
+                  borderColor: Colors[theme].border,
+                  borderRadius: 50,
+                }}
+                onPress={close}
+              >
+                <Feather
+                  name="x"
+                  color={Colors[theme].text}
+                  size={25}
+                />
+              </Pressable>
 
-            <View style={{ flex: 1 }}>
+            </View>
+
+            <ScrollView
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Pick icon */}
               <Pressable
                 onPress={() => {
@@ -390,8 +413,63 @@ const AddModal: React.FC<{
                     }}
                   />
                 </View>
+
+                {/* Sub-Habits Button */}
+                <Pressable
+                  onPress={() => {
+                    haptics.impact();
+                    setSubHabitModalVisible(true);
+                  }}
+                  style={{
+                    marginTop: 30,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 15,
+                    backgroundColor: Colors[theme].surface,
+                    borderRadius: 15,
+                    borderWidth: 2,
+                    borderColor: Colors[theme].border,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Feather
+                      name="layers"
+                      size={24}
+                      color={selectedColor}
+                      style={{ marginRight: 15 }}
+                    />
+                    <View>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 16,
+                          color: Colors[theme].text,
+                        }}
+                      >
+                        Sub-Habits
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoMedium",
+                          fontSize: 14,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        {subHabits.length > 0
+                          ? `${subHabits.length} added`
+                          : "Add sub-tasks to this habit"}
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather
+                    name="chevron-right"
+                    size={24}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
               </View>
-            </View>
+            </ScrollView>
           </KeyboardStickyView>
 
           {/* Save button - Fixed at bottom */}
@@ -432,6 +510,13 @@ const AddModal: React.FC<{
           setSelectedIcon(icon);
           setSelectedColor(color);
         }}
+      />
+      <AddSubHabitModal
+        visible={subHabitModalVisible}
+        setVisible={setSubHabitModalVisible}
+        subHabits={subHabits}
+        setSubHabits={setSubHabits}
+        themeColor={selectedColor}
       />
     </>
   );

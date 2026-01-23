@@ -22,6 +22,7 @@ import { habitIcons } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
 import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
+import CheckSubHabitModal from "./CheckSubHabitModal";
 import { useHapitcs } from "@/context/HapticsContext";
 
 import { useQuery, useMutation } from "convex/react";
@@ -45,7 +46,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
-  const { showCustomAlert } = useCustomAlert()
+  const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -68,7 +69,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
     // 1. Create the fast lookup set
     const completedSet = new Set(
-      habitEnteries.filter((e) => e.status === "completed").map((e) => e.date)
+      habitEnteries.filter((e) => e.status === "completed").map((e) => e.date),
     );
 
     const today = new Date();
@@ -111,11 +112,17 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [showEditButton, setShowEditButton] = useState<boolean>(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false); // State for delete modal
+  const [checkSubHabitModalVisible, setCheckSubHabitModalVisible] =
+    useState<boolean>(false);
+
+  const subHabits = useQuery(api.sub_habits.get_sub_habits, {
+    parent_habit_id: habit_id,
+  });
 
   useEffect(() => {
     const backAction = () => {
       if (visible) {
-        bottomSheetRef.current?.close()
+        bottomSheetRef.current?.close();
         return true;
       }
       return false;
@@ -123,7 +130,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -138,9 +145,11 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         await record_streak({
           habit_id: habit._id,
           current_date: today,
-          week_day: new Date().toLocaleDateString("en-US", { weekday: "short" }),
+          week_day: new Date().toLocaleDateString("en-US", {
+            weekday: "short",
+          }),
         });
-        showCustomAlert("Streak recorded", "success")
+        showCustomAlert("Streak recorded", "success");
       } catch (error) {
         console.log(error);
       }
@@ -157,7 +166,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
-    return null
+    return null;
   }
 
   return (
@@ -175,7 +184,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           width: 0,
           height: 0,
           backgroundColor: "grey",
-          marginTop: 10,
           borderRadius: 30,
         }}
       >
@@ -309,13 +317,14 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               </View>
 
               {/* Icon and Color */}
-              <View style={{ alignItems: "center", marginTop: 30 }}>
+              <View style={{ alignItems: "center", marginTop: 0 }}>
                 <View
                   style={{
                     width: 100,
                     height: 100,
                     borderRadius: 50,
-                    backgroundColor: (habit.theme ?? Colors[theme].primary) + "20",
+                    backgroundColor:
+                      (habit.theme ?? Colors[theme].primary) + "20",
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
@@ -336,7 +345,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   style={{
                     fontFamily: "NunitoExtraBold",
                     fontSize: 24,
-                    marginTop: 20,
+                    marginTop: 10,
                   }}
                 >
                   {habit.habit}
@@ -347,10 +356,11 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     fontFamily: "NunitoRegular",
                     fontSize: 14,
                     color: Colors[theme].text_secondary,
-                    marginTop: 5,
                   }}
                 >
-                  {habit.duration ? `${habit.duration} min(s) daily` : "Direct Task"}
+                  {habit.duration
+                    ? `${habit.duration} min(s) daily`
+                    : "Direct Task"}
                 </Text>
               </View>
 
@@ -358,12 +368,13 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               <View
                 style={{
                   marginHorizontal: 20,
-                  marginTop: 30,
+                  marginTop: 20,
                   backgroundColor: Colors[theme].surface,
                   borderWidth: 2,
                   borderColor: Colors[theme].border,
                   borderRadius: 15,
-                  padding: 20,
+                  paddingHorizontal: 20,
+                  paddingVertical: 15,
                 }}
               >
                 <View
@@ -377,7 +388,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -394,7 +405,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       <ThemedText
                         style={{
                           fontFamily: "NunitoExtraBold",
-                          fontSize: 32,
+                          fontSize: 25,
                         }}
                       >
                         {habit.current_streak}
@@ -410,7 +421,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -419,19 +430,77 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <ThemedText
                       style={{
                         fontFamily: "NunitoExtraBold",
-                        fontSize: 32,
+                        fontSize: 25,
                         marginTop: 5,
                       }}
                     >
                       {Math.min(
                         Math.ceil((habit.current_streak / habit.goal) * 100),
-                        100
+                        100,
                       )}
                       %
                     </ThemedText>
                   </View>
                 </View>
               </View>
+
+              {/* Sub Habits Card */}
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setCheckSubHabitModalVisible(true);
+                }}
+                style={{
+                  marginHorizontal: 20,
+                  marginTop: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 15,
+                  backgroundColor: Colors[theme].surface,
+                  borderRadius: 15,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Feather
+                    name="layers"
+                    size={24}
+                    color={habit.theme ?? Colors[theme].primary}
+                    style={{ marginRight: 15 }}
+                  />
+                  <View>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 16,
+                        color: Colors[theme].text,
+                      }}
+                    >
+                      Sub-Habits
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      {subHabits === undefined
+                        ? "Loading..."
+                        : subHabits.length > 0
+                          ? `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
+                          : "Add sub habits"}
+                    </Text>
+                  </View>
+                </View>
+                <Feather
+                  name="chevron-right"
+                  size={24}
+                  color={Colors[theme].text_secondary}
+                />
+              </Pressable>
 
               {/* Heat Map */}
               <View style={{ marginHorizontal: 20, marginTop: 30 }}>
@@ -486,7 +555,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                                   height: 12,
                                   borderRadius: 2,
                                   backgroundColor: day.completed
-                                    ? (habit.theme ?? Colors[theme].primary) + "cc"
+                                    ? (habit.theme ?? Colors[theme].primary) +
+                                      "cc"
                                     : Colors[theme].border,
                                 }}
                               />
@@ -494,32 +564,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                           </View>
                         ))}
                       </View>
-                      {/* <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        marginTop: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "NunitoRegular",
-                          fontSize: 10,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        Jan
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoRegular",
-                          fontSize: 10,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        Dec
-                      </Text>
-                    </View> */}
                     </View>
                   </ScrollView>
                 )}
@@ -554,24 +598,31 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   opacity: isDone ? 0.5 : 1,
                 }}
               >
-                {habit.duration ? <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 16,
-                    color: "#fff",
-                  }}
-                >
-                  {isDone ? "Completed for today" : "Start timer"}
-                </Text> : <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 16,
-                    color: "#fff",
-                  }}
-                >
-                  Record streak
-                </Text>}
-
+                {habit.duration ? (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    {isDone
+                      ? "Completed for today"
+                      : habit.timer_start_time || habit.timer_elapsed
+                        ? "Continue timer"
+                        : "Start timer"}
+                  </Text>
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    Record streak
+                  </Text>
+                )}
               </Pressable>
             </View>
           </View>
@@ -594,6 +645,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           setDeleteModalVisible(false);
         }}
         habit={habit}
+      />
+      <CheckSubHabitModal
+        visible={checkSubHabitModalVisible}
+        setVisible={setCheckSubHabitModalVisible}
+        habit_id={habit_id}
+        themeColor={habit.theme ?? Colors[theme].primary}
       />
     </>
   );

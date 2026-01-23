@@ -1,4 +1,9 @@
-import { Image, Pressable, StyleSheet, ScrollView as RNScrollView } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  ScrollView as RNScrollView,
+} from "react-native";
 import { useRef } from "react";
 
 import { ScrollView, Text, View } from "react-native";
@@ -36,7 +41,7 @@ import { useCustomAlert } from "@/context/AlertContext";
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { showCustomAlert } = useCustomAlert()
+  const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
 
   const { signedIn } = useUser();
@@ -57,10 +62,27 @@ const Home = () => {
   const [detailsModalVisible, setDetailsModalVisible] =
     useState<boolean>(false);
   const [selectedHabitId, setSelectedHabitId] = useState<Id<"habits"> | null>(
-    null
+    null,
   );
 
   const record_streak = useMutation(api.habits.record_streak);
+  const toggle_sub_habit = useMutation(api.sub_habits.toggle_sub_habit);
+
+  const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
+  const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
+
+  const toggleExpansion = (habitId: string) => {
+    haptics.impact();
+    setExpandedHabits((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(habitId)) {
+        newSet.delete(habitId);
+      } else {
+        newSet.add(habitId);
+      }
+      return newSet;
+    });
+  };
 
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -98,7 +120,7 @@ const Home = () => {
           // Wait 3 seconds before moving to next message
           setTimeout(() => {
             setCurrentMessageIndex(
-              (prevIndex) => (prevIndex + 1) % motivationalMsgs!.length
+              (prevIndex) => (prevIndex + 1) % motivationalMsgs!.length,
             );
             setIsTyping(true);
           }, 3000);
@@ -295,7 +317,7 @@ const Home = () => {
               {displayedText}
               {isTyping &&
                 displayedText.length <
-                motivationalMsgs![currentMessageIndex].text.length && (
+                  motivationalMsgs![currentMessageIndex].text.length && (
                   <Text style={{ color: Colors[theme].primary }}>|</Text>
                 )}
             </Text>
@@ -341,7 +363,6 @@ const Home = () => {
             gap: 12,
           }}
         >
-
           <Image
             source={require("../../assets/images/ai-icon.png")}
             style={{ width: 40, height: 40, borderRadius: 20 }}
@@ -420,51 +441,101 @@ const Home = () => {
           </View>
           <View>
             {habitData.length > 0 ? (
-              habitData?.map((habit) => (
-                <HabitCard
-                  key={habit._id}
-                  id={habit._id}
-                  duration={String(habit.duration)}
-                  title={habit.habit}
-                  done={
-                    habit.lastCompleted ===
-                    new Date().toLocaleDateString("en-CA")
-                  }
-                  streak={habit.current_streak}
-                  habitType={habit.icon ?? "default"}
-                  themeColor={habit.theme ?? "#eee"}
-                  timer_start_time={habit.timer_start_time}
-                  timer_elapsed={habit.timer_elapsed}
-                  target_duration={habit.duration}
-                  onFireIconPress={async () => {
-                    haptics.impact();
-                    if (!habit.duration) {
-                      try {
-                        await record_streak({
-                          habit_id: habit._id,
-                          current_date: today,
-                          week_day: new Date().toLocaleDateString("en-US", {
-                            weekday: "short",
-                          }),
-                        });
-                        showCustomAlert("Streak recorded", "success")
-                      } catch (error: any) {
-                        if (error.data)
-                          showCustomAlert(error.data, "danger")
-                        else showCustomAlert("An error occured", "danger")
+              habitData?.map((habit) => {
+                const habitSubHabits =
+                  subHabitsData?.filter(
+                    (sh) => sh.parent_habit === habit._id,
+                  ) || [];
+                const isExpanded = expandedHabits.has(habit._id);
+
+                return (
+                  <View key={habit._id}>
+                    <HabitCard
+                      id={habit._id}
+                      duration={String(habit.duration)}
+                      title={habit.habit}
+                      done={
+                        habit.lastCompleted ===
+                        new Date().toLocaleDateString("en-CA")
                       }
-                    } else {
-                      setSelectedHabitId(habit._id);
-                      setTimerModalVisible(true);
-                    }
-                  }}
-                  onCardPress={() => {
-                    haptics.impact();
-                    setSelectedHabitId(habit._id);
-                    setDetailsModalVisible(true);
-                  }}
-                />
-              ))
+                      streak={habit.current_streak}
+                      habitType={habit.icon ?? "default"}
+                      themeColor={habit.theme ?? "#eee"}
+                      timer_start_time={habit.timer_start_time}
+                      timer_elapsed={habit.timer_elapsed}
+                      target_duration={habit.duration}
+                      subHabits={habitSubHabits}
+                      isExpanded={isExpanded}
+                      onToggleExpand={() => toggleExpansion(habit._id)}
+                      onFireIconPress={async () => {
+                        haptics.impact();
+                        if (!habit.duration) {
+                          try {
+                            // Check if all sub-habits are completed if any exist
+                            if (habitSubHabits.length > 0) {
+                              const allCompleted = habitSubHabits.every(
+                                (sh) => sh.completed,
+                              );
+                              if (!allCompleted && habit.strict) {
+                                showCustomAlert(
+                                  "Complete all sub-habits first!",
+                                  "warning",
+                                );
+                                return;
+                              }
+                            }
+
+                            await record_streak({
+                              habit_id: habit._id,
+                              current_date: today,
+                              week_day: new Date().toLocaleDateString("en-US", {
+                                weekday: "short",
+                              }),
+                            });
+                            showCustomAlert("Streak recorded", "success");
+                          } catch (error: any) {
+                            if (error.data)
+                              showCustomAlert(error.data, "danger");
+                            else showCustomAlert("An error occured", "danger");
+                          }
+                        } else {
+                          setSelectedHabitId(habit._id);
+                          setTimerModalVisible(true);
+                        }
+                      }}
+                      onCardPress={() => {
+                        haptics.impact();
+                        setSelectedHabitId(habit._id);
+                        setDetailsModalVisible(true);
+                      }}
+                    />
+                    {isExpanded && (
+                      <View style={{ marginTop: 10 }}>
+                        {habitSubHabits.map((sh, index) => (
+                          <SubHabitItem
+                            key={sh._id}
+                            subHabit={sh}
+                            onToggle={() =>
+                              toggle_sub_habit({
+                                sub_habit_id: sh._id,
+                                current_date: today,
+                                week_day: new Date().toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "short",
+                                  },
+                                ),
+                              })
+                            }
+                            themeColor={habit.theme ?? "#eee"}
+                            isLast={index === habitSubHabits.length - 1}
+                          />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                );
+              })
             ) : (
               <View
                 style={{
@@ -533,9 +604,7 @@ const Home = () => {
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
-        habit={
-          habitData.find((habit) => habit._id === selectedHabitId)
-        }
+        habit={habitData.find((habit) => habit._id === selectedHabitId)}
       />
       {selectedHabitId && (
         <HabitDetaillsModal
@@ -600,6 +669,9 @@ const HabitCard: React.FC<{
   timer_start_time?: number;
   timer_elapsed?: number;
   target_duration?: number;
+  subHabits?: any[];
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }> = ({
   duration,
   title,
@@ -612,215 +684,264 @@ const HabitCard: React.FC<{
   timer_start_time,
   timer_elapsed,
   target_duration,
+  subHabits = [],
+  isExpanded = false,
+  onToggleExpand,
 }) => {
-    const { theme } = useTheme();
+  const { theme } = useTheme();
 
-    const haptics = useHapitcs();
+  const haptics = useHapitcs();
 
-    const [currentTime, setCurrentTime] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
 
-    const calculateCurrentTime = () => {
-      const elapsed = timer_elapsed || 0;
-      const currentSession = timer_start_time
-        ? Math.floor((Date.now() - timer_start_time) / 1000)
-        : 0;
-      const total = elapsed + currentSession;
-      const maxSeconds = (target_duration || 0) * 60;
-      return Math.min(total, maxSeconds);
-    };
+  const calculateCurrentTime = () => {
+    const elapsed = timer_elapsed || 0;
+    const currentSession = timer_start_time
+      ? Math.floor((Date.now() - timer_start_time) / 1000)
+      : 0;
+    const total = elapsed + currentSession;
+    const maxSeconds = (target_duration || 0) * 60;
+    if (maxSeconds === 0) return total;
+    return Math.min(total, maxSeconds);
+  };
 
-    useEffect(() => {
-      // Periodic update if the timer is running
-      if (timer_start_time) {
-        const interval = setInterval(() => {
-          setCurrentTime(calculateCurrentTime());
-        }, 1000);
+  const isRunning = !!timer_start_time;
+  useEffect(() => {
+    // Periodic update if the timer is running
+    setCurrentTime(calculateCurrentTime());
+    let interval: any;
+    if (isRunning) {
+      interval = setInterval(() => {
         setCurrentTime(calculateCurrentTime());
-        return () => clearInterval(interval);
-      } else {
-        setCurrentTime(calculateCurrentTime());
-      }
-    }, [timer_start_time, timer_elapsed, target_duration]);
+        // console.log(calculateCurrentTime());
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setCurrentTime(calculateCurrentTime());
+    }
+  }, [timer_start_time, timer_elapsed, target_duration, isRunning]);
 
-    const formatTime = (totalSeconds: number) => {
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
+  const formatTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
 
-      if (hours > 0) {
-        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-          2,
-          "0"
-        )}:${String(secs).padStart(2, "0")}`;
-      }
-      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
+    if (hours > 0) {
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
         2,
-        "0"
-      )}`;
-    };
+        "0",
+      )}:${String(secs).padStart(2, "0")}`;
+    }
+    return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
+      2,
+      "0",
+    )}`;
+  };
 
-    const isTimerActive = !!timer_start_time || (timer_elapsed || 0) > 0;
-    return (
-      <Pressable
-        onPress={onCardPress}
-        onLongPress={() => {
-          haptics.impact();
-        }}
+  const isTimerActive = !!timer_start_time || (timer_elapsed || 0) > 0;
+  const subHabitsCount = subHabits.length;
+  const completedSubHabits = subHabits.filter((s) => s.completed).length;
+
+  return (
+    <Pressable
+      onPress={onCardPress}
+      onLongPress={() => {
+        haptics.impact();
+        if (subHabitsCount > 0 && onToggleExpand) {
+          onToggleExpand();
+        }
+      }}
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+        backgroundColor: Colors[theme].surface,
+        paddingVertical: 15,
+        paddingHorizontal: 5,
+        marginTop: 15,
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: Colors[theme].border,
+      }}
+    >
+      <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
           alignItems: "center",
-          width: "100%",
-          backgroundColor: Colors[theme].surface,
-          paddingVertical: 15,
-          paddingHorizontal: 5,
-          marginTop: 15,
-          borderRadius: 15,
-          borderWidth: 2,
-          borderColor: Colors[theme].border,
+          gap: 15,
+          marginLeft: 5,
+          flex: 1,
         }}
       >
         <View
           style={{
-            flexDirection: "row",
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            backgroundColor: themeColor + "20",
+            justifyContent: "center",
             alignItems: "center",
-            gap: 15,
-            marginLeft: 5,
-            flex: 1,
+            borderColor: themeColor,
           }}
         >
+          <Image
+            source={habitIcons[habitType]}
+            style={{
+              width: 20,
+              height: 20,
+              tintColor: themeColor,
+            }}
+          />
+        </View>
+
+        <View>
+          <ThemedText
+            numberOfLines={1}
+            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
+          >
+            {title}
+          </ThemedText>
           <View
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              backgroundColor: themeColor + "20",
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
-              borderColor: themeColor,
+              gap: 15,
+              marginTop: 10,
             }}
           >
-            <Image
-              source={habitIcons[habitType]}
-              style={{
-                width: 20,
-                height: 20,
-                tintColor: themeColor,
-              }}
-            />
-          </View>
-
-          <View>
-            <ThemedText
-              numberOfLines={1}
-              style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
-            >
-              {title}
-            </ThemedText>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 15,
-                marginTop: 10,
+                gap: 5,
+                width: 80,
               }}
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  width: 80,
-                }}
-              >
-                {duration && duration !== "undefined" ? <Image
-                  source={require("../../assets/icons/clock.png")}
+              {subHabitsCount > 0 && !isTimerActive ? (
+                <Pressable
+                  onPress={onToggleExpand}
                   style={{
-                    tintColor: Colors[theme].text_secondary,
-                    width: 14,
-                    height: 14,
-                  }}
-                /> : <Image
-                  source={require("../../assets/icons/calendar.png")}
-                  style={{
-                    tintColor: Colors[theme].text_secondary,
-                    width: 14,
-                    height: 14,
-                  }}
-                />}
-
-                <ThemedText
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 12,
-                    color: Colors[theme].text_secondary,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingRight: 10,
                   }}
                 >
-                  {isTimerActive
-                    ? formatTime(currentTime)
-                    : duration && duration !== "undefined"
-                      ? `${duration} min(s)`
-                      : "Daily"}
-                </ThemedText>
-              </View>
-              <View
+                  <Image
+                    source={require("../../assets/icons/check-outline.png")}
+                    style={{
+                      tintColor: Colors[theme].text_secondary,
+                      width: 14,
+                      height: 14,
+                    }}
+                  />
+                  <ThemedText
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 12,
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    {completedSubHabits}/{subHabitsCount}
+                  </ThemedText>
+                </Pressable>
+              ) : (
+                <>
+                  {duration && duration !== "undefined" ? (
+                    <Image
+                      source={require("../../assets/icons/clock.png")}
+                      style={{
+                        tintColor: Colors[theme].text_secondary,
+                        width: 14,
+                        height: 14,
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={require("../../assets/icons/calendar.png")}
+                      style={{
+                        tintColor: Colors[theme].text_secondary,
+                        width: 14,
+                        height: 14,
+                      }}
+                    />
+                  )}
+                  <ThemedText
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 12,
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    {isTimerActive
+                      ? formatTime(currentTime)
+                      : duration && duration !== "undefined"
+                        ? `${duration} min(s)`
+                        : "Daily"}
+                  </ThemedText>
+                </>
+              )}
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              <Image
+                source={require("../../assets/icons/fire.png")}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 7,
+                  tintColor: !done ? Colors[theme].text_secondary : undefined,
+                  width: 14,
+                  height: 14,
+                }}
+              />
+              <ThemedText
+                style={{
+                  color: done
+                    ? Colors[theme].accent1
+                    : Colors[theme].text_secondary,
+                  fontFamily: "NunitoBold",
                 }}
               >
-                <Image
-                  source={require("../../assets/icons/fire.png")}
-                  style={{
-                    tintColor: !done ? Colors[theme].text_secondary : undefined,
-                    width: 14,
-                    height: 14,
-                  }}
-                />
-                <ThemedText
-                  style={{
-                    color: done
-                      ? Colors[theme].accent1
-                      : Colors[theme].text_secondary,
-                    fontFamily: "NunitoBold",
-                  }}
-                >
-                  {streak}
-                </ThemedText>
-              </View>
+                {streak}
+              </ThemedText>
             </View>
           </View>
         </View>
+      </View>
 
-        <Pressable
-          onPress={() => {
-            haptics.impact();
-            onFireIconPress();
-          }}
+      <Pressable
+        onPress={() => {
+          haptics.impact();
+          onFireIconPress();
+        }}
+        disabled={done}
+        style={{
+          borderLeftWidth: 3,
+          borderColor: Colors[theme].border,
+          width: 50,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          paddingHorizontal: 10,
+        }}
+      >
+        <Image
+          source={require("../../assets/icons/fire.png")}
           style={{
-            borderLeftWidth: 3,
-            borderColor: Colors[theme].border,
-            width: 50,
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-            paddingHorizontal: 10,
+            tintColor: !done ? Colors[theme].text_secondary : undefined,
+            width: 30,
+            height: 30,
           }}
-        >
-          <Image
-            source={require("../../assets/icons/fire.png")}
-            style={{
-              tintColor: !done ? Colors[theme].text_secondary : undefined,
-              width: 30,
-              height: 30,
-            }}
-          />
-        </Pressable>
+        />
       </Pressable>
-    );
-  };
+    </Pressable>
+  );
+};
 
 export default Home;
 
@@ -852,3 +973,87 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 });
+
+const SubHabitItem: React.FC<{
+  subHabit: any;
+  onToggle: () => void;
+  themeColor: string;
+  isLast: boolean;
+}> = ({ subHabit, onToggle, themeColor, isLast }) => {
+  const { theme } = useTheme();
+  const haptics = useHapitcs();
+
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      {/* L-shaped connector */}
+      <View
+        style={{
+          width: 30,
+          height: 40,
+          borderBottomLeftRadius: 10,
+          borderLeftWidth: 1,
+          borderBottomWidth: 1,
+          borderColor: Colors[theme].border,
+          marginBottom: 20,
+        }}
+      />
+      <Pressable
+        onPress={() => {
+          haptics.impact();
+          onToggle();
+        }}
+        disabled={subHabit.completed}
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: Colors[theme].surface,
+          padding: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: Colors[theme].border,
+          marginRight: 5,
+          marginVertical: 5,
+          opacity: subHabit.completed ? 0.6 : 1,
+        }}
+      >
+        <Text
+          style={{
+            flex: 1,
+            fontFamily: "NunitoMedium",
+            fontSize: 14,
+            color: Colors[theme].text,
+            textDecorationLine: subHabit.completed ? "line-through" : "none",
+          }}
+        >
+          {subHabit.name}
+        </Text>
+        <View
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 7,
+            borderWidth: 2,
+            borderColor: subHabit.completed
+              ? themeColor
+              : Colors[theme].text_secondary,
+            backgroundColor: subHabit.completed ? themeColor : "transparent",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {subHabit.completed && (
+            <Image
+              source={require("../../assets/icons/check-fill.png")}
+              style={{
+                width: 14,
+                height: 14,
+                tintColor: "#fff",
+              }}
+            />
+          )}
+        </View>
+      </Pressable>
+    </View>
+  );
+};
