@@ -22,6 +22,7 @@ import { habitIcons } from "@/data/habits";
 import TaskTimerModal from "./TaskTimerModal";
 import EditHabitModal from "./EditHabitModal";
 import DeleteHabitModal from "./DeleteHabitModal"; // Import the new modal
+import CheckSubHabitModal from "./CheckSubHabitModal";
 import { useHapitcs } from "@/context/HapticsContext";
 
 import { useQuery, useMutation } from "convex/react";
@@ -111,6 +112,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [showEditButton, setShowEditButton] = useState<boolean>(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false); // State for delete modal
+  const [checkSubHabitModalVisible, setCheckSubHabitModalVisible] =
+    useState<boolean>(false);
+
+  const subHabits = useQuery(api.sub_habits.get_sub_habits, {
+    parent_habit_id: habit_id,
+  });
 
   useEffect(() => {
     const backAction = () => {
@@ -311,7 +318,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               </View>
 
               {/* Icon and Color */}
-              <View style={{ alignItems: "center", marginTop: 30 }}>
+              <View style={{ alignItems: "center", marginTop: 0 }}>
                 <View
                   style={{
                     width: 100,
@@ -368,7 +375,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   borderWidth: 2,
                   borderColor: Colors[theme].border,
                   borderRadius: 15,
-                  padding: 20,
+                  paddingHorizontal: 20,
+                  paddingVertical: 15,
                 }}
               >
                 <View
@@ -438,6 +446,63 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 </View>
               </View>
 
+              {/* Sub Habits Card */}
+              {subHabits && subHabits.length > 0 && (
+                <Pressable
+                  onPress={() => {
+                    haptics.impact();
+                    setCheckSubHabitModalVisible(true);
+                  }}
+                  style={{
+                    marginHorizontal: 20,
+                    marginTop: 30,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 15,
+                    backgroundColor: Colors[theme].surface,
+                    borderRadius: 15,
+                    borderWidth: 2,
+                    borderColor: Colors[theme].border,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Feather
+                      name="layers"
+                      size={24}
+                      color={habit.theme ?? Colors[theme].primary}
+                      style={{ marginRight: 15 }}
+                    />
+                    <View>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 16,
+                          color: Colors[theme].text,
+                        }}
+                      >
+                        Sub-Habits
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoMedium",
+                          fontSize: 14,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        {subHabits.filter((s) => s.completed).length}/
+                        {subHabits.length} completed
+                      </Text>
+                    </View>
+                  </View>
+                  <Feather
+                    name="chevron-right"
+                    size={24}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+              )}
+
               {/* Heat Map */}
               <View style={{ marginHorizontal: 20, marginTop: 30 }}>
                 <ThemedText
@@ -500,32 +565,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                           </View>
                         ))}
                       </View>
-                      {/* <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        marginTop: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "NunitoRegular",
-                          fontSize: 10,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        Jan
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoRegular",
-                          fontSize: 10,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        Dec
-                      </Text>
-                    </View> */}
                     </View>
                   </ScrollView>
                 )}
@@ -607,6 +646,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           setDeleteModalVisible(false);
         }}
         habit={habit}
+      />
+      <CheckSubHabitModal
+        visible={checkSubHabitModalVisible}
+        setVisible={setCheckSubHabitModalVisible}
+        habit_id={habit_id}
+        themeColor={habit.theme ?? Colors[theme].primary}
       />
     </>
   );
