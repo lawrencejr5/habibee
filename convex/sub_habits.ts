@@ -122,40 +122,40 @@ export const toggle_sub_habit = mutation({
       completed: newCompleted,
     });
 
-    if (args.current_date && args.week_day) {
-      if (newCompleted) {
-        // Check if all sub-habits are now completed
-        const all_sub_habits = await ctx.db
-          .query("sub_habits")
-          .withIndex("by_parent_habit", (q) =>
-            q.eq("parent_habit", sub_habit.parent_habit),
-          )
-          .collect();
+    // if (args.current_date && args.week_day) {
+    //   if (newCompleted) {
+    //     // Check if all sub-habits are now completed
+    //     const all_sub_habits = await ctx.db
+    //       .query("sub_habits")
+    //       .withIndex("by_parent_habit", (q) =>
+    //         q.eq("parent_habit", sub_habit.parent_habit),
+    //       )
+    //       .collect();
 
-        const allDone = all_sub_habits.every((sh) => sh.completed);
-        if (allDone) {
-          await ctx.runMutation(
-            internal.habits.internal_record_habit_completion,
-            {
-              habit_id: sub_habit.parent_habit,
-              user_id,
-              current_date: args.current_date,
-              week_day: args.week_day,
-            },
-          );
-        }
-      } else {
-        // If unchecked, unstreak the parent habit
-        await ctx.runMutation(
-          internal.habits.internal_uncheck_habit_completion,
-          {
-            habit_id: sub_habit.parent_habit,
-            user_id,
-            current_date: args.current_date,
-          },
-        );
-      }
-    }
+    //     const allDone = all_sub_habits.every((sh) => sh.completed);
+    //     if (allDone) {
+    //       await ctx.runMutation(
+    //         internal.habits.internal_record_habit_completion,
+    //         {
+    //           habit_id: sub_habit.parent_habit,
+    //           user_id,
+    //           current_date: args.current_date,
+    //           week_day: args.week_day,
+    //         },
+    //       );
+    //     }
+    //   } else {
+    //     // If unchecked, unstreak the parent habit
+    //     await ctx.runMutation(
+    //       internal.habits.internal_uncheck_habit_completion,
+    //       {
+    //         habit_id: sub_habit.parent_habit,
+    //         user_id,
+    //         current_date: args.current_date,
+    //       },
+    //     );
+    //   }
+    // }
 
     return { completed: newCompleted };
   },

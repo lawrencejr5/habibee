@@ -338,13 +338,24 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
           <Pressable
             onPress={handleFinish}
-            disabled={btnLoading}
+            disabled={
+              btnLoading ||
+              (habit.strict &&
+                (habit.duration ?? 0) > 0 &&
+                displaySeconds < (habit.duration ?? 0) * 60)
+            }
             style={{
               backgroundColor: habit.theme ?? Colors[theme].primary,
               paddingVertical: 15,
               borderRadius: 50,
               alignItems: "center",
-              opacity: btnLoading ? 0.5 : 1,
+              opacity:
+                btnLoading ||
+                (habit.strict &&
+                  (habit.duration ?? 0) > 0 &&
+                  displaySeconds < (habit.duration ?? 0) * 60)
+                  ? 0.5
+                  : 1,
             }}
           >
             {btnLoading ? (

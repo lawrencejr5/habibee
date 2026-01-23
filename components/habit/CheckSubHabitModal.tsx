@@ -240,7 +240,10 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
           )}
           <KeyboardStickyView
             style={{ flex: 1 }}
-            offset={{ closed: 0, opened: 150 }}
+            offset={{
+              closed: 0,
+              opened: subHabits && subHabits.length > 0 ? 150 : 0,
+            }}
           >
             <ScrollView
               style={{ flex: 1 }}

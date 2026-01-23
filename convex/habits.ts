@@ -252,7 +252,8 @@ export const update_habit = mutation({
 
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
-    if (args.duration !== undefined)
+    if (args.duration === undefined) fields_to_update.duration = undefined;
+    else
       fields_to_update.duration = args.duration
         ? Math.max(1, args.duration)
         : undefined;

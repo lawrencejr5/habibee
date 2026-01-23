@@ -445,61 +445,60 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               </View>
 
               {/* Sub Habits Card */}
-              {subHabits && subHabits.length > 0 && (
-                <Pressable
-                  onPress={() => {
-                    haptics.impact();
-                    setCheckSubHabitModalVisible(true);
-                  }}
-                  style={{
-                    marginHorizontal: 20,
-                    marginTop: 20,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 15,
-                    backgroundColor: Colors[theme].surface,
-                    borderRadius: 15,
-                    borderWidth: 2,
-                    borderColor: Colors[theme].border,
-                  }}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Feather
-                      name="layers"
-                      size={24}
-                      color={habit.theme ?? Colors[theme].primary}
-                      style={{ marginRight: 15 }}
-                    />
-                    <View>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoBold",
-                          fontSize: 16,
-                          color: Colors[theme].text,
-                        }}
-                      >
-                        Sub-Habits
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoMedium",
-                          fontSize: 14,
-                          color: Colors[theme].text_secondary,
-                        }}
-                      >
-                        {subHabits.filter((s) => s.completed).length}/
-                        {subHabits.length} completed
-                      </Text>
-                    </View>
-                  </View>
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setCheckSubHabitModalVisible(true);
+                }}
+                style={{
+                  marginHorizontal: 20,
+                  marginTop: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 15,
+                  backgroundColor: Colors[theme].surface,
+                  borderRadius: 15,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Feather
-                    name="chevron-right"
+                    name="layers"
                     size={24}
-                    color={Colors[theme].text_secondary}
+                    color={habit.theme ?? Colors[theme].primary}
+                    style={{ marginRight: 15 }}
                   />
-                </Pressable>
-              )}
+                  <View>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 16,
+                        color: Colors[theme].text,
+                      }}
+                    >
+                      Sub-Habits
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      {subHabits && subHabits.length > 0
+                        ? `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
+                        : "Add sub habits"}
+                    </Text>
+                  </View>
+                </View>
+                <Feather
+                  name="chevron-right"
+                  size={24}
+                  color={Colors[theme].text_secondary}
+                />
+              </Pressable>
 
               {/* Heat Map */}
               <View style={{ marginHorizontal: 20, marginTop: 30 }}>
