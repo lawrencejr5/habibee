@@ -38,8 +38,7 @@ const ResetPasswordPage = () => {
       showCustomAlert("Code sent to your email", "success");
       setStep("otp");
     } catch (err: any) {
-      console.error("Reset Error:", err);
-      showCustomAlert(err.message || "Failed to send code", "danger");
+      showCustomAlert("Failed to send code, invalid email", "danger");
     } finally {
       setLoading(false);
     }
@@ -81,10 +80,7 @@ const ResetPasswordPage = () => {
     } catch (err: any) {
       console.error("Reset Verification Error:", err);
       // If it fails here, it's likely an invalid code or other issue
-      showCustomAlert(
-        err.message || "Failed to reset password. Check your code.",
-        "danger",
-      );
+      showCustomAlert("Failed to reset password. Invalid otp", "danger");
       if (err.message?.includes("code") || err.message?.includes("otp")) {
         setStep("otp");
       }

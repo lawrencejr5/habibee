@@ -178,9 +178,7 @@ export const record_streak = mutation({
     if (sub_habits.length > 0) {
       const allCompleted = sub_habits.every((sh) => sh.completed);
       if (!allCompleted) {
-        throw new ConvexError(
-          "All sub-habits must be completed before marking this habit as complete",
-        );
+        throw new ConvexError("Complete your sub habits");
       }
     }
 
