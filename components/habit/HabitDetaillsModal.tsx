@@ -49,15 +49,14 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ["100%"], []);
+  const heatMapScrollRef = useRef<ScrollView>(null);
 
   const today = new Date().toLocaleDateString("en-CA");
 
   const habitsData = useQuery(api.habits.get_user_habits);
   const habitEnteries = useQuery(api.habits.get_habit_enteries, { habit_id });
-
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["100%"], []);
 
   // Generate heat map data (365 days) — memoized so it only runs when `habit_id` changes
   const weeks = useMemo(() => {
@@ -175,149 +174,150 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
+        enableDynamicSizing={false}
         enablePanDownToClose={true}
         onClose={() => setVisible(false)}
         backgroundStyle={{
           backgroundColor: Colors[theme].background,
         }}
         handleIndicatorStyle={{
-          width: 0,
-          height: 0,
-          backgroundColor: "grey",
-          borderRadius: 30,
+          width: 40,
+          height: 4,
+          backgroundColor: Colors[theme].border,
+          marginTop: 10,
+          opacity: 0.5,
         }}
       >
         <BottomSheetView
           style={{
             flex: 1,
+            height: "100%",
           }}
         >
           <View
             style={{
               flex: 1,
+              height: "100%",
               backgroundColor: Colors[theme].background,
             }}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 100 }}
+            {/* Header */}
+            <View
+              style={{
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              {/* Header */}
-              <View
+              <Pressable
                 style={{
-                  paddingHorizontal: 20,
-                  paddingTop: 20,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  padding: 8,
+                }}
+                onPress={() => {
+                  haptics.impact();
+                  bottomSheetRef.current?.close();
                 }}
               >
-                <Pressable
+                <Feather
+                  name="chevron-down"
+                  size={30}
+                  color={Colors[theme].text}
+                />
+              </Pressable>
+              <Pressable
+                style={{
+                  padding: 10,
+                }}
+                onPress={() => {
+                  haptics.impact();
+                  setShowEditButton(!showEditButton);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="dots-vertical"
+                  size={25}
+                  color={Colors[theme].text}
+                />
+              </Pressable>
+              {showEditButton && (
+                <View
                   style={{
-                    padding: 8,
-                  }}
-                  onPress={() => {
-                    haptics.impact();
-                    bottomSheetRef.current?.close();
+                    position: "absolute",
+                    right: 60,
+                    top: 20,
+                    backgroundColor: Colors[theme].surface,
+                    borderColor: Colors[theme].border,
+                    borderWidth: 2,
+                    paddingHorizontal: 15,
+                    width: 150,
+                    borderRadius: 8,
                   }}
                 >
-                  <Feather
-                    name="chevron-down"
-                    size={30}
-                    color={Colors[theme].text}
-                  />
-                </Pressable>
-                <Pressable
-                  style={{
-                    padding: 10,
-                  }}
-                  onPress={() => {
-                    haptics.impact();
-                    setShowEditButton(!showEditButton);
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="dots-vertical"
-                    size={25}
-                    color={Colors[theme].text}
-                  />
-                </Pressable>
-                {showEditButton && (
-                  <View
+                  <Pressable
                     style={{
-                      position: "absolute",
-                      right: 60,
-                      top: 20,
-                      backgroundColor: Colors[theme].surface,
-                      borderColor: Colors[theme].border,
-                      borderWidth: 2,
-                      paddingHorizontal: 15,
-                      width: 150,
-                      borderRadius: 8,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => {
+                      haptics.impact();
+                      setEditModalVisible(true);
+                      setShowEditButton(false);
                     }}
                   >
-                    <Pressable
+                    <Feather name="edit" size={16} color={Colors[theme].text} />
+                    <Text
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                        paddingVertical: 10,
-                      }}
-                      onPress={() => {
-                        haptics.impact();
-                        setEditModalVisible(true);
-                        setShowEditButton(false);
+                        color: Colors[theme].text,
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
                       }}
                     >
-                      <Feather
-                        name="edit"
-                        size={16}
-                        color={Colors[theme].text}
-                      />
-                      <Text
-                        style={{
-                          color: Colors[theme].text,
-                          fontFamily: "NunitoMedium",
-                          fontSize: 14,
-                        }}
-                      >
-                        Edit habit
-                      </Text>
-                    </Pressable>
-                    <Pressable
+                      Edit habit
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => {
+                      haptics.impact();
+                      setShowEditButton(false);
+                      setDeleteModalVisible(true);
+                    }}
+                  >
+                    <Feather
+                      name="trash-2"
+                      size={16}
+                      color={Colors[theme].danger}
+                    />
+                    <Text
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                        paddingVertical: 10,
-                      }}
-                      onPress={() => {
-                        haptics.impact();
-                        setShowEditButton(false);
-                        setDeleteModalVisible(true);
+                        color: Colors[theme].danger,
+                        fontFamily: "NunitoMedium",
+                        fontSize: 14,
                       }}
                     >
-                      <Feather
-                        name="trash-2"
-                        size={16}
-                        color={Colors[theme].danger}
-                      />
-                      <Text
-                        style={{
-                          color: Colors[theme].danger,
-                          fontFamily: "NunitoMedium",
-                          fontSize: 14,
-                        }}
-                      >
-                        Delete habit
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
-              </View>
+                      Delete habit
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
 
+            {/* Main content */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 50, flexGrow: 1 }}
+            >
               {/* Icon and Color */}
-              <View style={{ alignItems: "center", marginTop: 0 }}>
+              <View style={{ alignItems: "center" }}>
                 <View
                   style={{
                     width: 100,
@@ -531,10 +531,10 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 ) : (
                   <ScrollView
                     horizontal
-                    ref={scrollViewRef}
+                    ref={heatMapScrollRef}
                     showsHorizontalScrollIndicator={false}
                     onContentSizeChange={() =>
-                      scrollViewRef.current?.scrollToEnd({ animated: false })
+                      heatMapScrollRef.current?.scrollToEnd({ animated: false })
                     }
                   >
                     <View>
@@ -574,7 +574,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             <View
               style={{
                 position: "absolute",
-                bottom: insets.bottom + 20,
+                bottom: 0,
+                backgroundColor: Colors[theme].background,
+                paddingVertical: 10,
                 left: 20,
                 right: 20,
               }}
