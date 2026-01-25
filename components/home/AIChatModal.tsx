@@ -48,6 +48,7 @@ type HabitData = {
   icon: string;
   theme: string;
   strict: boolean;
+  sub_habits?: string[];
 };
 
 type ChatPart =
@@ -90,7 +91,8 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   };
 
   const sendMessage = async (customInput?: string) => {
-    const messageContent = typeof customInput === "string" ? customInput : input;
+    const messageContent =
+      typeof customInput === "string" ? customInput : input;
     if (!messageContent.trim()) return;
 
     setGenerating(true);
@@ -126,7 +128,10 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         // Remove invalid control characters that might break JSON parsing
         // Preserving: \t (09), \n (0A), \r (0D)
         // Removing: 00-08, 0B, 0C, 0E-1F, 7F
-        jsonToParse = jsonToParse.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+        jsonToParse = jsonToParse.replace(
+          /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,
+          "",
+        );
 
         parsedResponse = JSON.parse(jsonToParse);
       } catch (e) {
@@ -197,13 +202,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     },
   ];
 
-
   const scrollViewRef = useRef<ScrollView>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const onShow = (e: any) => {
       setKeyboardHeight(e.endCoordinates.height);
@@ -212,7 +218,6 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       }, 100);
     };
     const onHide = () => setKeyboardHeight(0);
-
 
     const showListener = Keyboard.addListener(showEvent, onShow);
     const hideListener = Keyboard.addListener(hideEvent, onHide);
@@ -234,7 +239,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   useEffect(() => {
     const backAction = () => {
       if (visible) {
-        bottomSheetRef.current?.close()
+        bottomSheetRef.current?.close();
         return true;
       }
       return false;
@@ -242,7 +247,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -339,8 +344,6 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               paddingBottom: messages.length > 0 ? 100 + keyboardHeight : 100, // Dynamic space for sticky input + keyboard
             }}
           >
-
-
             {/* Content Display */}
             {messages.length === 0 ? (
               <View
@@ -352,7 +355,13 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   marginTop: 40,
                 }}
               >
-                <View style={{ marginBottom: 40, alignItems: "flex-start", width: "100%" }}>
+                <View
+                  style={{
+                    marginBottom: 40,
+                    alignItems: "flex-start",
+                    width: "100%",
+                  }}
+                >
                   <ThemedText
                     style={{
                       fontFamily: "NunitoExtraBold",
@@ -437,7 +446,10 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
                 {messages.map((msg, index) =>
                   msg.role === "user" ? (
-                    <UserChat key={index} text={(msg.parts[0].content as string)} />
+                    <UserChat
+                      key={index}
+                      text={msg.parts[0].content as string}
+                    />
                   ) : (
                     <ModelChat
                       key={index}
@@ -446,7 +458,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                       shouldAnimate={msg.shouldAnimate}
                       onAnimationComplete={() => markMessageAsAnimated(index)}
                     />
-                  )
+                  ),
                 )}
 
                 {generating && (
@@ -465,8 +477,20 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                         gap: 10,
                       }}
                     >
-                      <View style={{ position: 'relative', width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color={accentColor} style={{ position: 'absolute' }} />
+                      <View
+                        style={{
+                          position: "relative",
+                          width: 24,
+                          height: 24,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ActivityIndicator
+                          size="large"
+                          color={accentColor}
+                          style={{ position: "absolute" }}
+                        />
                         <Image
                           source={require("@/assets/images/ai-icon.png")}
                           style={{ width: 20, height: 20, borderRadius: 10 }}
@@ -476,7 +500,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                         style={{
                           color: Colors[theme].text_secondary,
                           fontFamily: "NunitoBold",
-                          fontSize: 12
+                          fontSize: 12,
                         }}
                       >
                         Thinking...
@@ -538,7 +562,9 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   onPress={() => sendMessage()}
                   disabled={generating}
                   style={{
-                    backgroundColor: generating ? Colors[theme].border : accentColor,
+                    backgroundColor: generating
+                      ? Colors[theme].border
+                      : accentColor,
                     width: 35,
                     height: 35,
                     borderRadius: 18,
@@ -587,7 +613,7 @@ const UserChat: FC<{ text: string }> = ({ text }) => {
         style={{
           color: Colors[theme].text,
           fontFamily: "NunitoRegular",
-          fontSize: 16
+          fontSize: 16,
         }}
       >
         {text}
@@ -629,7 +655,8 @@ const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
         goal: data.goal,
         icon: data.icon,
         theme: data.theme,
-        strict: data.strict
+        strict: data.strict,
+        sub_habits: data.sub_habits,
       });
       setSaved(true);
       showCustomAlert("Habit saved successfully!", "success");
@@ -645,119 +672,174 @@ const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
   };
 
   return (
-    <Pressable
-      onPress={() => haptics.impact()}
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        backgroundColor: Colors[theme].surface,
-        paddingVertical: 15,
-        paddingHorizontal: 5,
-        marginVertical: 15,
-        borderRadius: 15,
-        borderWidth: 2,
-        borderColor: Colors[theme].border,
-        maxWidth: 300
-      }}
-    >
-      <View
+    <View style={{ width: "100%", marginVertical: 15 }}>
+      <Pressable
+        onPress={() => haptics.impact()}
         style={{
           flexDirection: "row",
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: 15,
-          marginLeft: 5,
-          flex: 1,
+          width: "100%",
+          backgroundColor: Colors[theme].surface,
+          paddingVertical: 15,
+          paddingHorizontal: 5,
+          borderRadius: 15,
+          borderWidth: 2,
+          borderColor: Colors[theme].border,
+          maxWidth: 300,
         }}
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            backgroundColor: data.theme + "20",
-            justifyContent: "center",
+            flexDirection: "row",
             alignItems: "center",
-            borderColor: data.theme,
+            gap: 15,
+            marginLeft: 5,
+            flex: 1,
           }}
         >
-          <Image
-            source={habitIcons[data.icon] || habitIcons["default"]}
-            style={{
-              width: 20,
-              height: 20,
-              tintColor: data.theme,
-            }}
-          />
-        </View>
-
-        <View>
-          <ThemedText
-            numberOfLines={1}
-            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 150 }}
-          >
-            {data.habit}
-          </ThemedText>
           <View
             style={{
-              flexDirection: "row",
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              backgroundColor: data.theme + "20",
+              justifyContent: "center",
               alignItems: "center",
-              gap: 15,
-              marginTop: 10,
+              borderColor: data.theme,
             }}
           >
+            <Image
+              source={habitIcons[data.icon] || habitIcons["default"]}
+              style={{
+                width: 20,
+                height: 20,
+                tintColor: data.theme,
+              }}
+            />
+          </View>
+
+          <View>
+            <ThemedText
+              numberOfLines={1}
+              style={{ fontFamily: "NunitoBold", fontSize: 14, width: 150 }}
+            >
+              {data.habit}
+            </ThemedText>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 5,
-                width: 100,
+                gap: 15,
+                marginTop: 10,
               }}
             >
-              <Image
-                source={require("@/assets/icons/clock.png")}
+              <View
                 style={{
-                  tintColor: Colors[theme].text_secondary,
-                  width: 14,
-                  height: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  width: 100,
                 }}
-              />
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 12,
-                  color: Colors[theme].text_secondary,
-                }}
-                numberOfLines={1}
               >
-                {data.duration ? `${data.duration} mins daily` : "Direct Task"}
-              </ThemedText>
+                <Image
+                  source={
+                    data.duration
+                      ? require("@/assets/icons/clock.png")
+                      : require("@/assets/icons/calendar.png")
+                  }
+                  style={{
+                    tintColor: Colors[theme].text_secondary,
+                    width: 14,
+                    height: 14,
+                  }}
+                />
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                  }}
+                  numberOfLines={1}
+                >
+                  {data.duration
+                    ? `${data.duration} mins daily`
+                    : "Direct Task"}
+                </ThemedText>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <Pressable
-        onPress={saved ? undefined : onSave}
-        style={{
-          borderLeftWidth: 3,
-          borderColor: Colors[theme].border,
-          width: 50,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          paddingHorizontal: 10,
-        }}
-      >
-        <MaterialCommunityIcons
-          name={saved ? "check-circle" : "download"}
-          size={24}
-          color={saved ? Colors[theme].primary : Colors[theme].text_secondary}
-        />
+        <Pressable
+          onPress={saved ? undefined : onSave}
+          style={{
+            borderLeftWidth: 3,
+            borderColor: Colors[theme].border,
+            width: 50,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            paddingHorizontal: 10,
+          }}
+        >
+          <MaterialCommunityIcons
+            name={saved ? "check-circle" : "download"}
+            size={24}
+            color={saved ? Colors[theme].primary : Colors[theme].text_secondary}
+          />
+        </Pressable>
       </Pressable>
-    </Pressable>
+
+      {/* Suggested Sub-habits */}
+      {data.sub_habits && data.sub_habits.length > 0 && (
+        <View style={{ paddingLeft: 10, marginTop: 5 }}>
+          {data.sub_habits.map((sh, idx) => (
+            <View
+              key={idx}
+              style={{ flexDirection: "row", alignItems: "center" }}
+            >
+              {/* L-shaped connector */}
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderBottomLeftRadius: 10,
+                  borderLeftWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: Colors[theme].border,
+                  marginBottom: 15,
+                }}
+              />
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: Colors[theme].surface,
+                  padding: 10,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: Colors[theme].border,
+                  marginLeft: 5,
+                  marginBottom: 5,
+                  maxWidth: 250,
+                }}
+              >
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    fontSize: 13,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  {sh}
+                </ThemedText>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -770,13 +852,21 @@ const ModelChat: FC<{
   const { theme } = useTheme();
 
   // Combine all text parts for animation calculation
-  const textParts = parts.filter(p => p.type === 'text') as { type: 'text', content: string }[];
-  const fullText = textParts.map(p => p.content).join('');
+  const textParts = parts.filter((p) => p.type === "text") as {
+    type: "text";
+    content: string;
+  }[];
+  const fullText = textParts.map((p) => p.content).join("");
 
   const parsedText = useMemo(() => parseText(fullText), [fullText]);
-  const totalLength = useMemo(() => parsedText.reduce((acc, part) => acc + part.content.length, 0), [parsedText]);
+  const totalLength = useMemo(
+    () => parsedText.reduce((acc, part) => acc + part.content.length, 0),
+    [parsedText],
+  );
 
-  const [visibleCount, setVisibleCount] = useState(shouldAnimate ? 0 : totalLength);
+  const [visibleCount, setVisibleCount] = useState(
+    shouldAnimate ? 0 : totalLength,
+  );
 
   useEffect(() => {
     if (!shouldAnimate) {
@@ -839,12 +929,15 @@ const ModelChat: FC<{
       </View>
       <View style={{ paddingLeft: 32 }}>
         {parts.map((part, index) => {
-          if (part.type === 'habit') {
+          if (part.type === "habit") {
             return <HabitCard key={index} data={part.content} />;
           }
 
           const partParsed = parseText(part.content);
-          const realLength = partParsed.reduce((acc, p) => acc + p.content.length, 0);
+          const realLength = partParsed.reduce(
+            (acc, p) => acc + p.content.length,
+            0,
+          );
 
           let visibleForPart = 0;
           if (currentRenderCount > 0) {
@@ -856,7 +949,14 @@ const ModelChat: FC<{
 
           let localCounter = visibleForPart;
           return (
-            <Text key={index} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
+            <Text
+              key={index}
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                marginBottom: 8,
+              }}
+            >
               {partParsed.map((token, tIndex) => {
                 if (localCounter <= 0) return null;
                 const tokenLen = token.content.length;
@@ -868,14 +968,15 @@ const ModelChat: FC<{
                     key={tIndex}
                     style={{
                       color: Colors[theme].text,
-                      fontFamily: token.type === "bold" ? "NunitoBold" : "NunitoRegular",
+                      fontFamily:
+                        token.type === "bold" ? "NunitoBold" : "NunitoRegular",
                       fontSize: 16,
                       lineHeight: 22,
                     }}
                   >
                     {token.content.slice(0, showLen)}
                   </Text>
-                )
+                );
               })}
             </Text>
           );

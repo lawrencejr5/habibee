@@ -101,8 +101,12 @@ export const add_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
+    sub_habits: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { habit, icon, theme, duration, goal, strict }) => {
+  handler: async (
+    ctx,
+    { habit, icon, theme, duration, goal, strict, sub_habits },
+  ) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
@@ -126,6 +130,16 @@ export const add_habit = mutation({
       current_streak: 0,
       highest_streak: 0,
     });
+
+    if (sub_habits && sub_habits.length > 0) {
+      for (const sh_name of sub_habits) {
+        await ctx.db.insert("sub_habits", {
+          name: sh_name,
+          parent_habit: habit_id,
+          completed: false,
+        });
+      }
+    }
 
     return habit_id;
   },
@@ -434,11 +448,12 @@ export const generate_habit_ai = action({
                 "type": "habit", 
                 "content": {
                   "habit": "Habit Name",
-                  "duration": 15,
+                  "duration": 15, // Optional: Only if the habit is time-based. If not, omit this field.
                   "goal": 100, // Target days or frequency
                   "icon": "gym", 
                   "strict": false,
-                  "theme": "#3498db"
+                  "theme": "#3498db",
+                  "sub_habits": ["Step 1", "Step 2"] // Optional: Array of strings for sub-habits. Omit if not applicable.
                 } 
               }
             ]
@@ -455,9 +470,10 @@ export const generate_habit_ai = action({
           2. YOU ARE INQUISITIVE. If you need more info just return a "text" part.
           3. ONLY return a "habit" part if you are proposing a concrete habit for the user to save.
           4. "goal" usually implies target days (e.g. 100 days). "duration" is minutes per day.
-          5. Keep text CONCISE, supportive, and energetic.
-          6. IMPORTANT: Do not include markdown code blocks. Return ONLY raw JSON.
-          7. When creating habits, except the user is being specific, generate up to 3 habits so that the user can have options
+          5. "sub_habits" are simple actionable steps to help achieve the main habit.
+          6. Keep text CONCISE, supportive, and energetic.
+          7. IMPORTANT: Do not include markdown code blocks. Return ONLY raw JSON.
+          8. When creating habits, except the user is being specific, generate up to 3 habits so that the user can have options.
         `,
           },
         ],
@@ -492,8 +508,12 @@ export const create_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
+    sub_habits: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { habit, icon, theme, duration, goal, strict }) => {
+  handler: async (
+    ctx,
+    { habit, icon, theme, duration, goal, strict, sub_habits },
+  ) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
@@ -518,6 +538,16 @@ export const create_habit = mutation({
       highest_streak: 0,
     });
 
+    if (sub_habits && sub_habits.length > 0) {
+      for (const sh_name of sub_habits) {
+        await ctx.db.insert("sub_habits", {
+          name: sh_name,
+          parent_habit: habit_id,
+          completed: false,
+        });
+      }
+    }
+
     return habit_id;
   },
 });
@@ -533,10 +563,24 @@ export const get_user_context_data = internalQuery({
       .withIndex("by_user", (q) => q.eq("user", args.userId))
       .collect();
 
-    const habitsSummary = habits
+    const habitsWithSubHabits = await Promise.all(
+      habits.map(async (h) => {
+        const sub_habits = await ctx.db
+          .query("sub_habits")
+          .withIndex("by_parent_habit", (q) => q.eq("parent_habit", h._id))
+          .collect();
+        return { ...h, sub_habits };
+      }),
+    );
+
+    const habitsSummary = habitsWithSubHabits
       .map(
         (h) =>
-          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}${h.duration ? `, Duration: ${h.duration}m` : ""})`,
+          `- ${h.habit} (Streak: ${h.current_streak}, Goal: ${h.goal}${h.duration ? `, Duration: ${h.duration}m` : ""}${
+            h.sub_habits.length > 0
+              ? `, Sub-habits: ${h.sub_habits.map((sh) => sh.name).join(", ")}`
+              : ""
+          })`,
       )
       .join("\n");
 
