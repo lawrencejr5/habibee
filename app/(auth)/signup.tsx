@@ -52,7 +52,6 @@ const SignUpPage = () => {
       await signIn("password", formData);
       showCustomAlert("Signed up successfully", "success");
     } catch (err: any) {
-
       console.log("Registration Error:", JSON.stringify(err)); // Helpful for debugging in adb logcat
 
       if (err.data !== undefined) {
@@ -78,7 +77,7 @@ const SignUpPage = () => {
       // 1. Create the return URL (must match your app.json scheme)
       const redirectTo = makeRedirectUri({
         scheme: "com.lawrencejr.habibee",
-        path: "(auth)/signup"
+        path: "(auth)/signup",
       });
 
       // 2. Start OAuth with Convex Auth, get redirect URL
@@ -95,7 +94,7 @@ const SignUpPage = () => {
         {
           dismissButtonStyle: "close",
           showInRecents: false,
-        }
+        },
       );
 
       if (result.type !== "success" || !result.url) {
@@ -117,7 +116,6 @@ const SignUpPage = () => {
 
       // Keep loading state active - let the auth navigation handle the redirect
       // The loading will be visible while auth state updates and navigation occurs
-
     } catch (error) {
       console.log("Sign-in error", error);
       // Only reset loading on error
@@ -276,6 +274,20 @@ const SignUpPage = () => {
               placeHolder="Password"
               password={true}
             />
+
+            <Link
+              href={"/(auth)/reset-password"}
+              style={{
+                alignSelf: "flex-end",
+                color: Colors[theme].text_secondary,
+                fontFamily: "NunitoMedium",
+                fontSize: 12,
+                marginTop: 5,
+                marginRight: 5,
+              }}
+            >
+              Forgot Password?
+            </Link>
 
             <Pressable
               onPress={handleSubmit}

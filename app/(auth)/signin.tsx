@@ -51,11 +51,20 @@ const SigninPage = () => {
     } catch (err: any) {
       console.log("Login Error:", err); // Helpful to see the real string in logs
 
-      const message = err.message || (typeof err === "string" ? err : "") || JSON.stringify(err);
+      const message =
+        err.message ||
+        (typeof err === "string" ? err : "") ||
+        JSON.stringify(err);
 
-      if (message.includes("InvalidAccountId") || message.includes("User not found")) {
+      if (
+        message.includes("InvalidAccountId") ||
+        message.includes("User not found")
+      ) {
         showCustomAlert("Account does not exist. Please sign up.", "danger");
-      } else if (message.includes("InvalidSecret") || message.includes("Invalid password")) {
+      } else if (
+        message.includes("InvalidSecret") ||
+        message.includes("Invalid password")
+      ) {
         showCustomAlert("Incorrect password", "danger");
       } else {
         // Fallback for network errors or other weird states
@@ -72,7 +81,7 @@ const SigninPage = () => {
       // 1. Create the return URL (must match your app.json scheme)
       const redirectTo = makeRedirectUri({
         scheme: "com.lawrencejr.habibee",
-        path: "(auth)/signin"
+        path: "(auth)/signin",
       });
 
       // 2. Start OAuth with Convex Auth, get redirect URL
@@ -89,7 +98,7 @@ const SigninPage = () => {
         {
           dismissButtonStyle: "close",
           showInRecents: false,
-        }
+        },
       );
 
       if (result.type !== "success" || !result.url) {
@@ -111,7 +120,6 @@ const SigninPage = () => {
 
       // Keep loading state active - let the auth navigation handle the redirect
       // The loading will be visible while auth state updates and navigation occurs
-
     } catch (error) {
       console.log("Sign-in error", error);
       // Only reset loading on error
@@ -262,6 +270,20 @@ const SigninPage = () => {
               placeHolder="Password"
               password={true}
             />
+
+            <Link
+              href={"/(auth)/reset-password"}
+              style={{
+                alignSelf: "flex-end",
+                color: Colors[theme].text_secondary,
+                fontFamily: "NunitoMedium",
+                fontSize: 12,
+                marginTop: 5,
+                marginRight: 5,
+              }}
+            >
+              Forgot Password?
+            </Link>
 
             <Pressable
               onPress={handleSubmit}

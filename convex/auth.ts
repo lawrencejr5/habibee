@@ -3,6 +3,7 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import Google from "@auth/core/providers/google";
 import { ConvexError } from "convex/values";
 import { MutationCtx } from "./_generated/server";
+import { ResendOTPPasswordReset } from "./password_reset";
 
 async function findUserByEmail(ctx: MutationCtx, email: string | undefined) {
   if (!email) return null;
@@ -13,9 +14,9 @@ async function findUserByEmail(ctx: MutationCtx, email: string | undefined) {
 }
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-
   providers: [
     Password({
+      reset: ResendOTPPasswordReset,
       profile(params) {
         if (!params.email) {
           throw new ConvexError("Email is required");
@@ -40,7 +41,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           email: googleProfile.email,
           fullname: googleProfile.name,
           image: googleProfile.image,
-          username: googleProfile.name.split(" ")[0]
+          username: googleProfile.name.split(" ")[0],
         };
       },
     }),

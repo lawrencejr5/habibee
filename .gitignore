@@ -41,7 +41,7 @@ yarn-error.*
 /android
 
 #convex
-convex/data.jsonl
+convex/_data
 
 #gemini
 .gemini
