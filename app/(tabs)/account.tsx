@@ -214,7 +214,7 @@ export default function Account() {
                   />
                 </Pressable>
 
-                <Pressable
+                {/* <Pressable
                   onPress={() => {
                     haptics.impact();
                     router.push("/account/update_password");
@@ -237,7 +237,7 @@ export default function Account() {
                     size={18}
                     color={Colors[theme].text_secondary}
                   />
-                </Pressable>
+                </Pressable> */}
                 <Pressable
                   onPress={() => {
                     haptics.impact();
