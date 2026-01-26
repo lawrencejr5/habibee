@@ -29,6 +29,7 @@ import LoadingProvider, { useLoadingContext } from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
 import UserProvider, { useUser } from "@/context/UserContext";
 import { CustomAlertProvider } from "@/context/AlertContext";
+import { PushNotificationProvider } from "@/context/PushNotification";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -159,16 +160,18 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   return (
     <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <BottomSheetModalProvider>
-          <StatusBar style={theme === "dark" ? "light" : "dark"} />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              presentation: "card",
-              animation: "ios_from_right",
-            }}
-          />
-        </BottomSheetModalProvider>
+        <PushNotificationProvider>
+          <BottomSheetModalProvider>
+            <StatusBar style={theme === "dark" ? "light" : "dark"} />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                presentation: "card",
+                animation: "ios_from_right",
+              }}
+            />
+          </BottomSheetModalProvider>
+        </PushNotificationProvider>
       </GestureHandlerRootView>
     </ThemeProvider>
   );
