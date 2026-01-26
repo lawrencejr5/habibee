@@ -176,3 +176,31 @@ export const removePushToken = mutation({
     });
   },
 });
+
+export const getAllUsersWithTokens = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.neq(q.field("pushTokens"), undefined))
+      .collect();
+
+    return users.filter((u) => u.pushTokens && u.pushTokens.length > 0);
+  },
+});
+
+export const getIncompleteUsersWithTokens = internalQuery({
+  args: { today: v.string() },
+  handler: async (ctx, args) => {
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.neq(q.field("pushTokens"), undefined))
+      .collect();
+
+    return users.filter((u) => {
+      const hasTokens = u.pushTokens && u.pushTokens.length > 0;
+      const notCompletedToday = u.last_streak_date !== args.today;
+      return hasTokens && notCompletedToday;
+    });
+  },
+});

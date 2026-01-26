@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as feedback from "../feedback.js";
 import type * as habits from "../habits.js";
 import type * as http from "../http.js";
@@ -28,6 +29,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   feedback: typeof feedback;
   habits: typeof habits;
   http: typeof http;
