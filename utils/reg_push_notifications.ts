@@ -33,7 +33,7 @@ export async function sendPushNotification(expoPushToken: string) {
 }
 
 function handleRegistrationError(errorMessage: string) {
-  alert(errorMessage);
+  console.log(errorMessage);
   throw new Error(errorMessage);
 }
 

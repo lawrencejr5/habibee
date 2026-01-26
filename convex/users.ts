@@ -10,7 +10,7 @@ export const update_username = mutation({
     const user_id = await getAuthUserId(ctx);
     if (user_id === null) throw new Error("User not authenticated");
 
-    ctx.db.query
+    ctx.db.query;
     await ctx.db.patch(user_id, {
       username,
     });
@@ -34,7 +34,6 @@ export const get_current_user = query({
     return { ...user, profile_url };
   },
 });
-
 
 export const update_user_details = mutation({
   args: { fullname: v.string(), username: v.optional(v.string()) },
@@ -72,7 +71,6 @@ export const update_profile_image = mutation({
     });
   },
 });
-
 
 export const delete_account = mutation({
   args: {},
@@ -135,7 +133,6 @@ export const delete_account = mutation({
   },
 });
 
-
 export const getUserByEmail = internalQuery({
   args: { email: v.string() },
   handler: async (ctx, args) => {
@@ -143,5 +140,39 @@ export const getUserByEmail = internalQuery({
       .query("users")
       .withIndex("email", (q) => q.eq("email", args.email))
       .unique();
+  },
+});
+
+export const storePushToken = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) return;
+
+    const user = await ctx.db.get(user_id);
+    if (!user) return;
+
+    const currentTokens = user.pushTokens || [];
+    if (!currentTokens.includes(args.token)) {
+      await ctx.db.patch(user_id, {
+        pushTokens: [...currentTokens, args.token],
+      });
+    }
+  },
+});
+
+export const removePushToken = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) return;
+
+    const user = await ctx.db.get(user_id);
+    if (!user || !user.pushTokens) return;
+
+    const newTokens = user.pushTokens.filter((t) => t !== args.token);
+    await ctx.db.patch(user_id, {
+      pushTokens: newTokens,
+    });
   },
 });

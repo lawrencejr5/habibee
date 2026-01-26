@@ -14,6 +14,7 @@ const schema = defineSchema({
     streak: v.optional(v.number()),
     last_streak_date: v.optional(v.string()),
     emailVerificationTime: v.optional(v.number()),
+    pushTokens: v.optional(v.array(v.string())),
   }).index("email", ["email"]),
 
   weekly_stats: defineTable({
