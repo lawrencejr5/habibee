@@ -45,3 +45,7 @@ convex/_data
 
 #gemini
 .gemini
+
+#firebase
+firebase-private-key.json
+google-services.json
