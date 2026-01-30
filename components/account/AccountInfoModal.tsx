@@ -28,6 +28,7 @@ import { useTheme } from "@/context/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { registerForPushNotificationsAsync } from "@/utils/reg_push_notifications";
 
 interface AccountModalProps {
   visible: boolean;
@@ -44,6 +45,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
   const today = new Date().toLocaleDateString("en-CA");
 
   const { signOut } = useAuthActions();
+  const remove_push_token = useMutation(api.users.removePushToken);
   const [signingOut, setSigninOut] = useState<boolean>(false);
   const [uploading, setUploading] = useState(false);
 
@@ -54,6 +56,15 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
     setSigninOut(true);
     try {
       haptics.impact();
+
+      // Removing push token
+      try {
+        const token = await registerForPushNotificationsAsync();
+        if (token) await remove_push_token({ token });
+      } catch (e) {
+        console.warn("Could not remove token from server", e);
+      }
+
       await signOut();
       showCustomAlert("Signed out", "success");
     } catch (err) {

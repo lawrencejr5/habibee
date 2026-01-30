@@ -9,11 +9,13 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as feedback from "../feedback.js";
 import type * as habits from "../habits.js";
 import type * as http from "../http.js";
 import type * as motivationa_messages from "../motivationa_messages.js";
 import type * as password_reset from "../password_reset.js";
+import type * as reminder from "../reminder.js";
 import type * as sub_habits from "../sub_habits.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
@@ -27,11 +29,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   feedback: typeof feedback;
   habits: typeof habits;
   http: typeof http;
   motivationa_messages: typeof motivationa_messages;
   password_reset: typeof password_reset;
+  reminder: typeof reminder;
   sub_habits: typeof sub_habits;
   users: typeof users;
   utils: typeof utils;

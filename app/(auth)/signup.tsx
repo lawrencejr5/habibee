@@ -17,6 +17,9 @@ import { Link, router } from "expo-router";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
 import { ConvexError } from "convex/values";
+import { registerForPushNotificationsAsync } from "@/utils/reg_push_notifications";
+import { api } from "@/convex/_generated/api";
+import { useMutation } from "convex/react";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -27,6 +30,7 @@ const SignUpPage = () => {
   const { showCustomAlert } = useCustomAlert();
 
   const { signIn } = useAuthActions();
+  const storePushToken = useMutation(api.users.storePushToken);
 
   const [fullname, setFullname] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -50,6 +54,12 @@ const SignUpPage = () => {
       formData.append("flow", flow);
 
       await signIn("password", formData);
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await storePushToken({ token });
+      }
+
       showCustomAlert("Signed up successfully", "success");
     } catch (err: any) {
       console.log("Registration Error:", JSON.stringify(err)); // Helpful for debugging in adb logcat
@@ -112,6 +122,11 @@ const SignUpPage = () => {
 
       if (!final.signingIn) {
         throw new Error("Authentication failed. Please try again.");
+      }
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await storePushToken({ token });
       }
 
       // Keep loading state active - let the auth navigation handle the redirect

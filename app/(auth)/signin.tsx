@@ -16,6 +16,8 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useMutation } from "convex/react";
+import { registerForPushNotificationsAsync } from "@/utils/reg_push_notifications";
+import { api } from "@/convex/_generated/api";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +27,7 @@ const SigninPage = () => {
   const { showCustomAlert } = useCustomAlert();
 
   const { signIn } = useAuthActions();
+  const storePushToken = useMutation(api.users.storePushToken);
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -46,6 +49,11 @@ const SigninPage = () => {
       formData.append("flow", "signIn");
 
       await signIn("password", formData);
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await storePushToken({ token });
+      }
 
       showCustomAlert("Signed in successfully", "success");
     } catch (err: any) {
@@ -116,6 +124,11 @@ const SigninPage = () => {
 
       if (!final.signingIn) {
         throw new Error("Authentication failed. Please try again.");
+      }
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await storePushToken({ token });
       }
 
       // Keep loading state active - let the auth navigation handle the redirect
