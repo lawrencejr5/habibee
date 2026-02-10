@@ -49,3 +49,6 @@ convex/_data
 #firebase
 firebase-private-key.json
 google-services.json
+
+#convex
+convex/_generated
