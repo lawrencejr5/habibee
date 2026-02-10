@@ -29,7 +29,10 @@ import LoadingProvider, { useLoadingContext } from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
 import UserProvider, { useUser } from "@/context/UserContext";
 import { CustomAlertProvider } from "@/context/AlertContext";
-import { PushNotificationProvider } from "@/context/PushNotification";
+import {
+  PushNotificationProvider,
+  usePushNotification,
+} from "@/context/PushNotification";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -66,9 +69,11 @@ export default function RootLayout() {
             <CustomAlertProvider>
               <LoadingProvider>
                 <UserProvider>
-                  <MotivationMsgProvider>
-                    <NavigationWithTheme loaded={loaded} />
-                  </MotivationMsgProvider>
+                  <PushNotificationProvider>
+                    <MotivationMsgProvider>
+                      <NavigationWithTheme loaded={loaded} />
+                    </MotivationMsgProvider>
+                  </PushNotificationProvider>
                 </UserProvider>
               </LoadingProvider>
             </CustomAlertProvider>
@@ -84,6 +89,8 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { setAppLoading } = useLoadingContext();
   const segments = useSegments();
   const appState = useRef(AppState.currentState);
+
+  const { notificationResponse } = usePushNotification();
 
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
@@ -150,7 +157,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
         router.replace("/(tabs)");
       }
     }
-  }, [isAuthenticated, segments, loaded, isLoading]);
+  }, [isAuthenticated, segments, loaded, isLoading, signedIn?.username]);
 
   // Show Custom Splash until fonts load AND Auth determines state
   if (!loaded || showSplash) {
@@ -160,18 +167,16 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   return (
     <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <PushNotificationProvider>
-          <BottomSheetModalProvider>
-            <StatusBar style={theme === "dark" ? "light" : "dark"} />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                presentation: "card",
-                animation: "ios_from_right",
-              }}
-            />
-          </BottomSheetModalProvider>
-        </PushNotificationProvider>
+        <BottomSheetModalProvider>
+          <StatusBar style={theme === "dark" ? "light" : "dark"} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              presentation: "card",
+              animation: "ios_from_right",
+            }}
+          />
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>
   );
