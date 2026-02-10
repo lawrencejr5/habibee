@@ -42,6 +42,11 @@ yarn-error.*
 
 #convex
 convex/data.jsonl
+convex/_generated
 
 #gemini
 .gemini
+
+#firebase
+firebase-private-key.json
+google-services.json
