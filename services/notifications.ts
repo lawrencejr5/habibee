@@ -33,7 +33,7 @@ export async function scheduleSubHabitReminders(
       await Notifications.scheduleNotificationAsync({
         identifier: `${SUB_HABIT_REMINDER_PREFIX}${sh._id}`,
         content: {
-          title: `⏰ Time for: ${sh.name}`,
+          title: `Time for: ${sh.name}`,
           body: `Don't forget "${sh.name}" for ${parentName}!`,
           sound: "default",
         },
