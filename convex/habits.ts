@@ -433,7 +433,7 @@ export const generate_habit_ai = action({
     }
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: {
         parts: [
           {
