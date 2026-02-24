@@ -5,6 +5,7 @@ import {
   ScrollView as RNScrollView,
 } from "react-native";
 import { useRef } from "react";
+import { Feather } from "@expo/vector-icons";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -37,6 +38,8 @@ import AIChatModal from "@/components/home/AIChatModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
+import { formatTime12h } from "@/components/habit/AddSubHabitModal";
+import { scheduleSubHabitReminders } from "@/services/notifications";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -70,6 +73,19 @@ const Home = () => {
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
+
+  // Schedule local notifications for sub-habit reminders
+  useEffect(() => {
+    if (!subHabitsData || !habitData) return;
+
+    // Build a map of habitId -> habitName
+    const habitsMap: Record<string, string> = {};
+    for (const h of habitData) {
+      habitsMap[h._id] = h.habit;
+    }
+
+    scheduleSubHabitReminders(subHabitsData as any, habitsMap);
+  }, [subHabitsData, habitData]);
 
   const toggleExpansion = (habitId: string) => {
     haptics.impact();
@@ -1017,17 +1033,39 @@ const SubHabitItem: React.FC<{
           opacity: subHabit.completed ? 0.6 : 1,
         }}
       >
-        <Text
-          style={{
-            flex: 1,
-            fontFamily: "NunitoMedium",
-            fontSize: 14,
-            color: Colors[theme].text,
-            textDecorationLine: subHabit.completed ? "line-through" : "none",
-          }}
-        >
-          {subHabit.name}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: "NunitoMedium",
+              fontSize: 14,
+              color: Colors[theme].text,
+              textDecorationLine: subHabit.completed ? "line-through" : "none",
+            }}
+          >
+            {subHabit.name}
+          </Text>
+          {subHabit.reminder_time && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                marginTop: 4,
+              }}
+            >
+              <Feather name="clock" size={11} color={themeColor} />
+              <Text
+                style={{
+                  fontFamily: "NunitoMedium",
+                  fontSize: 11,
+                  color: themeColor,
+                }}
+              >
+                {formatTime12h(subHabit.reminder_time)}
+              </Text>
+            </View>
+          )}
+        </View>
         <View
           style={{
             width: 22,

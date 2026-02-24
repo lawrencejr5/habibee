@@ -1,54 +1,53 @@
 import { internalAction } from "./_generated/server";
-import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
 const MORNING_MESSAGES = [
-  "☀️ Rise and shine! Your goals are waiting for you.",
-  "🚀 Start your day with a win! Complete a habit now.",
-  "☕ Grab your coffee and crush your habits!",
-  "🌅 New day, new opportunities to build your streak.",
-  "💪 Consistency starts in the morning. Let's go!",
-  "🎯 Focus on your goals today. You got this!",
-  "✨ A small habit now sets the tone for the whole day.",
-  "🌄 Good morning! Time to be productive.",
-  "🔋 Charge up your day with a completed habit.",
-  "🌟 Make today count. Start with one habit.",
+  "Rise and shine! Your goals are waiting for you.",
+  "Start your day with a win! Complete a habit now.",
+  "Grab your coffee and crush your habits!",
+  "New day, new opportunities to build your streak.",
+  "Consistency starts in the morning. Let's go!",
+  "Focus on your goals today. You got this!",
+  "A small habit now sets the tone for the whole day.",
+  "Good morning! Time to be productive.",
+  "Charge up your day with a completed habit.",
+  "Make today count. Start with one habit.",
 ];
 
 const EVENING_MESSAGES = [
-  "👋 Hey! Just checking in on your habits.",
-  "🌇 The sun is setting. Have you finished your habits?",
-  "🔔 Gentle reminder: Don't forget your daily goals.",
-  "🧘‍♀️ Take a moment to complete a habit this evening.",
-  "📉 Don't let the day end without a win.",
-  "🤔 Have you checked off your habits today?",
-  "⏳ The day is almost over. Time for a quick habit.",
-  "🌙 Evening is a great time for consistency.",
-  "👀 Just a quick nudge to keep your streak alive.",
-  "🌆 Wrap up your day with a sense of accomplishment.",
+  "Hey! Just checking in on your habits.",
+  "The sun is setting. Have you finished your habits?",
+  "Gentle reminder: Don't forget your daily goals.",
+  "Take a moment to complete a habit this evening.",
+  "Don't let the day end without a win.",
+  "Have you checked off your habits today?",
+  "The day is almost over. Time for a quick habit.",
+  "Evening is a great time for consistency.",
+  "Just a quick nudge to keep your streak alive.",
+  "Wrap up your day with a sense of accomplishment.",
 ];
 
 const NIGHT_MESSAGES = [
-  "🔥 YOUR STREAK IS IN DANGER! ACT NOW!",
-  "😱 Do you really want to break your streak after all this work?",
-  "⏰ Tick tock! The day is almost over!",
-  "🦉 It's now or never! Complete your habits immediately!",
-  "💔 Don't break my heart... and your streak.",
-  "🥺 I'm begging you, just do one habit!",
-  "🔪 Your streak is about to die. Save it!",
-  "🛑 STOP SCROLLING AND DO YOUR HABITS!",
-  "😭 Don't make me cry. Keep the streak alive!",
-  "💥 LAST CHANCE! Save your progress now!",
-  "👻 Your streak will haunt you if you lose it tonight.",
-  "🥶 Cold streaks are lonely. Keep yours burning!",
-  "🚑 Emergency! Streak support needed immediately!",
-  "📉 Zero is a lonely number. Don't go back to zero.",
-  "🚓 The streak police are watching. Do it now!",
-  "💣 This message will self-destruct... along with your streak.",
-  "👀 I see you haven't finished yet...",
-  "💤 Don't go to bed with regrets (and a broken streak).",
-  "🚨 RED ALERT: Habit incomplete!",
-  "🔚 This is the end... unless you act fast!",
+  "YOUR STREAK IS IN DANGER! ACT NOW!",
+  "Do you really want to break your streak after all this work?",
+  "Tick tock! The day is almost over!",
+  "It's now or never! Complete your habits immediately!",
+  "Don't break my heart... and your streak.",
+  "I'm begging you, just do one habit!",
+  "Your streak is about to die. Save it!",
+  "STOP SCROLLING AND DO YOUR HABITS!",
+  "Don't make me cry. Keep the streak alive!",
+  "LAST CHANCE! Save your progress now!",
+  "Your streak will haunt you if you lose it tonight.",
+  "Cold streaks are lonely. Keep yours burning!",
+  "Emergency! Streak support needed immediately!",
+  "Zero is a lonely number. Don't go back to zero.",
+  "The streak police are watching. Do it now!",
+  "This message will self-destruct... along with your streak.",
+  "I see you haven't finished yet...",
+  "Don't go to bed with regrets (and a broken streak).",
+  "RED ALERT: Habit incomplete!",
+  "This is the end... unless you act fast!",
 ];
 
 function getCreativeMessage(type: "morning" | "evening" | "night"): string {
@@ -114,14 +113,12 @@ export const checkAndSendMorningReminders = internalAction({
 
 export const checkAndSendEveningReminders = internalAction({
   handler: async (ctx) => {
-    // We need a query to get users that haven't completed their habits today
-    // checking last_streak_date != today might be a good approximation for "general streak"
     const today = new Date().toISOString().split("T")[0];
+
+    // Use the accurate per-habit completion check
     const users = await ctx.runQuery(
-      internal.users.getIncompleteUsersWithTokens,
-      {
-        today,
-      },
+      internal.habits.getUsersWithIncompleteHabitsToday,
+      { today },
     );
 
     const allTokens: string[] = [];
@@ -139,11 +136,11 @@ export const checkAndSendEveningReminders = internalAction({
 export const checkAndSendNightReminders = internalAction({
   handler: async (ctx) => {
     const today = new Date().toISOString().split("T")[0];
+
+    // Use the accurate per-habit completion check
     const users = await ctx.runQuery(
-      internal.users.getIncompleteUsersWithTokens,
-      {
-        today,
-      },
+      internal.habits.getUsersWithIncompleteHabitsToday,
+      { today },
     );
 
     const allTokens: string[] = [];
@@ -154,6 +151,6 @@ export const checkAndSendNightReminders = internalAction({
     if (allTokens.length === 0) return;
 
     const message = getCreativeMessage("night");
-    await sendPush(allTokens, "🚨 STREAK DANGER!", message);
+    await sendPush(allTokens, "STREAK DANGER! 🚨", message);
   },
 });

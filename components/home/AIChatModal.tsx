@@ -656,7 +656,7 @@ const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
         icon: data.icon,
         theme: data.theme,
         strict: data.strict,
-        sub_habits: data.sub_habits,
+        sub_habits: data.sub_habits?.map((sh) => ({ name: sh })),
       });
       setSaved(true);
       showCustomAlert("Habit saved successfully!", "success");

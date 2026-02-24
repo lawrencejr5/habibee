@@ -101,7 +101,14 @@ export const add_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
-    sub_habits: v.optional(v.array(v.string())),
+    sub_habits: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          reminder_time: v.optional(v.string()),
+        }),
+      ),
+    ),
   },
   handler: async (
     ctx,
@@ -132,11 +139,12 @@ export const add_habit = mutation({
     });
 
     if (sub_habits && sub_habits.length > 0) {
-      for (const sh_name of sub_habits) {
+      for (const sh of sub_habits) {
         await ctx.db.insert("sub_habits", {
-          name: sh_name,
+          name: sh.name,
           parent_habit: habit_id,
           completed: false,
+          reminder_time: sh.reminder_time,
         });
       }
     }
@@ -506,7 +514,14 @@ export const create_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
-    sub_habits: v.optional(v.array(v.string())),
+    sub_habits: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          reminder_time: v.optional(v.string()),
+        }),
+      ),
+    ),
   },
   handler: async (
     ctx,
@@ -537,11 +552,12 @@ export const create_habit = mutation({
     });
 
     if (sub_habits && sub_habits.length > 0) {
-      for (const sh_name of sub_habits) {
+      for (const sh of sub_habits) {
         await ctx.db.insert("sub_habits", {
-          name: sh_name,
+          name: sh.name,
           parent_habit: habit_id,
           completed: false,
+          reminder_time: sh.reminder_time,
         });
       }
     }
@@ -723,5 +739,62 @@ export const internal_uncheck_habit_completion = internalMutation({
         });
       }
     }
+  },
+});
+
+/**
+ * Returns users who have push tokens AND have at least one habit that has
+ * NOT been marked as completed today. Used by reminder crons for evening/night nudges.
+ */
+export const getUsersWithIncompleteHabitsToday = internalQuery({
+  args: { today: v.string() },
+  handler: async (ctx, { today }) => {
+    // 1. Get all users that have at least one push token
+    const allUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.neq(q.field("pushTokens"), undefined))
+      .collect();
+
+    const usersWithTokens = allUsers.filter(
+      (u) => u.pushTokens && u.pushTokens.length > 0,
+    );
+
+    const incompleteUsers = [];
+
+    for (const user of usersWithTokens) {
+      // 2. Get all habits for this user
+      const habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user._id))
+        .collect();
+
+      if (habits.length === 0) {
+        // No habits — nothing to complete, skip
+        continue;
+      }
+
+      // 3. Check each habit for a completed entry today
+      let hasIncomplete = false;
+      for (const habit of habits) {
+        const entry = await ctx.db
+          .query("habit_enteries")
+          .withIndex("by_habit_date", (q) =>
+            q.eq("habit", habit._id).eq("date", today),
+          )
+          .first();
+
+        // No entry OR entry that isn't "completed" → habit is incomplete
+        if (!entry || entry.status !== "completed") {
+          hasIncomplete = true;
+          break;
+        }
+      }
+
+      if (hasIncomplete) {
+        incompleteUsers.push(user);
+      }
+    }
+
+    return incompleteUsers;
   },
 });

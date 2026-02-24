@@ -59,6 +59,7 @@ export const add_sub_habit = mutation({
   args: {
     parent_habit_id: v.id("habits"),
     name: v.string(),
+    reminder_time: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
@@ -89,6 +90,7 @@ export const add_sub_habit = mutation({
       name: args.name,
       parent_habit: args.parent_habit_id,
       completed: false,
+      reminder_time: args.reminder_time,
     });
 
     return sub_habit_id;
@@ -185,7 +187,8 @@ export const delete_sub_habit = mutation({
 export const update_sub_habit = mutation({
   args: {
     sub_habit_id: v.id("sub_habits"),
-    name: v.string(),
+    name: v.optional(v.string()),
+    reminder_time: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
@@ -199,27 +202,35 @@ export const update_sub_habit = mutation({
     if (!parent_habit) throw new Error("Parent habit not found");
     if (parent_habit.user !== user_id) throw new Error("Unauthorized");
 
-    // Check if another sub-habit with same name already exists for this parent
-    const existing = await ctx.db
-      .query("sub_habits")
-      .withIndex("by_parent_habit", (q) =>
-        q.eq("parent_habit", sub_habit.parent_habit),
-      )
-      .collect();
+    if (args.name !== undefined) {
+      // Check if another sub-habit with same name already exists for this parent
+      const existing = await ctx.db
+        .query("sub_habits")
+        .withIndex("by_parent_habit", (q) =>
+          q.eq("parent_habit", sub_habit.parent_habit),
+        )
+        .collect();
 
-    const duplicate = existing.find(
-      (sh) =>
-        sh._id !== args.sub_habit_id &&
-        sh.name.toLowerCase() === args.name.toLowerCase(),
-    );
+      const duplicate = existing.find(
+        (sh) =>
+          sh._id !== args.sub_habit_id &&
+          sh.name.toLowerCase() === args.name!.toLowerCase(),
+      );
 
-    if (duplicate) {
-      throw new ConvexError("Sub-habit with same name already exists");
+      if (duplicate) {
+        throw new ConvexError("Sub-habit with same name already exists");
+      }
     }
 
-    await ctx.db.patch(args.sub_habit_id, {
-      name: args.name,
-    });
+    const patch: Record<string, any> = {};
+    if (args.name !== undefined) patch.name = args.name;
+    // null means "clear the reminder", a string means "set it"
+    if (args.reminder_time !== undefined) {
+      patch.reminder_time =
+        args.reminder_time === null ? undefined : args.reminder_time;
+    }
+
+    await ctx.db.patch(args.sub_habit_id, patch);
 
     return { msg: "Sub-habit updated", sub_habit_id: args.sub_habit_id };
   },
