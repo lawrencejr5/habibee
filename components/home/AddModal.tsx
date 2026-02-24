@@ -30,7 +30,7 @@ import { api } from "@/convex/_generated/api";
 import { useTheme } from "@/context/ThemeContext";
 import { useCustomAlert } from "@/context/AlertContext";
 import { Id } from "@/convex/_generated/dataModel";
-import AddSubHabitModal from "../habit/AddSubHabitModal";
+import AddSubHabitModal, { SubHabitEntry } from "../habit/AddSubHabitModal";
 const AddModal: React.FC<{
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
@@ -58,7 +58,7 @@ const AddModal: React.FC<{
   const [strict, setStrict] = useState<boolean>(true);
 
   // Sub-habits state
-  const [subHabits, setSubHabits] = useState<string[]>([]);
+  const [subHabits, setSubHabits] = useState<SubHabitEntry[]>([]);
   const [subHabitModalVisible, setSubHabitModalVisible] = useState(false);
 
   const close = () => {
@@ -99,10 +99,11 @@ const AddModal: React.FC<{
 
       // Add sub-habits if any
       if (subHabits.length > 0) {
-        for (const subHabitName of subHabits) {
+        for (const sh of subHabits) {
           await add_sub_habit({
             parent_habit_id: habit_id,
-            name: subHabitName,
+            name: sh.name,
+            reminder_time: sh.reminderTime,
           });
         }
       }
@@ -120,8 +121,6 @@ const AddModal: React.FC<{
     }
   };
 
-
-
   useEffect(() => {
     const backAction = () => {
       if (visible) {
@@ -133,7 +132,7 @@ const AddModal: React.FC<{
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -154,7 +153,13 @@ const AddModal: React.FC<{
             style={{ backgroundColor: Colors[theme].background, flex: 1 }}
             offset={{ opened: 250, closed: insets.bottom }}
           >
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Text
                 style={{
                   color: Colors[theme].text,
@@ -174,13 +179,8 @@ const AddModal: React.FC<{
                 }}
                 onPress={close}
               >
-                <Feather
-                  name="x"
-                  color={Colors[theme].text}
-                  size={25}
-                />
+                <Feather name="x" color={Colors[theme].text} size={25} />
               </Pressable>
-
             </View>
 
             <ScrollView

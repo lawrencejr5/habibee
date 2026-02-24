@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -16,14 +17,34 @@ import { View as ThemedView } from "@/components/Themed";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+
+export interface SubHabitEntry {
+  name: string;
+  reminderTime?: string; // "HH:mm" 24h format, e.g. "09:00", "14:30"
+}
 
 interface AddSubHabitModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  subHabits: string[];
-  setSubHabits: Dispatch<SetStateAction<string[]>>;
+  subHabits: SubHabitEntry[];
+  setSubHabits: Dispatch<SetStateAction<SubHabitEntry[]>>;
   themeColor: string;
 }
+
+/**
+ * Format a 24h time string like "09:00" to "9:00 AM"
+ */
+export const formatTime12h = (time24: string): string => {
+  const [hStr, mStr] = time24.split(":");
+  let h = parseInt(hStr, 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  return `${h}:${mStr} ${ampm}`;
+};
 
 const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
   visible,
@@ -39,6 +60,11 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
 
   const [newSubHabit, setNewSubHabit] = useState("");
 
+  // Time picker state
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [pickerDate, setPickerDate] = useState(new Date());
+
   const close = () => {
     haptics.impact();
     setVisible(false);
@@ -49,19 +75,83 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
       return;
     }
 
-    if (subHabits.includes(newSubHabit.trim())) {
+    if (subHabits.some((sh) => sh.name === newSubHabit.trim())) {
       showCustomAlert("This sub-habit already exists", "warning");
       return;
     }
 
     haptics.impact();
-    setSubHabits([...subHabits, newSubHabit.trim()]);
+    setSubHabits([...subHabits, { name: newSubHabit.trim() }]);
     setNewSubHabit("");
   };
 
   const handleRemoveSubHabit = (index: number) => {
     haptics.impact();
     setSubHabits(subHabits.filter((_, i) => i !== index));
+  };
+
+  const openTimePicker = (index: number) => {
+    haptics.impact();
+    setEditingIndex(index);
+
+    // If there's already a reminder time set, use it as default
+    const existing = subHabits[index].reminderTime;
+    if (existing) {
+      const [h, m] = existing.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      setPickerDate(d);
+    } else {
+      // Default to 9:00 AM
+      const d = new Date();
+      d.setHours(9, 0, 0, 0);
+      setPickerDate(d);
+    }
+
+    setShowTimePicker(true);
+  };
+
+  const handleTimeChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowTimePicker(false);
+    }
+
+    if (event.type === "set" && date && editingIndex !== null) {
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const timeStr = `${hours}:${minutes}`;
+
+      const updated = [...subHabits];
+      updated[editingIndex] = {
+        ...updated[editingIndex],
+        reminderTime: timeStr,
+      };
+      setSubHabits(updated);
+    }
+
+    if (Platform.OS === "ios") {
+      // On iOS, keep the picker open until user dismisses
+      if (date && editingIndex !== null) {
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const timeStr = `${hours}:${minutes}`;
+
+        const updated = [...subHabits];
+        updated[editingIndex] = {
+          ...updated[editingIndex],
+          reminderTime: timeStr,
+        };
+        setSubHabits(updated);
+        setPickerDate(date);
+      }
+    }
+  };
+
+  const removeReminder = (index: number) => {
+    haptics.impact();
+    const updated = [...subHabits];
+    updated[index] = { ...updated[index], reminderTime: undefined };
+    setSubHabits(updated);
   };
 
   return (
@@ -209,39 +299,109 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
                     <View
                       key={index}
                       style={{
-                        flexDirection: "row",
-                        alignItems: "center",
                         padding: 15,
                         borderBottomWidth: index < subHabits.length - 1 ? 1 : 0,
                         borderBottomColor: Colors[theme].border,
                       }}
                     >
-                      <Feather
-                        name="check-circle"
-                        size={20}
-                        color={themeColor}
-                        style={{ marginRight: 12 }}
-                      />
-                      <Text
+                      <View
                         style={{
-                          flex: 1,
-                          fontFamily: "NunitoMedium",
-                          fontSize: 16,
-                          color: Colors[theme].text,
+                          flexDirection: "row",
+                          alignItems: "center",
                         }}
                       >
-                        {item}
-                      </Text>
-                      <Pressable
-                        onPress={() => handleRemoveSubHabit(index)}
-                        style={{ padding: 5 }}
-                      >
                         <Feather
-                          name="trash-2"
+                          name="check-circle"
                           size={20}
-                          color={Colors[theme].text_secondary}
+                          color={themeColor}
+                          style={{ marginRight: 12 }}
                         />
-                      </Pressable>
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontFamily: "NunitoMedium",
+                            fontSize: 16,
+                            color: Colors[theme].text,
+                          }}
+                        >
+                          {item.name}
+                        </Text>
+                        <Pressable
+                          onPress={() => handleRemoveSubHabit(index)}
+                          style={{ padding: 5 }}
+                        >
+                          <Feather
+                            name="trash-2"
+                            size={20}
+                            color={Colors[theme].text_secondary}
+                          />
+                        </Pressable>
+                      </View>
+
+                      {/* Reminder time row */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginTop: 8,
+                          marginLeft: 32,
+                        }}
+                      >
+                        <Pressable
+                          onPress={() => openTimePicker(index)}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            backgroundColor: item.reminderTime
+                              ? themeColor + "15"
+                              : Colors[theme].background,
+                            paddingVertical: 6,
+                            paddingHorizontal: 12,
+                            borderRadius: 20,
+                            borderWidth: 1,
+                            borderColor: item.reminderTime
+                              ? themeColor + "40"
+                              : Colors[theme].border,
+                            gap: 6,
+                          }}
+                        >
+                          <Feather
+                            name="clock"
+                            size={14}
+                            color={
+                              item.reminderTime
+                                ? themeColor
+                                : Colors[theme].text_secondary
+                            }
+                          />
+                          <Text
+                            style={{
+                              fontFamily: "NunitoMedium",
+                              fontSize: 13,
+                              color: item.reminderTime
+                                ? themeColor
+                                : Colors[theme].text_secondary,
+                            }}
+                          >
+                            {item.reminderTime
+                              ? formatTime12h(item.reminderTime)
+                              : "Set reminder"}
+                          </Text>
+                        </Pressable>
+
+                        {item.reminderTime && (
+                          <Pressable
+                            onPress={() => removeReminder(index)}
+                            style={{ marginLeft: 8, padding: 4 }}
+                          >
+                            <Feather
+                              name="x"
+                              size={16}
+                              color={Colors[theme].text_secondary}
+                            />
+                          </Pressable>
+                        )}
+                      </View>
                     </View>
                   ))}
                 </View>
@@ -272,6 +432,75 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
               </View>
             )}
           </ScrollView>
+
+          {/* iOS Time Picker Inline */}
+          {showTimePicker && Platform.OS === "ios" && (
+            <View
+              style={{
+                backgroundColor: Colors[theme].surface,
+                borderRadius: 15,
+                padding: 15,
+                marginBottom: 10,
+                borderWidth: 1,
+                borderColor: Colors[theme].border,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 14,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  Set Reminder Time
+                </Text>
+                <Pressable
+                  onPress={() => setShowTimePicker(false)}
+                  style={{
+                    backgroundColor: themeColor,
+                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "NunitoBold",
+                      fontSize: 13,
+                      color: "#fff",
+                    }}
+                  >
+                    Done
+                  </Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={pickerDate}
+                mode="time"
+                display="spinner"
+                onChange={handleTimeChange}
+                themeVariant={theme === "dark" ? "dark" : "light"}
+              />
+            </View>
+          )}
+
+          {/* Android Time Picker (auto-dismisses) */}
+          {showTimePicker && Platform.OS === "android" && (
+            <DateTimePicker
+              value={pickerDate}
+              mode="time"
+              display="default"
+              onChange={handleTimeChange}
+            />
+          )}
 
           {/* Done Button */}
           <Pressable

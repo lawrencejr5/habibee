@@ -59,6 +59,7 @@ export const add_sub_habit = mutation({
   args: {
     parent_habit_id: v.id("habits"),
     name: v.string(),
+    reminder_time: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
@@ -89,6 +90,7 @@ export const add_sub_habit = mutation({
       name: args.name,
       parent_habit: args.parent_habit_id,
       completed: false,
+      reminder_time: args.reminder_time,
     });
 
     return sub_habit_id;

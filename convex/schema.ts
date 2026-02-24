@@ -65,6 +65,7 @@ const schema = defineSchema({
     name: v.string(),
     parent_habit: v.id("habits"),
     completed: v.boolean(),
+    reminder_time: v.optional(v.string()),
   }).index("by_parent_habit", ["parent_habit"]),
 });
 

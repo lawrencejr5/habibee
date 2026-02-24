@@ -101,7 +101,14 @@ export const add_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
-    sub_habits: v.optional(v.array(v.string())),
+    sub_habits: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          reminder_time: v.optional(v.string()),
+        }),
+      ),
+    ),
   },
   handler: async (
     ctx,
@@ -132,11 +139,12 @@ export const add_habit = mutation({
     });
 
     if (sub_habits && sub_habits.length > 0) {
-      for (const sh_name of sub_habits) {
+      for (const sh of sub_habits) {
         await ctx.db.insert("sub_habits", {
-          name: sh_name,
+          name: sh.name,
           parent_habit: habit_id,
           completed: false,
+          reminder_time: sh.reminder_time,
         });
       }
     }
@@ -506,7 +514,14 @@ export const create_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
-    sub_habits: v.optional(v.array(v.string())),
+    sub_habits: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          reminder_time: v.optional(v.string()),
+        }),
+      ),
+    ),
   },
   handler: async (
     ctx,
@@ -537,11 +552,12 @@ export const create_habit = mutation({
     });
 
     if (sub_habits && sub_habits.length > 0) {
-      for (const sh_name of sub_habits) {
+      for (const sh of sub_habits) {
         await ctx.db.insert("sub_habits", {
-          name: sh_name,
+          name: sh.name,
           parent_habit: habit_id,
           completed: false,
+          reminder_time: sh.reminder_time,
         });
       }
     }
