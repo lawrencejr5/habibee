@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useState, useCallback } from "react";
 import {
   Modal,
   Platform,
@@ -107,43 +107,43 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
     setShowTimePicker(true);
   };
 
-  const handleTimeChange = async (event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === "android") {
+  const saveReminder = useCallback(
+    async (subHabitId: Id<"sub_habits">, timeStr: string) => {
+      try {
+        setUpdatingId(subHabitId);
+        await update_sub_habit({
+          sub_habit_id: subHabitId,
+          reminder_time: timeStr,
+        });
+      } catch (error) {
+        showCustomAlert("Failed to save reminder", "danger");
+      } finally {
+        setUpdatingId(null);
+      }
+    },
+    [update_sub_habit, showCustomAlert],
+  );
+
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedDate?: Date) => {
       setShowTimePicker(false);
-    }
 
-    if (event.type !== "set" || !date || !pickerTarget) return;
+      if (!selectedDate || !pickerTarget) return;
 
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const timeStr = `${hours}:${minutes}`;
+      setPickerDate(selectedDate);
 
-    if (pickerTarget === "new") {
-      setNewReminderTime(timeStr);
-      if (Platform.OS === "ios") setPickerDate(date);
-    } else {
-      // Persist immediately for existing sub-habits
-      if (Platform.OS === "ios") setPickerDate(date);
-      await saveReminder(pickerTarget, timeStr);
-    }
-  };
+      const hours = String(selectedDate.getHours()).padStart(2, "0");
+      const minutes = String(selectedDate.getMinutes()).padStart(2, "0");
+      const timeStr = `${hours}:${minutes}`;
 
-  const saveReminder = async (
-    subHabitId: Id<"sub_habits">,
-    timeStr: string,
-  ) => {
-    try {
-      setUpdatingId(subHabitId);
-      await update_sub_habit({
-        sub_habit_id: subHabitId,
-        reminder_time: timeStr,
-      });
-    } catch (error) {
-      showCustomAlert("Failed to save reminder", "danger");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
+      if (pickerTarget === "new") {
+        setNewReminderTime(timeStr);
+      } else {
+        saveReminder(pickerTarget, timeStr);
+      }
+    },
+    [pickerTarget, saveReminder],
+  );
 
   const clearReminder = async (subHabitId: Id<"sub_habits">) => {
     haptics.impact();

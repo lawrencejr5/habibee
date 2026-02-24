@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useState, useCallback } from "react";
 import {
   Modal,
   Platform,
@@ -111,29 +111,15 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
     setShowTimePicker(true);
   };
 
-  const handleTimeChange = (event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === "android") {
+  const handleTimeChange = useCallback(
+    (_event: DateTimePickerEvent, selectedDate?: Date) => {
       setShowTimePicker(false);
-    }
 
-    if (event.type === "set" && date && editingIndex !== null) {
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const timeStr = `${hours}:${minutes}`;
+      if (selectedDate && editingIndex !== null) {
+        setPickerDate(selectedDate);
 
-      const updated = [...subHabits];
-      updated[editingIndex] = {
-        ...updated[editingIndex],
-        reminderTime: timeStr,
-      };
-      setSubHabits(updated);
-    }
-
-    if (Platform.OS === "ios") {
-      // On iOS, keep the picker open until user dismisses
-      if (date && editingIndex !== null) {
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const hours = String(selectedDate.getHours()).padStart(2, "0");
+        const minutes = String(selectedDate.getMinutes()).padStart(2, "0");
         const timeStr = `${hours}:${minutes}`;
 
         const updated = [...subHabits];
@@ -142,10 +128,10 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
           reminderTime: timeStr,
         };
         setSubHabits(updated);
-        setPickerDate(date);
       }
-    }
-  };
+    },
+    [subHabits, editingIndex, setSubHabits],
+  );
 
   const removeReminder = (index: number) => {
     haptics.impact();
