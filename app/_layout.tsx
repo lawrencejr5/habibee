@@ -86,22 +86,16 @@ export default function RootLayout() {
 
 function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { theme } = useTheme();
-  const { setAppLoading } = useLoadingContext();
   const segments = useSegments();
   const appState = useRef(AppState.currentState);
 
-  const { notificationResponse } = usePushNotification();
-
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
-    setAppLoading(true);
     try {
       const today = new Date().toLocaleDateString("en-CA");
       await checkStreak({ today });
     } catch (err) {
       console.log(err);
-    } finally {
-      setAppLoading(false);
     }
   };
 
