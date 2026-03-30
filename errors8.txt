@@ -1,0 +1,5 @@
+﻿app/habit/[id].tsx(343,9): error TS2322: Type '{ visible: boolean; setVisible: Dispatch<SetStateAction<boolean>>; duration: string; habitTitle: string; }' is not assignable to type 'IntrinsicAttributes & TaskTimerModalProps'.
+  Property 'duration' does not exist on type 'IntrinsicAttributes & TaskTimerModalProps'.
+components/home/AddModal.tsx(71,9): error TS2304: Cannot find name 'Platform'.
+components/home/AddModal.tsx(538,32): error TS2304: Cannot find name 'Platform'.
+components/home/AddModal.tsx(547,32): error TS2304: Cannot find name 'Platform'.

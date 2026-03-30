@@ -101,6 +101,7 @@ export const add_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
+    reminder_time: v.optional(v.string()),
     sub_habits: v.optional(
       v.array(
         v.object({
@@ -112,7 +113,7 @@ export const add_habit = mutation({
   },
   handler: async (
     ctx,
-    { habit, icon, theme, duration, goal, strict, sub_habits },
+    { habit, icon, theme, duration, goal, strict, reminder_time, sub_habits },
   ) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
@@ -134,6 +135,7 @@ export const add_habit = mutation({
       duration: duration && Math.max(1, duration),
       goal: Math.max(1, goal),
       strict,
+      reminder_time,
       current_streak: 0,
       highest_streak: 0,
     });
@@ -247,6 +249,7 @@ export const update_habit = mutation({
     strict: v.optional(v.boolean()),
     icon: v.optional(v.string()),
     theme: v.optional(v.string()),
+    reminder_time: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
@@ -281,6 +284,10 @@ export const update_habit = mutation({
     if (args.strict !== undefined) fields_to_update.strict = args.strict;
     if (args.icon !== undefined) fields_to_update.icon = args.icon;
     if (args.theme !== undefined) fields_to_update.theme = args.theme;
+    if (args.reminder_time !== undefined) {
+      fields_to_update.reminder_time =
+        args.reminder_time === null ? undefined : args.reminder_time;
+    }
 
     await ctx.db.patch(args.habit_id, fields_to_update);
     return { msg: "success", habit: args.habit_id };
@@ -514,6 +521,7 @@ export const create_habit = mutation({
     duration: v.optional(v.number()),
     goal: v.number(),
     strict: v.boolean(),
+    reminder_time: v.optional(v.string()),
     sub_habits: v.optional(
       v.array(
         v.object({
@@ -525,7 +533,7 @@ export const create_habit = mutation({
   },
   handler: async (
     ctx,
-    { habit, icon, theme, duration, goal, strict, sub_habits },
+    { habit, icon, theme, duration, goal, strict, reminder_time, sub_habits },
   ) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
@@ -547,6 +555,7 @@ export const create_habit = mutation({
       duration: duration ? Math.max(1, duration) : undefined,
       goal,
       strict,
+      reminder_time,
       current_streak: 0,
       highest_streak: 0,
     });

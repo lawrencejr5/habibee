@@ -39,7 +39,11 @@ import AIChatModal from "@/components/home/AIChatModal";
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
 import { formatTime12h } from "@/components/habit/AddSubHabitModal";
-import { scheduleSubHabitReminders } from "@/services/notifications";
+import {
+  scheduleSubHabitReminders,
+  scheduleHabitReminders,
+} from "@/services/notifications";
+import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -70,9 +74,21 @@ const Home = () => {
 
   const record_streak = useMutation(api.habits.record_streak);
   const toggle_sub_habit = useMutation(api.sub_habits.toggle_sub_habit);
+  const update_habit = useMutation(api.habits.update_habit);
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
+
+  const [reminderModalVisible, setReminderModalVisible] = useState(false);
+  const [reminderHabitId, setReminderHabitId] = useState<Id<"habits"> | null>(
+    null,
+  );
+  const [reminderInitialTime, setReminderInitialTime] = useState<
+    string | undefined
+  >(undefined);
+  const [reminderTheme, setReminderTheme] = useState<string | undefined>(
+    undefined,
+  );
 
   // Schedule local notifications for sub-habit reminders
   useEffect(() => {
@@ -85,6 +101,7 @@ const Home = () => {
     }
 
     scheduleSubHabitReminders(subHabitsData as any, habitsMap);
+    scheduleHabitReminders(habitData as any);
   }, [subHabitsData, habitData]);
 
   const toggleExpansion = (habitId: string) => {
@@ -483,6 +500,26 @@ const Home = () => {
                       subHabits={habitSubHabits}
                       isExpanded={isExpanded}
                       onToggleExpand={() => toggleExpansion(habit._id)}
+                      reminder_time={habit.reminder_time}
+                      onReminderPress={() => {
+                        haptics.impact();
+                        setReminderHabitId(habit._id);
+                        setReminderInitialTime(habit.reminder_time);
+                        setReminderTheme(habit.theme);
+                        setReminderModalVisible(true);
+                      }}
+                      onRemoveReminder={async () => {
+                        haptics.impact();
+                        try {
+                          await update_habit({
+                            habit_id: habit._id,
+                            reminder_time: null as any,
+                          });
+                          showCustomAlert("Reminder removed", "success");
+                        } catch (e: any) {
+                          showCustomAlert(e.message || "Error", "danger");
+                        }
+                      }}
                       onFireIconPress={async () => {
                         haptics.impact();
                         if (!habit.duration) {
@@ -629,6 +666,13 @@ const Home = () => {
           habit_id={selectedHabitId!}
         />
       )}
+      <ReminderPickerModal
+        visible={reminderModalVisible}
+        setVisible={setReminderModalVisible}
+        habitId={reminderHabitId}
+        initialTime={reminderInitialTime}
+        themeColor={reminderTheme}
+      />
     </View>
   );
 };
@@ -688,6 +732,9 @@ const HabitCard: React.FC<{
   subHabits?: any[];
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  reminder_time?: string;
+  onReminderPress?: () => void;
+  onRemoveReminder?: () => void;
 }> = ({
   duration,
   title,
@@ -703,6 +750,9 @@ const HabitCard: React.FC<{
   subHabits = [],
   isExpanded = false,
   onToggleExpand,
+  reminder_time,
+  onReminderPress,
+  onRemoveReminder,
 }) => {
   const { theme } = useTheme();
 
@@ -759,203 +809,273 @@ const HabitCard: React.FC<{
   const completedSubHabits = subHabits.filter((s) => s.completed).length;
 
   return (
-    <Pressable
-      onPress={onCardPress}
-      onLongPress={() => {
-        haptics.impact();
-        if (subHabitsCount > 0 && onToggleExpand) {
-          onToggleExpand();
-        }
-      }}
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        backgroundColor: Colors[theme].surface,
-        paddingVertical: 15,
-        paddingHorizontal: 5,
-        marginTop: 15,
-        borderRadius: 15,
-        borderWidth: 2,
-        borderColor: Colors[theme].border,
-      }}
-    >
-      <View
+    <View style={{ marginTop: 15, width: "100%" }}>
+      {/* Reminder Extension Tab */}
+      <Pressable
+        onPress={(e) => {
+          e.stopPropagation();
+          if (onReminderPress) onReminderPress();
+        }}
         style={{
+          backgroundColor: Colors[theme].surface,
+          borderWidth: 2,
+          borderColor: Colors[theme].border,
+          borderBottomWidth: 0,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          paddingHorizontal: 10,
+          paddingBottom: 4,
+          alignSelf: "flex-start",
           flexDirection: "row",
           alignItems: "center",
-          gap: 15,
-          marginLeft: 5,
-          flex: 1,
+          gap: 6,
+          marginBottom: -2,
+          zIndex: 10,
+        }}
+      >
+        <Feather
+          name={reminder_time ? "clock" : "plus"}
+          size={12}
+          color={Colors[theme].text}
+          style={{ paddingTop: 6 }}
+        />
+        <Text
+          style={{
+            fontSize: 10,
+            fontFamily: "NunitoBold",
+            color: Colors[theme].text,
+            paddingTop: 6,
+          }}
+        >
+          {reminder_time ? formatTime12h(reminder_time) : "Add reminder"}
+        </Text>
+        {reminder_time && (
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              if (onRemoveReminder) onRemoveReminder();
+            }}
+            style={{
+              marginLeft: 4,
+              paddingLeft: 15,
+              paddingTop: 6,
+            }}
+          >
+            <Feather name="x" size={14} color={Colors[theme].text_secondary} />
+          </Pressable>
+        )}
+      </Pressable>
+
+      <Pressable
+        onPress={onCardPress}
+        onLongPress={() => {
+          haptics.impact();
+          if (subHabitsCount > 0 && onToggleExpand) {
+            onToggleExpand();
+          }
+        }}
+        style={{
+          width: "100%",
+          backgroundColor: Colors[theme].surface,
+          borderTopRightRadius: 15,
+          borderBottomLeftRadius: 15,
+          borderBottomRightRadius: 15,
+          borderTopLeftRadius: 0,
+          borderWidth: 2,
+          borderColor: Colors[theme].border,
+          paddingTop: 15,
+          paddingBottom: 15,
+          position: "relative",
+          zIndex: 1,
         }}
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            backgroundColor: themeColor + "20",
-            justifyContent: "center",
+            flexDirection: "row",
             alignItems: "center",
-            borderColor: themeColor,
+            justifyContent: "space-between",
+            paddingHorizontal: 5,
           }}
         >
-          <Image
-            source={habitIcons[habitType]}
-            style={{
-              width: 20,
-              height: 20,
-              tintColor: themeColor,
-            }}
-          />
-        </View>
-
-        <View>
-          <ThemedText
-            numberOfLines={1}
-            style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
-          >
-            {title}
-          </ThemedText>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               gap: 15,
-              marginTop: 10,
+              marginLeft: 5,
+              flex: 1,
             }}
           >
             <View
               style={{
-                flexDirection: "row",
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                backgroundColor: themeColor + "20",
+                justifyContent: "center",
                 alignItems: "center",
-                gap: 5,
-                width: 80,
+                borderColor: themeColor,
               }}
             >
-              {subHabitsCount > 0 && !isTimerActive ? (
-                <Pressable
-                  onPress={onToggleExpand}
+              <Image
+                source={habitIcons[habitType]}
+                style={{
+                  width: 20,
+                  height: 20,
+                  tintColor: themeColor,
+                }}
+              />
+            </View>
+
+            <View>
+              <ThemedText
+                numberOfLines={1}
+                style={{ fontFamily: "NunitoBold", fontSize: 14, width: 180 }}
+              >
+                {title}
+              </ThemedText>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 15,
+                  marginTop: 10,
+                }}
+              >
+                <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 5,
-                    paddingRight: 10,
+                    width: 80,
+                  }}
+                >
+                  {subHabitsCount > 0 && !isTimerActive ? (
+                    <Pressable
+                      onPress={onToggleExpand}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5,
+                        paddingRight: 10,
+                      }}
+                    >
+                      <Image
+                        source={require("../../assets/icons/check-outline.png")}
+                        style={{
+                          tintColor: Colors[theme].text_secondary,
+                          width: 14,
+                          height: 14,
+                        }}
+                      />
+                      <ThemedText
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 12,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        {completedSubHabits}/{subHabitsCount}
+                      </ThemedText>
+                    </Pressable>
+                  ) : (
+                    <>
+                      {duration && duration !== "undefined" ? (
+                        <Image
+                          source={require("../../assets/icons/clock.png")}
+                          style={{
+                            tintColor: Colors[theme].text_secondary,
+                            width: 14,
+                            height: 14,
+                          }}
+                        />
+                      ) : (
+                        <Image
+                          source={require("../../assets/icons/calendar.png")}
+                          style={{
+                            tintColor: Colors[theme].text_secondary,
+                            width: 14,
+                            height: 14,
+                          }}
+                        />
+                      )}
+                      <ThemedText
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 12,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        {isTimerActive
+                          ? formatTime(currentTime)
+                          : duration && duration !== "undefined"
+                            ? `${duration} min(s)`
+                            : "Daily"}
+                      </ThemedText>
+                    </>
+                  )}
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 7,
                   }}
                 >
                   <Image
-                    source={require("../../assets/icons/check-outline.png")}
+                    source={require("../../assets/icons/fire.png")}
                     style={{
-                      tintColor: Colors[theme].text_secondary,
+                      tintColor: !done
+                        ? Colors[theme].text_secondary
+                        : undefined,
                       width: 14,
                       height: 14,
                     }}
                   />
                   <ThemedText
                     style={{
+                      color: done
+                        ? Colors[theme].accent1
+                        : Colors[theme].text_secondary,
                       fontFamily: "NunitoBold",
-                      fontSize: 12,
-                      color: Colors[theme].text_secondary,
                     }}
                   >
-                    {completedSubHabits}/{subHabitsCount}
+                    {streak}
                   </ThemedText>
-                </Pressable>
-              ) : (
-                <>
-                  {duration && duration !== "undefined" ? (
-                    <Image
-                      source={require("../../assets/icons/clock.png")}
-                      style={{
-                        tintColor: Colors[theme].text_secondary,
-                        width: 14,
-                        height: 14,
-                      }}
-                    />
-                  ) : (
-                    <Image
-                      source={require("../../assets/icons/calendar.png")}
-                      style={{
-                        tintColor: Colors[theme].text_secondary,
-                        width: 14,
-                        height: 14,
-                      }}
-                    />
-                  )}
-                  <ThemedText
-                    style={{
-                      fontFamily: "NunitoBold",
-                      fontSize: 12,
-                      color: Colors[theme].text_secondary,
-                    }}
-                  >
-                    {isTimerActive
-                      ? formatTime(currentTime)
-                      : duration && duration !== "undefined"
-                        ? `${duration} min(s)`
-                        : "Daily"}
-                  </ThemedText>
-                </>
-              )}
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 7,
-              }}
-            >
-              <Image
-                source={require("../../assets/icons/fire.png")}
-                style={{
-                  tintColor: !done ? Colors[theme].text_secondary : undefined,
-                  width: 14,
-                  height: 14,
-                }}
-              />
-              <ThemedText
-                style={{
-                  color: done
-                    ? Colors[theme].accent1
-                    : Colors[theme].text_secondary,
-                  fontFamily: "NunitoBold",
-                }}
-              >
-                {streak}
-              </ThemedText>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
-      </View>
 
-      <Pressable
-        onPress={() => {
-          haptics.impact();
-          onFireIconPress();
-        }}
-        disabled={done}
-        style={{
-          borderLeftWidth: 3,
-          borderColor: Colors[theme].border,
-          width: 50,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          paddingHorizontal: 10,
-        }}
-      >
-        <Image
-          source={require("../../assets/icons/fire.png")}
-          style={{
-            tintColor: !done ? Colors[theme].text_secondary : undefined,
-            width: 30,
-            height: 30,
-          }}
-        />
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              onFireIconPress();
+            }}
+            disabled={done}
+            style={{
+              borderLeftWidth: 3,
+              borderColor: Colors[theme].border,
+              width: 50,
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+              paddingHorizontal: 10,
+            }}
+          >
+            <Image
+              source={require("../../assets/icons/fire.png")}
+              style={{
+                tintColor: !done ? Colors[theme].text_secondary : undefined,
+                width: 30,
+                height: 30,
+              }}
+            />
+          </Pressable>
+        </View>
       </Pressable>
-    </Pressable>
+    </View>
   );
 };
 

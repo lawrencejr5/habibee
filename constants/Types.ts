@@ -14,4 +14,5 @@ export interface HabitType {
   lastCompleted?: string;
   timer_start_time?: number;
   timer_elapsed?: number;
+  reminder_time?: string;
 }

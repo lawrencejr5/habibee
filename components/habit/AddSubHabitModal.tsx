@@ -112,10 +112,10 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
   };
 
   const handleTimeChange = useCallback(
-    (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    (event: DateTimePickerEvent, selectedDate?: Date) => {
       setShowTimePicker(false);
 
-      if (selectedDate && editingIndex !== null) {
+      if (event.type === "set" && selectedDate && editingIndex !== null) {
         setPickerDate(selectedDate);
 
         const hours = String(selectedDate.getHours()).padStart(2, "0");
