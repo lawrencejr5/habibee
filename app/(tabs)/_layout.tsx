@@ -51,15 +51,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="connect"
+        name="hive"
         options={{
-          title: "Connect",
+          title: "Hive",
           tabBarIcon: ({ focused }) => (
             <Image
-              source={require("../../assets/icons/friends.png")}
+              source={require("../../assets/icons/hive.png")}
               style={{
-                height: 22,
-                width: 22,
+                height: 30,
+                width: 30,
                 tintColor: focused ? Colors[theme].primary : "#797979",
               }}
               resizeMode="contain"

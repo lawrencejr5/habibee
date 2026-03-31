@@ -68,6 +68,21 @@ const schema = defineSchema({
     completed: v.boolean(),
     reminder_time: v.optional(v.string()),
   }).index("by_parent_habit", ["parent_habit"]),
+
+  hives: defineTable({
+    name: v.string(),
+    code: v.string(),
+    creator: v.id("users"),
+  }).index("by_code", ["code"]),
+
+  hive_members: defineTable({
+    hive: v.id("hives"),
+    user: v.id("users"),
+    joined_at: v.string(),
+  })
+    .index("by_hive", ["hive"])
+    .index("by_user", ["user"])
+    .index("by_hive_user", ["hive", "user"]),
 });
 
 export default schema;
