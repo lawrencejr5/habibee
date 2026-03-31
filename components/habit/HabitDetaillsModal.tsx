@@ -201,6 +201,15 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               backgroundColor: Colors[theme].background,
             }}
           >
+            {showEditButton && (
+              <Pressable
+                style={[
+                  StyleSheet.absoluteFill,
+                  { zIndex: 1, backgroundColor: "transparent" },
+                ]}
+                onPress={() => setShowEditButton(false)}
+              />
+            )}
             {/* Header */}
             <View
               style={{
@@ -209,6 +218,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
+                zIndex: 2,
               }}
             >
               <Pressable
@@ -253,6 +263,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     paddingHorizontal: 15,
                     width: 150,
                     borderRadius: 8,
+                    zIndex: 2,
                   }}
                 >
                   <Pressable

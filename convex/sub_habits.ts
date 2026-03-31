@@ -11,7 +11,7 @@ export const get_sub_habits = query({
 
     // Verify the parent habit belongs to the user
     const parent_habit = await ctx.db.get(args.parent_habit_id);
-    if (!parent_habit) throw new Error("Parent habit not found");
+    if (!parent_habit) return [];
     if (parent_habit.user !== user_id) throw new Error("Unauthorized");
 
     const sub_habits = await ctx.db
@@ -244,7 +244,7 @@ export const has_sub_habits = query({
     if (!user_id) throw new Error("Unauthenticated");
 
     const habit = await ctx.db.get(args.habit_id);
-    if (!habit) throw new Error("Habit not found");
+    if (!habit) return false;
     if (habit.user !== user_id) throw new Error("Unauthorized");
 
     const sub_habits = await ctx.db
@@ -264,7 +264,7 @@ export const all_sub_habits_completed = query({
     if (!user_id) throw new Error("Unauthenticated");
 
     const habit = await ctx.db.get(args.habit_id);
-    if (!habit) throw new Error("Habit not found");
+    if (!habit) return false;
     if (habit.user !== user_id) throw new Error("Unauthorized");
 
     const sub_habits = await ctx.db
