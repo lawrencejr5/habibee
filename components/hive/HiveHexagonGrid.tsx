@@ -16,32 +16,46 @@ interface HiveHexagonGridProps {
   members: HiveMember[];
 }
 
-const HEX_SIZE = 52;
-const HEX_GAP = 6;
-const HEX_WIDTH = HEX_SIZE * 2;
-const HEX_HEIGHT = HEX_SIZE * Math.sqrt(3);
-const COL_STEP = HEX_WIDTH * 0.75 + HEX_GAP;
-const ROW_STEP = HEX_HEIGHT + HEX_GAP;
+const COLS = 4;
+const BASE_HEX_SIZE = 52;
+const MIN_HEX_SIZE = 28;
+const HEX_GAP = 8;
+
+function getHexSize(memberCount: number): number {
+  const rows = Math.ceil(memberCount / COLS);
+  if (rows <= 2) return BASE_HEX_SIZE;
+  if (rows <= 3) return 44;
+  if (rows <= 4) return 36;
+  return Math.max(MIN_HEX_SIZE, BASE_HEX_SIZE - (rows - 2) * 6);
+}
 
 const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
   const { theme } = useTheme();
 
+  const hexSize = getHexSize(members.length);
+  const hexWidth = hexSize * 2;
+  const hexHeight = hexSize * Math.sqrt(3);
+  const colStep = hexWidth * 0.7 + HEX_GAP;
+  const rowStep = hexHeight * 1.3 + HEX_GAP;
+
   // Build honeycomb layout: odd columns offset down by half a row
   const positions = members.map((_, i) => {
-    const col = i % 4;
-    const row = Math.floor(i / 4);
-    const x = col * COL_STEP;
-    const y = row * ROW_STEP + (col % 2 === 1 ? ROW_STEP / 2 : 0);
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const x = col * colStep;
+    const y = row * rowStep + (col % 2 === 1 ? rowStep / 2 : 0);
     return { x, y };
   });
 
-  const maxY = positions.length > 0
-    ? Math.max(...positions.map((p) => p.y)) + HEX_HEIGHT
-    : HEX_HEIGHT;
+  const maxY =
+    positions.length > 0
+      ? Math.max(...positions.map((p) => p.y)) + hexHeight
+      : hexHeight;
 
-  const maxX = positions.length > 0
-    ? Math.max(...positions.map((p) => p.x)) + HEX_WIDTH
-    : HEX_WIDTH;
+  const maxX =
+    positions.length > 0
+      ? Math.max(...positions.map((p) => p.x)) + hexWidth
+      : hexWidth;
 
   return (
     <View
@@ -54,8 +68,12 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
         {members.map((member, i) => {
           const { x, y } = positions[i];
           const completed = member.completedToday;
-          const bgColor = completed ? Colors[theme].primary : Colors[theme].surface;
-          const borderColor = completed ? Colors[theme].primary : Colors[theme].border;
+          const bgColor = completed
+            ? Colors[theme].primary
+            : Colors[theme].surface;
+          const borderColor = completed
+            ? Colors[theme].primary
+            : Colors[theme].border;
           const initial = member.fullname?.charAt(0)?.toUpperCase() ?? "?";
 
           return (
@@ -65,19 +83,18 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
                 position: "absolute",
                 left: x,
                 top: y,
-                width: HEX_WIDTH,
-                height: HEX_HEIGHT,
+                width: hexWidth,
+                height: hexHeight,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              {/* Hexagon shape via CSS clip-path isn't available in RN,
-                  so we use a rotated-square approach with overflow hidden */}
+              {/* Rotated-square hexagon shape */}
               <View
                 style={{
-                  width: HEX_SIZE * 1.6,
-                  height: HEX_SIZE * 1.6,
-                  borderRadius: HEX_SIZE * 0.32,
+                  width: hexSize * 1.6,
+                  height: hexSize * 1.6,
+                  borderRadius: hexSize * 0.32,
                   backgroundColor: bgColor,
                   borderWidth: 2.5,
                   borderColor,
@@ -85,7 +102,6 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
                   overflow: "hidden",
                   alignItems: "center",
                   justifyContent: "center",
-                  // Glow for completed
                   ...(completed
                     ? {
                         shadowColor: Colors[theme].primary,
@@ -102,22 +118,27 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
                     transform: [{ rotate: "-45deg" }],
                     alignItems: "center",
                     justifyContent: "center",
+                    borderWidth: 2,
+                    borderColor: Colors[theme].text_secondary,
+                    borderRadius: hexSize * 0.45,
+                    width: hexSize * 0.9,
+                    height: hexSize * 0.9,
                   }}
                 >
                   {member.profile_url ? (
                     <Image
                       source={{ uri: member.profile_url }}
                       style={{
-                        width: HEX_SIZE * 0.9,
-                        height: HEX_SIZE * 0.9,
-                        borderRadius: HEX_SIZE * 0.45,
+                        width: hexSize * 0.9,
+                        height: hexSize * 0.9,
+                        borderRadius: hexSize * 0.45,
                       }}
                     />
                   ) : (
                     <Text
                       style={{
                         fontFamily: "NunitoExtraBold",
-                        fontSize: HEX_SIZE * 0.4,
+                        fontSize: hexSize * 0.4,
                         color: completed ? "#fff" : Colors[theme].text,
                       }}
                     >
@@ -132,14 +153,15 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
                 numberOfLines={1}
                 style={{
                   fontFamily: "NunitoBold",
-                  fontSize: 10,
+                  fontSize: Math.max(8, hexSize * 0.19),
                   color: Colors[theme].text_secondary,
-                  marginTop: 4,
+                  marginTop: 8,
                   textAlign: "center",
-                  maxWidth: HEX_WIDTH,
+                  maxWidth: hexWidth,
+                  textTransform: "lowercase",
                 }}
               >
-                {member.fullname?.split(" ")[0]}
+                @{member.fullname?.split(" ")[0]}
               </Text>
             </View>
           );

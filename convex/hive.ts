@@ -154,6 +154,9 @@ export const get_hive_members = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
+    const hive = await ctx.db.get(args.hiveId);
+    if (!hive) return [];
+
     const memberships = await ctx.db
       .query("hive_members")
       .withIndex("by_hive", (q) => q.eq("hive", args.hiveId))
@@ -176,6 +179,7 @@ export const get_hive_members = query({
           profile_url,
           streak: user.streak ?? 0,
           completedToday: user.last_streak_date === args.today,
+          isLeader: hive.creator === user._id,
         };
       })
     );

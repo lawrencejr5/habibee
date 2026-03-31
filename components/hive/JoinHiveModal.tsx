@@ -23,6 +23,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 interface JoinHiveModalProps {
   visible: boolean;
@@ -137,8 +138,9 @@ const JoinHiveModal: React.FC<JoinHiveModalProps> = ({
           </Pressable>
         </View>
 
-        <View
+        <KeyboardStickyView
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          offset={{ opened: 200, closed: insets.bottom }}
         >
           <Text
             style={{
@@ -240,7 +242,7 @@ const JoinHiveModal: React.FC<JoinHiveModalProps> = ({
               </Text>
             )}
           </Pressable>
-        </View>
+        </KeyboardStickyView>
       </ThemedView>
     </Modal>
   );

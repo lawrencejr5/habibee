@@ -86,9 +86,7 @@ export default function HivePage() {
     <ThemedView style={[styles.container, { paddingTop: insets.top + 10 }]}>
       {/* Header */}
       <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-        <Text style={[styles.title, { color: Colors[theme].text }]}>
-          Habibee hive
-        </Text>
+        <Text style={[styles.title, { color: Colors[theme].text }]}>Hive</Text>
         <Text
           style={{
             fontFamily: "NunitoRegular",
@@ -225,7 +223,8 @@ export default function HivePage() {
             contentContainerStyle={{
               paddingHorizontal: 20,
               gap: 10,
-              marginBottom: 15,
+              marginBottom: 50,
+              height: 40,
             }}
           >
             {myHives!.map((hive: any) => {
@@ -238,7 +237,9 @@ export default function HivePage() {
                     setSelectedHiveId(hive._id);
                   }}
                   style={{
-                    paddingVertical: 10,
+                    paddingVertical: 0,
+                    flexDirection: "row",
+                    alignItems: "center",
                     paddingHorizontal: 18,
                     borderRadius: 50,
                     backgroundColor: isSelected
@@ -270,7 +271,7 @@ export default function HivePage() {
                 setCreateModalVisible(true);
               }}
               style={{
-                paddingVertical: 10,
+                paddingVertical: 0,
                 paddingHorizontal: 14,
                 borderRadius: 50,
                 backgroundColor: Colors[theme].surface,
@@ -299,7 +300,7 @@ export default function HivePage() {
                 setJoinModalVisible(true);
               }}
               style={{
-                paddingVertical: 10,
+                paddingVertical: 0,
                 paddingHorizontal: 14,
                 borderRadius: 50,
                 backgroundColor: Colors[theme].surface,
