@@ -273,7 +273,8 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
     <View
       style={{
         alignItems: "center",
-        paddingVertical: 16,
+        paddingTop: 10,
+        paddingBottom: 25,
         backgroundColor: Colors[theme].surface,
         borderWidth: 2,
         borderColor: Colors[theme].border,
