@@ -42,10 +42,10 @@ const GLOW_PAD = 12; // Extra canvas room so thick glow strokes aren't clipped
  * half of each stroke, so only the outward bloom is visible.
  */
 const GLOW_BANDS = [
-  { strokeWidth: 16, opacity: 0.05 },
-  { strokeWidth: 11, opacity: 0.1 },
-  { strokeWidth: 7, opacity: 0.2 },
-  { strokeWidth: 4, opacity: 0.45 },
+  { strokeWidth: 10, opacity: 0.05 },
+  { strokeWidth: 8, opacity: 0.07 },
+  { strokeWidth: 6, opacity: 0.1 },
+  { strokeWidth: 4, opacity: 0.2 },
 ];
 
 function getHexSize(memberCount: number): number {
