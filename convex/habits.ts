@@ -12,6 +12,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { getDaysDifference } from "./utils";
+import { evaluateHiveStreak } from "./hive";
 
 // Available habit icons that can be suggested by AI
 const AVAILABLE_ICONS = [
@@ -236,6 +237,16 @@ export const record_streak = mutation({
           date: args.current_date,
         });
       }
+    }
+
+    // Evaluate Hive Streaks
+    const user_hives = await ctx.db
+      .query("hive_members")
+      .withIndex("by_user", (q) => q.eq("user", user_id))
+      .collect();
+    
+    for (const membership of user_hives) {
+      await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
   },
 });
@@ -683,6 +694,16 @@ export const internal_record_habit_completion = internalMutation({
           date: args.current_date,
         });
       }
+    }
+
+    // Evaluate Hive Streaks
+    const user_hives = await ctx.db
+      .query("hive_members")
+      .withIndex("by_user", (q) => q.eq("user", args.user_id))
+      .collect();
+    
+    for (const membership of user_hives) {
+      await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
   },
 });
