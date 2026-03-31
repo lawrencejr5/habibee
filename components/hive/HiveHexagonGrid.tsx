@@ -241,6 +241,8 @@ const HexagonCell: React.FC<HexCellProps> = React.memo(
 // ─────── Grid Container ───────
 
 const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
+  const { theme } = useTheme();
+
   const hexSize = getHexSize(members.length);
   const hexW = Math.sqrt(3) * hexSize;
   const hexH = 1 * hexSize;
@@ -268,7 +270,17 @@ const HiveHexagonGrid: React.FC<HiveHexagonGridProps> = ({ members }) => {
       : svgH + nameHeight;
 
   return (
-    <View style={{ alignItems: "center", paddingVertical: 16 }}>
+    <View
+      style={{
+        alignItems: "center",
+        paddingVertical: 16,
+        backgroundColor: Colors[theme].surface,
+        borderWidth: 2,
+        borderColor: Colors[theme].border,
+        borderRadius: 15,
+        marginBottom: 6,
+      }}
+    >
       <View style={{ width: gridW, height: gridH }}>
         {members.map((member, i) => {
           const { x, y } = positions[i];

@@ -7,6 +7,8 @@ import {
   Text,
   View,
   ActivityIndicator,
+  TextInput,
+  Modal,
 } from "react-native";
 
 import { View as ThemedView } from "@/components/Themed";
@@ -37,6 +39,10 @@ export default function HivePage() {
     null,
   );
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -48,6 +54,8 @@ export default function HivePage() {
   );
 
   const leaveHive = useMutation(api.hive.leave_hive);
+  const deleteHive = useMutation(api.hive.delete_hive);
+  const renameHive = useMutation(api.hive.rename_hive);
 
   // Auto-select first hive if none selected
   React.useEffect(() => {
@@ -79,24 +87,159 @@ export default function HivePage() {
     }
   };
 
+  const handleDeleteHive = async () => {
+    if (!selectedHiveId) return;
+    try {
+      await deleteHive({ hiveId: selectedHiveId });
+      showCustomAlert("Hive deleted", "success");
+      setSelectedHiveId(null);
+      setShowDeleteConfirm(false);
+    } catch (err: any) {
+      showCustomAlert(err.message || "Failed to delete", "danger");
+    }
+  };
+
+  const handleRenameHive = async () => {
+    if (!selectedHiveId || !renameValue.trim()) return;
+    try {
+      await renameHive({ hiveId: selectedHiveId, name: renameValue });
+      showCustomAlert("Hive renamed", "success");
+      setShowRenameModal(false);
+    } catch (err: any) {
+      showCustomAlert(err.message || "Failed to rename", "danger");
+    }
+  };
+
   const isLoading = myHives === undefined;
   const hasHives = myHives && myHives.length > 0;
 
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top + 10 }]}>
+      {showSettings && (
+        <Pressable
+          style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: "transparent" }]}
+          onPress={() => setShowSettings(false)}
+        />
+      )}
       {/* Header */}
-      <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-        <Text style={[styles.title, { color: Colors[theme].text }]}>Hive</Text>
-        <Text
-          style={{
-            fontFamily: "NunitoRegular",
-            fontSize: 14,
-            color: Colors[theme].text_secondary,
-            marginTop: 5,
-          }}
-        >
-          Stay accountable with your circle
-        </Text>
+      <View style={{ paddingHorizontal: 20, marginBottom: 20, flexDirection: "row", justifyContent: "space-between", alignItems: "center", zIndex: 11 }}>
+        <View>
+          <Text style={[styles.title, { color: Colors[theme].text }]}>Hive</Text>
+          <Text
+            style={{
+              fontFamily: "NunitoRegular",
+              fontSize: 14,
+              color: Colors[theme].text_secondary,
+              marginTop: 5,
+            }}
+          >
+            Stay accountable with your circle
+          </Text>
+        </View>
+
+        {selectedHive && (
+          <View>
+            <Pressable
+              style={{ padding: 5 }}
+              onPress={() => {
+                haptics.impact();
+                setShowSettings(!showSettings);
+              }}
+            >
+              <Feather name="settings" size={24} color={Colors[theme].text} />
+            </Pressable>
+
+            {showSettings && (
+              <View
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 35,
+                  backgroundColor: Colors[theme].surface,
+                  borderColor: Colors[theme].border,
+                  borderWidth: 2,
+                  paddingHorizontal: 15,
+                  width: 170,
+                  borderRadius: 12,
+                  zIndex: 12,
+                }}
+              >
+                {selectedHive.isLeader ? (
+                  <>
+                    <Pressable
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 12,
+                        borderBottomWidth: 1,
+                        borderBottomColor: Colors[theme].border,
+                      }}
+                      onPress={() => {
+                        haptics.impact();
+                        setShowSettings(false);
+                        setRenameValue(selectedHive.name);
+                        setShowRenameModal(true);
+                      }}
+                    >
+                      <Feather name="edit-2" size={18} color={Colors[theme].text} />
+                      <Text style={{ color: Colors[theme].text, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                        Rename
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 12,
+                      }}
+                      onPress={() => {
+                        haptics.impact("light");
+                        if (showDeleteConfirm) {
+                          setShowSettings(false);
+                          handleDeleteHive();
+                        } else {
+                          setShowDeleteConfirm(true);
+                          setTimeout(() => setShowDeleteConfirm(false), 3000);
+                        }
+                      }}
+                    >
+                      <Feather name="trash-2" size={18} color={Colors[theme].danger} />
+                      <Text style={{ color: Colors[theme].danger, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                        {showDeleteConfirm ? "Tap to Confirm" : "Delete Hive"}
+                      </Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Pressable
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      paddingVertical: 12,
+                    }}
+                    onPress={() => {
+                      haptics.impact("light");
+                      if (showLeaveConfirm) {
+                        setShowSettings(false);
+                        handleLeave();
+                      } else {
+                        setShowLeaveConfirm(true);
+                        setTimeout(() => setShowLeaveConfirm(false), 3000);
+                      }
+                    }}
+                  >
+                    <Feather name="log-out" size={18} color={Colors[theme].danger} />
+                    <Text style={{ color: Colors[theme].danger, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                      {showLeaveConfirm ? "Tap to Confirm" : "Leave Hive"}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {isLoading ? (
@@ -415,36 +558,39 @@ export default function HivePage() {
                       </View>
                     </View>
 
-                    {/* Leave button */}
-                    <Pressable
-                      onPress={() => {
-                        haptics.impact("light");
-                        if (showLeaveConfirm) {
-                          handleLeave();
-                        } else {
-                          setShowLeaveConfirm(true);
-                          setTimeout(() => setShowLeaveConfirm(false), 3000);
-                        }
-                      }}
+                    {/* Streak Display */}
+                    <View
                       style={{
-                        paddingVertical: 6,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                        backgroundColor: Colors[theme].surface,
                         paddingHorizontal: 12,
-                        borderRadius: 8,
-                        backgroundColor: showLeaveConfirm
-                          ? Colors[theme].danger + "20"
-                          : "transparent",
+                        paddingVertical: 8,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: Colors[theme].border,
+                        shadowColor: Colors[theme].primary,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 3,
+                        elevation: 2,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontFamily: "NunitoBold",
-                          fontSize: 12,
-                          color: Colors[theme].danger,
-                        }}
-                      >
-                        {showLeaveConfirm ? "Confirm?" : "Leave"}
-                      </Text>
-                    </Pressable>
+                       <Image
+                         source={require("../../assets/icons/fire.png")}
+                         style={{ width: 22, height: 22 }}
+                       />
+                       <Text
+                         style={{
+                           fontFamily: "NunitoExtraBold",
+                           fontSize: 18,
+                           color: Colors[theme].text,
+                         }}
+                       >
+                         {selectedHive.streak || 0}
+                       </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -486,6 +632,50 @@ export default function HivePage() {
         visible={joinModalVisible}
         setVisible={setJoinModalVisible}
       />
+      <Modal visible={showRenameModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20, zIndex: 100 }}>
+          <View style={{ backgroundColor: Colors[theme].surface, width: "100%", borderRadius: 20, padding: 20, borderWidth: 2, borderColor: Colors[theme].border }}>
+            <Text style={{ fontFamily: "NunitoExtraBold", fontSize: 20, color: Colors[theme].text, marginBottom: 15 }}>
+              Rename Hive
+            </Text>
+            <TextInput
+              value={renameValue}
+              onChangeText={setRenameValue}
+              placeholder="Enter new hive name"
+              placeholderTextColor={Colors[theme].text_secondary}
+              style={{
+                backgroundColor: Colors[theme].background,
+                color: Colors[theme].text,
+                fontFamily: "NunitoMedium",
+                fontSize: 16,
+                padding: 15,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: Colors[theme].border,
+                marginBottom: 20,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setShowRenameModal(false);
+                }}
+                style={{ flex: 1, padding: 15, borderRadius: 12, alignItems: "center", backgroundColor: Colors[theme].background, borderWidth: 1, borderColor: Colors[theme].border }}
+              >
+                <Text style={{ fontFamily: "NunitoBold", color: Colors[theme].text, fontSize: 16 }}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleRenameHive}
+                style={{ flex: 1, padding: 15, borderRadius: 12, alignItems: "center", backgroundColor: Colors[theme].primary }}
+              >
+                <Text style={{ fontFamily: "NunitoBold", color: "#fff", fontSize: 16 }}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </ThemedView>
   );
 }

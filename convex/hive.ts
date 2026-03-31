@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { getDaysDifference } from "./utils";
 
 // ---------- helpers ----------
 
@@ -72,7 +73,9 @@ export const join_hive = mutation({
     // Check if already a member
     const existing = await ctx.db
       .query("hive_members")
-      .withIndex("by_hive_user", (q) => q.eq("hive", hive._id).eq("user", userId))
+      .withIndex("by_hive_user", (q) =>
+        q.eq("hive", hive._id).eq("user", userId),
+      )
       .unique();
 
     if (existing) throw new Error("You're already in this hive");
@@ -95,7 +98,9 @@ export const leave_hive = mutation({
 
     const membership = await ctx.db
       .query("hive_members")
-      .withIndex("by_hive_user", (q) => q.eq("hive", args.hiveId).eq("user", userId))
+      .withIndex("by_hive_user", (q) =>
+        q.eq("hive", args.hiveId).eq("user", userId),
+      )
       .unique();
 
     if (!membership) throw new Error("You're not in this hive");
@@ -111,6 +116,106 @@ export const leave_hive = mutation({
     if (remaining.length === 0) {
       await ctx.db.delete(args.hiveId);
     }
+  },
+});
+
+export const rename_hive = mutation({
+  args: { hiveId: v.id("hives"), name: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("User not authenticated");
+
+    const hive = await ctx.db.get(args.hiveId);
+    if (!hive) throw new Error("Hive not found");
+    if (hive.creator !== userId)
+      throw new Error("Only the leader can rename the hive");
+
+    if (!args.name.trim()) throw new Error("Hive name is required");
+
+    await ctx.db.patch(args.hiveId, { name: args.name.trim() });
+  },
+});
+
+export const delete_hive = mutation({
+  args: { hiveId: v.id("hives") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("User not authenticated");
+
+    const hive = await ctx.db.get(args.hiveId);
+    if (!hive) throw new Error("Hive not found");
+    if (hive.creator !== userId)
+      throw new Error("Only the leader can delete the hive");
+
+    // Delete all members
+    const members = await ctx.db
+      .query("hive_members")
+      .withIndex("by_hive", (q) => q.eq("hive", args.hiveId))
+      .collect();
+
+    for (const member of members) {
+      await ctx.db.delete(member._id);
+    }
+
+    // Delete the hive
+    await ctx.db.delete(args.hiveId);
+  },
+});
+
+export async function evaluateHiveStreak(ctx: any, hiveId: any, today: string) {
+  const hive = await ctx.db.get(hiveId);
+  if (!hive) return;
+
+  const memberships = await ctx.db
+    .query("hive_members")
+    .withIndex("by_hive", (q: any) => q.eq("hive", hiveId))
+    .collect();
+
+  const totalMembers = memberships.length;
+  if (totalMembers <= 1) return;
+
+  let usersWithStreakToday = 0;
+  for (const m of memberships) {
+    const user = await ctx.db.get(m.user);
+    if (user && user.last_streak_date === today) {
+      usersWithStreakToday++;
+    }
+  }
+
+  let meetsCondition = false;
+  if (totalMembers === 2) {
+    meetsCondition = usersWithStreakToday === 2;
+  } else {
+    meetsCondition = usersWithStreakToday >= Math.ceil(totalMembers / 2);
+  }
+
+  let newStreak = hive.streak ?? 0;
+
+  if (hive.last_streak_date && hive.last_streak_date !== today) {
+    if (getDaysDifference(hive.last_streak_date, today) > 1) {
+      newStreak = 0;
+    }
+  }
+
+  if (meetsCondition) {
+    if (hive.last_streak_date !== today) {
+      newStreak += 1;
+      await ctx.db.patch(hiveId, {
+        streak: newStreak,
+        last_streak_date: today,
+      });
+    }
+  } else {
+    if (newStreak === 0 && hive.streak !== 0) {
+      await ctx.db.patch(hiveId, { streak: 0 });
+    }
+  }
+}
+
+export const manual_trigger_hive_eval = internalMutation({
+  args: { hiveId: v.id("hives"), today: v.string() },
+  handler: async (ctx, args) => {
+    await evaluateHiveStreak(ctx, args.hiveId, args.today);
   },
 });
 
@@ -140,8 +245,9 @@ export const get_my_hives = query({
         return {
           ...hive,
           memberCount: members.length,
+          isLeader: hive.creator === userId,
         };
-      })
+      }),
     );
 
     return hives.filter(Boolean);
@@ -181,7 +287,7 @@ export const get_hive_members = query({
           completedToday: user.last_streak_date === args.today,
           isLeader: hive.creator === user._id,
         };
-      })
+      }),
     );
 
     return members.filter(Boolean);

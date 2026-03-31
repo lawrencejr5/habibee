@@ -73,6 +73,8 @@ const schema = defineSchema({
     name: v.string(),
     code: v.string(),
     creator: v.id("users"),
+    streak: v.optional(v.number()),
+    last_streak_date: v.optional(v.string()),
   }).index("by_code", ["code"]),
 
   hive_members: defineTable({
