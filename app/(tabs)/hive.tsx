@@ -20,6 +20,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Feather } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { useCustomAlert } from "@/context/AlertContext";
 
 import CreateHiveModal from "@/components/hive/CreateHiveModal";
@@ -43,6 +44,7 @@ export default function HivePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
+  const [copiedHiveCode, setCopiedHiveCode] = useState<string | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -110,6 +112,14 @@ export default function HivePage() {
     }
   };
 
+  const handleCopyExistingCode = async (code: string) => {
+    haptics.impact("light");
+    await Clipboard.setStringAsync(code);
+    setCopiedHiveCode(code);
+    showCustomAlert("Code copied!", "success");
+    setTimeout(() => setCopiedHiveCode(null), 2000);
+  };
+
   const isLoading = myHives === undefined;
   const hasHives = myHives && myHives.length > 0;
 
@@ -117,14 +127,28 @@ export default function HivePage() {
     <ThemedView style={[styles.container, { paddingTop: insets.top + 10 }]}>
       {showSettings && (
         <Pressable
-          style={[StyleSheet.absoluteFill, { zIndex: 10, backgroundColor: "transparent" }]}
+          style={[
+            StyleSheet.absoluteFill,
+            { zIndex: 10, backgroundColor: "transparent" },
+          ]}
           onPress={() => setShowSettings(false)}
         />
       )}
       {/* Header */}
-      <View style={{ paddingHorizontal: 20, marginBottom: 20, flexDirection: "row", justifyContent: "space-between", alignItems: "center", zIndex: 11 }}>
+      <View
+        style={{
+          paddingHorizontal: 20,
+          marginBottom: 20,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          zIndex: 11,
+        }}
+      >
         <View>
-          <Text style={[styles.title, { color: Colors[theme].text }]}>Hive</Text>
+          <Text style={[styles.title, { color: Colors[theme].text }]}>
+            Hive
+          </Text>
           <Text
             style={{
               fontFamily: "NunitoRegular",
@@ -182,8 +206,18 @@ export default function HivePage() {
                         setShowRenameModal(true);
                       }}
                     >
-                      <Feather name="edit-2" size={18} color={Colors[theme].text} />
-                      <Text style={{ color: Colors[theme].text, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                      <Feather
+                        name="edit-2"
+                        size={18}
+                        color={Colors[theme].text}
+                      />
+                      <Text
+                        style={{
+                          color: Colors[theme].text,
+                          fontFamily: "NunitoMedium",
+                          fontSize: 15,
+                        }}
+                      >
                         Rename
                       </Text>
                     </Pressable>
@@ -205,8 +239,18 @@ export default function HivePage() {
                         }
                       }}
                     >
-                      <Feather name="trash-2" size={18} color={Colors[theme].danger} />
-                      <Text style={{ color: Colors[theme].danger, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                      <Feather
+                        name="trash-2"
+                        size={18}
+                        color={Colors[theme].danger}
+                      />
+                      <Text
+                        style={{
+                          color: Colors[theme].danger,
+                          fontFamily: "NunitoMedium",
+                          fontSize: 15,
+                        }}
+                      >
                         {showDeleteConfirm ? "Tap to Confirm" : "Delete Hive"}
                       </Text>
                     </Pressable>
@@ -230,8 +274,18 @@ export default function HivePage() {
                       }
                     }}
                   >
-                    <Feather name="log-out" size={18} color={Colors[theme].danger} />
-                    <Text style={{ color: Colors[theme].danger, fontFamily: "NunitoMedium", fontSize: 15 }}>
+                    <Feather
+                      name="log-out"
+                      size={18}
+                      color={Colors[theme].danger}
+                    />
+                    <Text
+                      style={{
+                        color: Colors[theme].danger,
+                        fontFamily: "NunitoMedium",
+                        fontSize: 15,
+                      }}
+                    >
                       {showLeaveConfirm ? "Tap to Confirm" : "Leave Hive"}
                     </Text>
                   </Pressable>
@@ -520,18 +574,24 @@ export default function HivePage() {
                         <Text
                           style={{
                             fontFamily: "NunitoMedium",
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Colors[theme].text_secondary,
                           }}
                         >
                           Code:
                         </Text>
-                        <View
+                        <Pressable
+                          onPress={() =>
+                            handleCopyExistingCode(selectedHive.code)
+                          }
                           style={{
                             backgroundColor: Colors[theme].primary + "15",
                             paddingHorizontal: 10,
                             paddingVertical: 3,
                             borderRadius: 8,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
                           }}
                         >
                           <Text
@@ -544,7 +604,16 @@ export default function HivePage() {
                           >
                             {selectedHive.code}
                           </Text>
-                        </View>
+                          <Feather
+                            name={
+                              copiedHiveCode === selectedHive.code
+                                ? "check"
+                                : "copy"
+                            }
+                            size={12}
+                            color={Colors[theme].primary}
+                          />
+                        </Pressable>
                         <Text
                           style={{
                             fontFamily: "NunitoMedium",
@@ -577,19 +646,19 @@ export default function HivePage() {
                         elevation: 2,
                       }}
                     >
-                       <Image
-                         source={require("../../assets/icons/fire.png")}
-                         style={{ width: 22, height: 22 }}
-                       />
-                       <Text
-                         style={{
-                           fontFamily: "NunitoExtraBold",
-                           fontSize: 18,
-                           color: Colors[theme].text,
-                         }}
-                       >
-                         {selectedHive.streak || 0}
-                       </Text>
+                      <Image
+                        source={require("../../assets/icons/fire.png")}
+                        style={{ width: 22, height: 22 }}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: "NunitoExtraBold",
+                          fontSize: 18,
+                          color: Colors[theme].text,
+                        }}
+                      >
+                        {selectedHive.streak || 0}
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -633,9 +702,34 @@ export default function HivePage() {
         setVisible={setJoinModalVisible}
       />
       <Modal visible={showRenameModal} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20, zIndex: 100 }}>
-          <View style={{ backgroundColor: Colors[theme].surface, width: "100%", borderRadius: 20, padding: 20, borderWidth: 2, borderColor: Colors[theme].border }}>
-            <Text style={{ fontFamily: "NunitoExtraBold", fontSize: 20, color: Colors[theme].text, marginBottom: 15 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+            zIndex: 100,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: Colors[theme].surface,
+              width: "100%",
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 2,
+              borderColor: Colors[theme].border,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 20,
+                color: Colors[theme].text,
+                marginBottom: 15,
+              }}
+            >
               Rename Hive
             </Text>
             <TextInput
@@ -661,21 +755,50 @@ export default function HivePage() {
                   haptics.impact();
                   setShowRenameModal(false);
                 }}
-                style={{ flex: 1, padding: 15, borderRadius: 12, alignItems: "center", backgroundColor: Colors[theme].background, borderWidth: 1, borderColor: Colors[theme].border }}
+                style={{
+                  flex: 1,
+                  padding: 15,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  backgroundColor: Colors[theme].background,
+                  borderWidth: 1,
+                  borderColor: Colors[theme].border,
+                }}
               >
-                <Text style={{ fontFamily: "NunitoBold", color: Colors[theme].text, fontSize: 16 }}>Cancel</Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: Colors[theme].text,
+                    fontSize: 16,
+                  }}
+                >
+                  Cancel
+                </Text>
               </Pressable>
               <Pressable
                 onPress={handleRenameHive}
-                style={{ flex: 1, padding: 15, borderRadius: 12, alignItems: "center", backgroundColor: Colors[theme].primary }}
+                style={{
+                  flex: 1,
+                  padding: 15,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  backgroundColor: Colors[theme].primary,
+                }}
               >
-                <Text style={{ fontFamily: "NunitoBold", color: "#fff", fontSize: 16 }}>Save</Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: "#fff",
+                    fontSize: 16,
+                  }}
+                >
+                  Save
+                </Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
-
     </ThemedView>
   );
 }

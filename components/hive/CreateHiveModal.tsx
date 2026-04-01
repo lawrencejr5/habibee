@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-// import * as Clipboard from "expo-clipboard";
+import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View as ThemedView } from "@/components/Themed";
 import Colors from "@/constants/Colors";
@@ -38,6 +38,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const createHive = useMutation(api.hive.create_hive);
 
@@ -45,6 +46,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
     haptics.impact();
     setName("");
     setCreatedCode(null);
+    setIsCopied(false);
     setVisible(false);
   };
 
@@ -68,8 +70,10 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
   const handleCopyCode = async () => {
     if (createdCode) {
       haptics.impact();
-      // await Clipboard.setStringAsync(createdCode);
+      await Clipboard.setStringAsync(createdCode);
+      setIsCopied(true);
       showCustomAlert("Code copied!", "success");
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
 
@@ -302,7 +306,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
                   borderRadius: 50,
                 }}
               >
-                <Feather name="copy" size={16} color="#fff" />
+                <Feather name={isCopied ? "check" : "copy"} size={16} color="#fff" />
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
@@ -310,7 +314,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
                     color: "#fff",
                   }}
                 >
-                  Copy Code
+                  {isCopied ? "Copied !" : "Copy Code"}
                 </Text>
               </Pressable>
             </View>
