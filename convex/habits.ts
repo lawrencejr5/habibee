@@ -212,7 +212,9 @@ export const record_streak = mutation({
     const user = await ctx.db.get(user_id);
     if (!user) throw new Error("User not found");
 
+    let isFirstOfDay = false;
     if (user.last_streak_date !== args.current_date) {
+      isFirstOfDay = true;
       const newUserStreak = (user.streak ?? 0) + 1;
       await ctx.db.patch(user_id, {
         streak: newUserStreak,
@@ -248,6 +250,8 @@ export const record_streak = mutation({
     for (const membership of user_hives) {
       await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
+
+    return { isFirstOfDay };
   },
 });
 

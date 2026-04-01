@@ -38,6 +38,7 @@ import AIChatModal from "@/components/home/AIChatModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
+import HiveNudgeOverlay from "@/components/hive/HiveNudgeOverlay";
 import { formatTime12h } from "@/components/habit/AddSubHabitModal";
 import {
   scheduleSubHabitReminders,
@@ -78,6 +79,7 @@ const Home = () => {
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
+  const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
 
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [reminderHabitId, setReminderHabitId] = useState<Id<"habits"> | null>(
@@ -173,7 +175,8 @@ const Home = () => {
     timerModalVisible ||
     addModalVisible ||
     detailsModalVisible ||
-    aiChatModalVisible;
+    aiChatModalVisible ||
+    showNudgeModal;
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -537,8 +540,8 @@ const Home = () => {
                                 return;
                               }
                             }
-
-                            await record_streak({
+                            
+                            const res = await record_streak({
                               habit_id: habit._id,
                               current_date: today,
                               week_day: new Date().toLocaleDateString("en-US", {
@@ -546,6 +549,10 @@ const Home = () => {
                               }),
                             });
                             showCustomAlert("Streak recorded", "success");
+                            
+                            if (res?.isFirstOfDay) {
+                              setShowNudgeModal(true);
+                            }
                           } catch (error: any) {
                             if (error.data)
                               showCustomAlert(error.data, "danger");
@@ -658,12 +665,14 @@ const Home = () => {
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
         habit={habitData.find((habit) => habit._id === selectedHabitId)}
+        onFirstStreakOfDay={() => setShowNudgeModal(true)}
       />
       {selectedHabitId && (
         <HabitDetaillsModal
           visible={detailsModalVisible}
           setVisible={setDetailsModalVisible}
           habit_id={selectedHabitId!}
+          onFirstStreakOfDay={() => setShowNudgeModal(true)}
         />
       )}
       <ReminderPickerModal
@@ -672,6 +681,10 @@ const Home = () => {
         habitId={reminderHabitId}
         initialTime={reminderInitialTime}
         themeColor={reminderTheme}
+      />
+      <HiveNudgeOverlay 
+        visible={showNudgeModal} 
+        onClose={() => setShowNudgeModal(false)} 
       />
     </View>
   );

@@ -37,12 +37,14 @@ interface HabitDetailsModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
   habit_id: Id<"habits">;
+  onFirstStreakOfDay?: () => void;
 }
 
 const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   visible,
   setVisible,
   habit_id,
+  onFirstStreakOfDay,
 }) => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
@@ -141,7 +143,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     haptics.impact();
     if (habit && !habit?.duration) {
       try {
-        await record_streak({
+        const res = await record_streak({
           habit_id: habit._id,
           current_date: today,
           week_day: new Date().toLocaleDateString("en-US", {
@@ -149,6 +151,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           }),
         });
         showCustomAlert("Streak recorded", "success");
+        if (res?.isFirstOfDay && onFirstStreakOfDay) {
+          onFirstStreakOfDay();
+        }
       } catch (error) {
         console.log(error);
       }
@@ -645,6 +650,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}
         habit={habit}
+        onFirstStreakOfDay={onFirstStreakOfDay}
       />
       <EditHabitModal
         visible={editModalVisible}

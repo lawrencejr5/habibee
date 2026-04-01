@@ -32,12 +32,14 @@ interface TaskTimerModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
   habit?: HabitType;
+  onFirstStreakOfDay?: () => void;
 }
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   visible,
   setVisible,
   habit,
+  onFirstStreakOfDay,
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -183,7 +185,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     haptics.impact("success");
     setBtnLoading(true);
     try {
-      await record_streak({
+      const res = await record_streak({
         habit_id: habit._id,
         current_date: today,
         week_day,
@@ -197,6 +199,10 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       });
 
       showCustomAlert("Streak increased for this habit", "success");
+      
+      if (res?.isFirstOfDay && onFirstStreakOfDay) {
+        onFirstStreakOfDay();
+      }
     } catch (err) {
       console.log(err);
       showCustomAlert("Couldn't count this streak", "danger");

@@ -293,3 +293,59 @@ export const get_hive_members = query({
     return members.filter(Boolean);
   },
 });
+
+export const get_my_hives_with_members = query({
+  args: { today: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const memberships = await ctx.db
+      .query("hive_members")
+      .withIndex("by_user", (q) => q.eq("user", userId))
+      .collect();
+
+    const hivesWithMembers = await Promise.all(
+      memberships.map(async (m) => {
+        const hive = await ctx.db.get(m.hive);
+        if (!hive) return null;
+
+        const hiveMemberships = await ctx.db
+          .query("hive_members")
+          .withIndex("by_hive", (q) => q.eq("hive", hive._id))
+          .collect();
+
+        const members = await Promise.all(
+          hiveMemberships.map(async (hm) => {
+            const user = await ctx.db.get(hm.user);
+            if (!user) return null;
+
+            let profile_url = null;
+            if (user.profile_pic) {
+              profile_url = await ctx.storage.getUrl(user.profile_pic);
+            }
+
+            return {
+              _id: user._id,
+              fullname: user.fullname,
+              username: user.username,
+              profile_url,
+              streak: user.streak ?? 0,
+              completedToday: user.last_streak_date === args.today,
+              isLeader: hive.creator === user._id,
+            };
+          })
+        );
+
+        return {
+          ...hive,
+          memberCount: members.length,
+          isLeader: hive.creator === userId,
+          members: members.filter(Boolean),
+        };
+      })
+    );
+
+    return hivesWithMembers.filter(Boolean);
+  },
+});
