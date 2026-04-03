@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   ScrollView as RNScrollView,
+  Dimensions,
 } from "react-native";
 import { useRef } from "react";
 import { Feather } from "@expo/vector-icons";
@@ -20,7 +21,7 @@ import { habitIcons } from "@/data/habits";
 import HabitDetaillsModal from "@/components/habit/HabitDetaillsModal";
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import AddModal from "@/components/home/AddModal";
-import { usePathname } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -39,6 +40,7 @@ import AIChatModal from "@/components/home/AIChatModal";
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
 import HiveNudgeOverlay from "@/components/hive/HiveNudgeOverlay";
+import CreateHiveModal from "@/components/hive/CreateHiveModal";
 import { formatTime12h } from "@/components/habit/AddSubHabitModal";
 import {
   scheduleSubHabitReminders,
@@ -59,6 +61,7 @@ const Home = () => {
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
 
   const pathname = usePathname();
+  const router = useRouter();
 
   const { appLoading } = useLoadingContext();
   const { isLoading: authLoading } = useConvexAuth();
@@ -66,6 +69,8 @@ const Home = () => {
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
+  const [createHiveModalVisible, setCreateHiveModalVisible] =
+    useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
   const [detailsModalVisible, setDetailsModalVisible] =
     useState<boolean>(false);
@@ -91,6 +96,30 @@ const Home = () => {
   const [reminderTheme, setReminderTheme] = useState<string | undefined>(
     undefined,
   );
+
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const adScrollViewRef = useRef<RNScrollView>(null);
+  const adData = ["hive", "ai"];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentAdIndex((prev) => {
+        const nextIndex = (prev + 1) % adData.length;
+        return nextIndex;
+      });
+    }, 10000); // Swipe every 10 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (adScrollViewRef.current) {
+      const adWidth = Dimensions.get("window").width - 40;
+      adScrollViewRef.current.scrollTo({
+        x: currentAdIndex * adWidth,
+        animated: true,
+      });
+    }
+  }, [currentAdIndex]);
 
   // Schedule local notifications for sub-habit reminders
   useEffect(() => {
@@ -381,59 +410,174 @@ const Home = () => {
           </View>
         </View>
 
-        {/* Habibee AI Ad Card */}
-        <Pressable
-          onPress={() => {
-            setAiChatModalVisible(true);
-            haptics.impact();
-          }}
+        {/* Ad Carousel Container */}
+        <View
           style={{
-            backgroundColor: Colors[theme].surface,
             borderWidth: 1.5,
             borderColor: Colors[theme].primary,
             borderRadius: 15,
-            padding: 15,
             marginTop: 15,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
+            overflow: "hidden",
           }}
         >
-          <Image
-            source={require("../../assets/images/ai-icon.png")}
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-          />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 14,
-                color: Colors[theme].text,
-              }}
-            >
-              Try Habibee AI for free! 🚀
-            </Text>
-            <Text
-              style={{
-                fontFamily: "NunitoRegular",
-                fontSize: 12,
-                color: Colors[theme].text_secondary,
-                marginTop: 2,
-              }}
-            >
-              Get personalized habit recommendations and support.
-            </Text>
-          </View>
-          <Image
-            source={require("../../assets/icons/chevron-down.png")}
-            style={{
-              width: 16,
-              height: 16,
-              tintColor: Colors[theme].primary,
-              transform: [{ rotate: "-90deg" }],
+          <RNScrollView
+            ref={adScrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onMomentumScrollEnd={(e) => {
+              const contentOffsetX = e.nativeEvent.contentOffset.x;
+              const index = Math.round(
+                contentOffsetX / (Dimensions.get("window").width - 40),
+              );
+              setCurrentAdIndex(index);
             }}
-          />
-        </Pressable>
+          >
+            {/* Hive Ad Card */}
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                router.push("/(tabs)/hive");
+              }}
+              style={{
+                width: Dimensions.get("window").width - 40,
+                backgroundColor: Colors[theme].surface,
+                padding: 15,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: Colors[theme].primary,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/hive.png")}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    tintColor: "#fff",
+                  }}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 14,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  Join the Habibee Hive! 🐝
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoRegular",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 2,
+                  }}
+                >
+                  Build streaks and stay accountable with friends.
+                </Text>
+              </View>
+              <Image
+                source={require("../../assets/icons/chevron-down.png")}
+                style={{
+                  width: 16,
+                  height: 16,
+                  tintColor: Colors[theme].primary,
+                  transform: [{ rotate: "-90deg" }],
+                }}
+              />
+            </Pressable>
+
+            {/* Habibee AI Ad Card */}
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setAiChatModalVisible(true);
+              }}
+              style={{
+                width: Dimensions.get("window").width - 40,
+                backgroundColor: Colors[theme].surface,
+                padding: 15,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <Image
+                source={require("../../assets/images/ai-icon.png")}
+                style={{ width: 40, height: 40, borderRadius: 20 }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 14,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  Try Habibee AI for free! 🚀
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoRegular",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 2,
+                  }}
+                >
+                  Get personalized habit recommendations and support.
+                </Text>
+              </View>
+              <Image
+                source={require("../../assets/icons/chevron-down.png")}
+                style={{
+                  width: 16,
+                  height: 16,
+                  tintColor: Colors[theme].primary,
+                  transform: [{ rotate: "-90deg" }],
+                }}
+              />
+            </Pressable>
+          </RNScrollView>
+
+          {/* Pagination Dots */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              paddingBottom: 10,
+              backgroundColor: Colors[theme].surface,
+            }}
+          >
+            {adData.map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  width: currentAdIndex === i ? 20 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor:
+                    currentAdIndex === i
+                      ? Colors[theme].text_secondary
+                      : Colors[theme].text_secondary,
+                  marginHorizontal: 3,
+                }}
+              />
+            ))}
+          </View>
+        </View>
 
         {/* Tasks */}
         <View
@@ -685,6 +829,10 @@ const Home = () => {
       <HiveNudgeOverlay
         visible={showNudgeModal}
         onClose={() => setShowNudgeModal(false)}
+      />
+      <CreateHiveModal
+        visible={createHiveModalVisible}
+        setVisible={setCreateHiveModalVisible}
       />
     </View>
   );
