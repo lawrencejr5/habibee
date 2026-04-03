@@ -540,7 +540,7 @@ const Home = () => {
                                 return;
                               }
                             }
-                            
+
                             const res = await record_streak({
                               habit_id: habit._id,
                               current_date: today,
@@ -549,7 +549,7 @@ const Home = () => {
                               }),
                             });
                             showCustomAlert("Streak recorded", "success");
-                            
+
                             if (res?.isFirstOfDay) {
                               setShowNudgeModal(true);
                             }
@@ -564,7 +564,7 @@ const Home = () => {
                         }
                       }}
                       onCardPress={() => {
-                        haptics.impact();
+                        haptics.impact("light");
                         setSelectedHabitId(habit._id);
                         setDetailsModalVisible(true);
                       }}
@@ -682,9 +682,9 @@ const Home = () => {
         initialTime={reminderInitialTime}
         themeColor={reminderTheme}
       />
-      <HiveNudgeOverlay 
-        visible={showNudgeModal} 
-        onClose={() => setShowNudgeModal(false)} 
+      <HiveNudgeOverlay
+        visible={showNudgeModal}
+        onClose={() => setShowNudgeModal(false)}
       />
     </View>
   );
@@ -1062,7 +1062,7 @@ const HabitCard: React.FC<{
 
           <Pressable
             onPress={() => {
-              haptics.impact();
+              haptics.impact("light");
               onFireIconPress();
             }}
             disabled={done}

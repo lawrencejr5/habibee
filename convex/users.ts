@@ -204,3 +204,19 @@ export const getIncompleteUsersWithTokens = internalQuery({
     });
   },
 });
+
+export const getNudgeData = internalQuery({
+  args: { senderId: v.id("users"), targetId: v.id("users") },
+  handler: async (ctx, args) => {
+    const sender = await ctx.db.get(args.senderId);
+    if (!sender) return null;
+    
+    const target = await ctx.db.get(args.targetId);
+    if (!target) return null;
+    
+    return {
+      senderUsername: sender.username || sender.fullname,
+      targetPushTokens: target.pushTokens || [],
+    };
+  }
+});

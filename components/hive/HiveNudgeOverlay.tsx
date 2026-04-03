@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
@@ -35,6 +35,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
 
   const today = new Date().toISOString().split("T")[0];
   const hives = useQuery(api.hive.get_my_hives_with_members, { today });
+  const sendNudgePush = useAction(api.reminder.send_nudge_notification);
 
   const scrollRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,12 +57,18 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
     }
   };
 
-  const handleNudge = (username: string | undefined) => {
-    if (!username || nudgedUsers.has(username)) return;
+  const handleNudge = async (targetUserId: any, username: string | undefined) => {
+    if (!targetUserId || !username || nudgedUsers.has(username)) return;
 
     haptics.impact("medium");
     setNudgedUsers((prev) => new Set(prev).add(username));
     showCustomAlert(`Nudged ${username}!`, "success");
+    
+    try {
+      await sendNudgePush({ targetUserId });
+    } catch (error) {
+      console.error("Failed to send nudge push:", error);
+    }
   };
 
   return (
@@ -245,7 +252,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
 
                             {!member?.completedToday && (
                               <Pressable
-                                onPress={() => handleNudge(member?.username)}
+                                onPress={() => handleNudge(member?._id, member?.username)}
                                 disabled={nudgedUsers.has(
                                   member?.username as string,
                                 )}

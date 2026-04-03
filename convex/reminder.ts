@@ -1,5 +1,7 @@
-import { internalAction } from "./_generated/server";
+import { internalAction, action } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 const MORNING_MESSAGES = [
   "Rise and shine! Your goals are waiting for you.",
@@ -153,4 +155,33 @@ export const checkAndSendNightReminders = internalAction({
     const message = getCreativeMessage("night");
     await sendPush(allTokens, "STREAK DANGER! 🚨", message);
   },
+});
+
+const NUDGE_MESSAGES = [
+  "Hey, let's keep that streak going! 🚀",
+  "Don't forget your habits for today! 💪",
+  "Your hive is counting on you! 🐝",
+  "A little nudge to get you moving today! ✨",
+  "Time to crush those goals! 🔥",
+  "Just a friendly nudge! You've got this! 😁",
+];
+
+export const send_nudge_notification = action({
+  args: { targetUserId: v.id("users") },
+  handler: async (ctx, args) => {
+    const senderId = await getAuthUserId(ctx);
+    if (!senderId) throw new Error("Unauthorized");
+    
+    const data = await ctx.runQuery(internal.users.getNudgeData, { 
+      senderId, 
+      targetId: args.targetUserId 
+    });
+    
+    if (!data || !data.targetPushTokens || data.targetPushTokens.length === 0) return;
+    
+    const message = NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)];
+    const title = `🐝 @${data.senderUsername}`;
+    
+    await sendPush(data.targetPushTokens, title, message);
+  }
 });
