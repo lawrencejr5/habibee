@@ -33,6 +33,7 @@ interface TaskTimerModalProps {
   setVisible: Dispatch<SetStateAction<boolean>>;
   habit?: HabitType;
   onFirstStreakOfDay?: () => void;
+  onGoalCompleted?: (habit: HabitType) => void;
 }
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
@@ -40,6 +41,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   setVisible,
   habit,
   onFirstStreakOfDay,
+  onGoalCompleted,
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -200,7 +202,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
       showCustomAlert("Streak increased for this habit", "success");
       
-      if (res?.isFirstOfDay && onFirstStreakOfDay) {
+      if (res?.newStreak && res?.goal && res.newStreak >= res.goal && onGoalCompleted && habit) {
+        onGoalCompleted(habit);
+      } else if (res?.isFirstOfDay && onFirstStreakOfDay) {
         onFirstStreakOfDay();
       }
     } catch (err) {

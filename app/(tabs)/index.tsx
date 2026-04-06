@@ -47,6 +47,8 @@ import {
   scheduleHabitReminders,
 } from "@/services/notifications";
 import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
+import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
+import { HabitType } from "@/constants/Types";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -85,6 +87,7 @@ const Home = () => {
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
   const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
+  const [goalCompletedHabit, setGoalCompletedHabit] = useState<HabitType | null>(null);
 
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [reminderHabitId, setReminderHabitId] = useState<Id<"habits"> | null>(
@@ -694,7 +697,9 @@ const Home = () => {
                             });
                             showCustomAlert("Streak recorded", "success");
 
-                            if (res?.isFirstOfDay) {
+                            if (res?.newStreak && res?.goal && res.newStreak >= res.goal) {
+                              setGoalCompletedHabit(habit as HabitType);
+                            } else if (res?.isFirstOfDay) {
                               setShowNudgeModal(true);
                             }
                           } catch (error: any) {
@@ -810,6 +815,7 @@ const Home = () => {
         setVisible={setTimerModalVisible}
         habit={habitData.find((habit) => habit._id === selectedHabitId)}
         onFirstStreakOfDay={() => setShowNudgeModal(true)}
+        onGoalCompleted={(h: HabitType) => setGoalCompletedHabit(h)}
       />
       {selectedHabitId && (
         <HabitDetaillsModal
@@ -817,6 +823,7 @@ const Home = () => {
           setVisible={setDetailsModalVisible}
           habit_id={selectedHabitId!}
           onFirstStreakOfDay={() => setShowNudgeModal(true)}
+          onGoalCompleted={(h: HabitType) => setGoalCompletedHabit(h)}
         />
       )}
       <ReminderPickerModal
@@ -834,6 +841,13 @@ const Home = () => {
         visible={createHiveModalVisible}
         setVisible={setCreateHiveModalVisible}
       />
+      {goalCompletedHabit && (
+        <GoalCompletedModal
+          visible={!!goalCompletedHabit}
+          onClose={() => setGoalCompletedHabit(null)}
+          habit={goalCompletedHabit}
+        />
+      )}
     </View>
   );
 };

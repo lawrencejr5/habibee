@@ -32,12 +32,14 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useTheme } from "@/context/ThemeContext";
 import { ActivityIndicator } from "react-native";
 import { useCustomAlert } from "@/context/AlertContext";
+import { HabitType } from "@/constants/Types";
 
 interface HabitDetailsModalProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
   habit_id: Id<"habits">;
   onFirstStreakOfDay?: () => void;
+  onGoalCompleted?: (habit: HabitType) => void;
 }
 
 const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
@@ -45,6 +47,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   setVisible,
   habit_id,
   onFirstStreakOfDay,
+  onGoalCompleted,
 }) => {
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
@@ -151,7 +154,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           }),
         });
         showCustomAlert("Streak recorded", "success");
-        if (res?.isFirstOfDay && onFirstStreakOfDay) {
+        if (res?.newStreak && res?.goal && res.newStreak >= res.goal && onGoalCompleted && habit) {
+          onGoalCompleted(habit as HabitType);
+        } else if (res?.isFirstOfDay && onFirstStreakOfDay) {
           onFirstStreakOfDay();
         }
       } catch (error) {
@@ -651,6 +656,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         setVisible={setTimerModalVisible}
         habit={habit}
         onFirstStreakOfDay={onFirstStreakOfDay}
+        onGoalCompleted={onGoalCompleted}
       />
       <EditHabitModal
         visible={editModalVisible}
