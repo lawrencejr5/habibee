@@ -14,7 +14,11 @@ export type HabitType =
   | "save"
   | "money"
   | "default"
-  | "flower";
+  | "flower"
+  | "food"
+  | "tool"
+  | "music"
+  | "graduate";
 
 export type ThemeType =
   | "#c5c9cc"
@@ -51,6 +55,10 @@ export const habitIcons: Record<string, any> = {
   money: require("@/assets/icons/habit/dollar-rise.png"),
   default: require("@/assets/icons/habit/emoji.png"),
   flower: require("@/assets/icons/habit/flower.png"),
+  food: require("@/assets/icons/habit/food.png"),
+  tool: require("@/assets/icons/habit/tool.png"),
+  music: require("@/assets/icons/habit/music.png"),
+  graduate: require("@/assets/icons/habit/graduate.png"),
 };
 
 export const habitsData: Habit[] = [

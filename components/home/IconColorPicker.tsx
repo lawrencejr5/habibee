@@ -19,6 +19,7 @@ type Props = {
   visible: boolean;
   icons: any[]; // array of image sources
   selectedColor?: string;
+  selectedIcon?: string; // currently active icon key
   onClose: () => void;
   onSelect: (icon: any, color: string) => void;
 };
@@ -37,6 +38,7 @@ export default function IconColorPicker({
   visible,
   icons,
   selectedColor,
+  selectedIcon,
   onClose,
   onSelect,
 }: Props) {
@@ -51,8 +53,10 @@ export default function IconColorPicker({
   React.useEffect(() => {
     if (!visible) return;
     setColor(selectedColor || DEFAULT_COLORS[0]);
-    setSelectedIconIndex(0);
-  }, [visible, selectedColor]);
+    // Pre-select the icon that is currently active
+    const idx = selectedIcon ? icons.indexOf(selectedIcon) : -1;
+    setSelectedIconIndex(idx >= 0 ? idx : 0);
+  }, [visible, selectedColor, selectedIcon]);
 
   const pick = () => {
     const icon = icons[selectedIconIndex] || icons[0];

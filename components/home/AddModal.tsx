@@ -505,6 +505,7 @@ const AddModal: React.FC<{
         visible={iconPickerVisible}
         icons={Object.keys(habitIcons)}
         selectedColor={selectedColor}
+        selectedIcon={selectedIcon}
         onClose={() => setIconPickerVisible(false)}
         onSelect={(icon, color) => {
           setSelectedIcon(icon);

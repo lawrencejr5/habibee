@@ -473,6 +473,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         visible={iconPickerVisible}
         icons={Object.keys(habitIcons)}
         selectedColor={selectedColor}
+        selectedIcon={selectedIcon}
         onClose={() => setIconPickerVisible(false)}
         onSelect={(icon, color) => {
           setSelectedIcon(icon);
