@@ -16,7 +16,7 @@ export type HabitType =
   | "default"
   | "flower"
   | "food"
-  | "tool"
+  | "sleep"
   | "music"
   | "graduate";
 
@@ -56,7 +56,7 @@ export const habitIcons: Record<string, any> = {
   default: require("@/assets/icons/habit/emoji.png"),
   flower: require("@/assets/icons/habit/flower.png"),
   food: require("@/assets/icons/habit/food.png"),
-  tool: require("@/assets/icons/habit/tool.png"),
+  sleep: require("@/assets/icons/habit/sleep.png"),
   music: require("@/assets/icons/habit/music.png"),
   graduate: require("@/assets/icons/habit/graduate.png"),
 };
