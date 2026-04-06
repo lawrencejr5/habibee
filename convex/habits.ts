@@ -251,7 +251,7 @@ export const record_streak = mutation({
       await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
 
-    return { isFirstOfDay };
+    return { isFirstOfDay, newStreak, goal: habit.goal };
   },
 });
 
