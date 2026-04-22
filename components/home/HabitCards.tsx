@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Text as ThemedText } from "@/components/Themed";
 import Colors from "@/constants/Colors";
@@ -114,11 +121,11 @@ export const HabitCard: React.FC<{
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.96, { damping: 15, stiffness: 200 });
+    scale.value = withSpring(0.96, { damping: 10, stiffness: 200, mass: 0.5 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
+    scale.value = withSpring(1, { damping: 10, stiffness: 200, mass: 0.5 });
   };
 
   return (
@@ -400,12 +407,15 @@ export const HabitCard: React.FC<{
 
 export const SubHabitItem: React.FC<{
   subHabit: any;
-  onToggle: () => void;
+  onToggle: () => Promise<void> | void;
   themeColor: string;
   isLast: boolean;
-}> = ({ subHabit, onToggle, themeColor, isLast }) => {
+  isParentDone?: boolean;
+}> = ({ subHabit, onToggle, themeColor, isLast, isParentDone }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const scale = useSharedValue(1);
 
@@ -414,11 +424,11 @@ export const SubHabitItem: React.FC<{
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 200, mass: 0.5 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
+    scale.value = withSpring(1, { damping: 15, stiffness: 200, mass: 0.5 });
   };
 
   return (
@@ -436,13 +446,18 @@ export const SubHabitItem: React.FC<{
         }}
       />
       <AnimatedPressable
-        onPress={() => {
+        onPress={async () => {
           haptics.impact();
-          onToggle();
+          setIsLoading(true);
+          try {
+            await onToggle();
+          } finally {
+            setIsLoading(false);
+          }
         }}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={subHabit.completed}
+        onPressIn={isParentDone ? undefined : handlePressIn}
+        onPressOut={isParentDone ? undefined : handlePressOut}
+        disabled={isLoading || isParentDone}
         style={[
           {
             flex: 1,
@@ -455,7 +470,7 @@ export const SubHabitItem: React.FC<{
             borderColor: Colors[theme].border,
             marginRight: 5,
             marginVertical: 5,
-            opacity: subHabit.completed ? 0.6 : 1,
+            opacity: isParentDone ? 0.6 : 1,
           },
           animatedStyle,
         ]}
@@ -493,31 +508,44 @@ export const SubHabitItem: React.FC<{
             </View>
           )}
         </View>
-        <View
-          style={{
-            width: 22,
-            height: 22,
-            borderRadius: 7,
-            borderWidth: 2,
-            borderColor: subHabit.completed
-              ? themeColor
-              : Colors[theme].text_secondary,
-            backgroundColor: subHabit.completed ? themeColor : "transparent",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {subHabit.completed && (
-            <Image
-              source={require("../../assets/icons/check-fill.png")}
-              style={{
-                width: 14,
-                height: 14,
-                tintColor: "#fff",
-              }}
-            />
-          )}
-        </View>
+        {isLoading ? (
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ActivityIndicator size="small" color={themeColor} />
+          </View>
+        ) : (
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 7,
+              borderWidth: 2,
+              borderColor: subHabit.completed
+                ? themeColor
+                : Colors[theme].text_secondary,
+              backgroundColor: subHabit.completed ? themeColor : "transparent",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {subHabit.completed && (
+              <Image
+                source={require("../../assets/icons/check-fill.png")}
+                style={{
+                  width: 14,
+                  height: 14,
+                  tintColor: "#fff",
+                }}
+              />
+            )}
+          </View>
+        )}
       </AnimatedPressable>
     </View>
   );

@@ -738,8 +738,8 @@ const Home = () => {
                           <SubHabitItem
                             key={sh._id}
                             subHabit={sh}
-                            onToggle={() =>
-                              toggle_sub_habit({
+                            onToggle={async () => {
+                              await toggle_sub_habit({
                                 sub_habit_id: sh._id,
                                 current_date: today,
                                 week_day: new Date().toLocaleDateString(
@@ -748,10 +748,14 @@ const Home = () => {
                                     weekday: "short",
                                   },
                                 ),
-                              })
-                            }
+                              });
+                            }}
                             themeColor={habit.theme ?? "#eee"}
                             isLast={index === habitSubHabits.length - 1}
+                            isParentDone={
+                              habit.lastCompleted ===
+                              new Date().toLocaleDateString("en-CA")
+                            }
                           />
                         ))}
                       </View>
