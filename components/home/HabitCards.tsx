@@ -128,6 +128,20 @@ export const HabitCard: React.FC<{
     scale.value = withSpring(1, { damping: 10, stiffness: 200, mass: 0.5 });
   };
 
+  const fireScale = useSharedValue(1);
+
+  const fireAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fireScale.value }],
+  }));
+
+  const handleFirePressIn = () => {
+    fireScale.value = withSpring(0.8, { damping: 10, stiffness: 400 });
+  };
+
+  const handleFirePressOut = () => {
+    fireScale.value = withSpring(1, { damping: 10, stiffness: 400 });
+  };
+
   return (
     <Animated.View style={[{ marginTop: 15, width: "100%" }, animatedStyle]}>
       {/* Reminder Extension Tab */}
@@ -373,22 +387,28 @@ export const HabitCard: React.FC<{
             </View>
           </View>
 
-          <Pressable
-            onPress={() => {
+          <AnimatedPressable
+            onPress={(e) => {
+              e.stopPropagation();
               haptics.impact("light");
               onFireIconPress();
             }}
+            onPressIn={handleFirePressIn}
+            onPressOut={handleFirePressOut}
             disabled={done}
-            style={{
-              borderLeftWidth: 3,
-              borderColor: Colors[theme].border,
-              width: 50,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%",
-              paddingHorizontal: 10,
-            }}
+            style={[
+              {
+                borderLeftWidth: 3,
+                borderColor: Colors[theme].border,
+                width: 50,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+                paddingHorizontal: 10,
+              },
+              fireAnimatedStyle,
+            ]}
           >
             <Image
               source={require("../../assets/icons/fire.png")}
@@ -398,7 +418,7 @@ export const HabitCard: React.FC<{
                 height: 30,
               }}
             />
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </AnimatedPressable>
     </Animated.View>
