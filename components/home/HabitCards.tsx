@@ -7,6 +7,13 @@ import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { formatTime12h } from "@/components/habit/AddSubHabitModal";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const HabitCard: React.FC<{
   duration: string;
@@ -100,14 +107,30 @@ export const HabitCard: React.FC<{
   const subHabitsCount = subHabits.length;
   const completedSubHabits = subHabits.filter((s) => s.completed).length;
 
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.96, { damping: 15, stiffness: 200 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
+  };
+
   return (
-    <View style={{ marginTop: 15, width: "100%" }}>
+    <Animated.View style={[{ marginTop: 15, width: "100%" }, animatedStyle]}>
       {/* Reminder Extension Tab */}
       <Pressable
         onPress={(e) => {
           e.stopPropagation();
           if (onReminderPress) onReminderPress();
         }}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         style={{
           backgroundColor: Colors[theme].surface,
           borderWidth: 2,
@@ -158,28 +181,32 @@ export const HabitCard: React.FC<{
         )}
       </Pressable>
 
-      <Pressable
+      <AnimatedPressable
         onPress={onCardPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         onLongPress={() => {
           haptics.impact();
           if (subHabitsCount > 0 && onToggleExpand) {
             onToggleExpand();
           }
         }}
-        style={{
-          width: "100%",
-          backgroundColor: Colors[theme].surface,
-          borderTopRightRadius: 15,
-          borderBottomLeftRadius: 15,
-          borderBottomRightRadius: 15,
-          borderTopLeftRadius: 0,
-          borderWidth: 2,
-          borderColor: Colors[theme].border,
-          paddingTop: 15,
-          paddingBottom: 15,
-          position: "relative",
-          zIndex: 1,
-        }}
+        style={[
+          {
+            width: "100%",
+            backgroundColor: Colors[theme].surface,
+            borderTopRightRadius: 15,
+            borderBottomLeftRadius: 15,
+            borderBottomRightRadius: 15,
+            borderTopLeftRadius: 0,
+            borderWidth: 2,
+            borderColor: Colors[theme].border,
+            paddingTop: 15,
+            paddingBottom: 15,
+            position: "relative",
+            zIndex: 1,
+          },
+        ]}
       >
         <View
           style={{
@@ -366,8 +393,8 @@ export const HabitCard: React.FC<{
             />
           </Pressable>
         </View>
-      </Pressable>
-    </View>
+      </AnimatedPressable>
+    </Animated.View>
   );
 };
 
@@ -379,6 +406,20 @@ export const SubHabitItem: React.FC<{
 }> = ({ subHabit, onToggle, themeColor, isLast }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
+
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
+  };
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -394,25 +435,30 @@ export const SubHabitItem: React.FC<{
           marginBottom: 20,
         }}
       />
-      <Pressable
+      <AnimatedPressable
         onPress={() => {
           haptics.impact();
           onToggle();
         }}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={subHabit.completed}
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: Colors[theme].surface,
-          padding: 12,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: Colors[theme].border,
-          marginRight: 5,
-          marginVertical: 5,
-          opacity: subHabit.completed ? 0.6 : 1,
-        }}
+        style={[
+          {
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: Colors[theme].surface,
+            padding: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: Colors[theme].border,
+            marginRight: 5,
+            marginVertical: 5,
+            opacity: subHabit.completed ? 0.6 : 1,
+          },
+          animatedStyle,
+        ]}
       >
         <View style={{ flex: 1 }}>
           <Text
@@ -472,7 +518,7 @@ export const SubHabitItem: React.FC<{
             />
           )}
         </View>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 };
