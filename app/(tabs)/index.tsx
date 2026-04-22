@@ -226,6 +226,11 @@ const Home = () => {
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
 
+  const totalHabits = habitData?.length || 0;
+  const completedHabits =
+    habitData?.filter((h) => h.lastCompleted === today).length || 0;
+  const allHabitsDone = totalHabits > 0 && completedHabits === totalHabits;
+
   if (loading) return <Loading />;
 
   return (
@@ -330,6 +335,7 @@ const Home = () => {
 
       <ScrollView
         ref={scrollRef}
+        stickyHeaderIndices={[2]}
         style={[
           styles.container,
           {
@@ -584,12 +590,17 @@ const Home = () => {
           </View>
         </View>
 
-        {/* Tasks */}
+        {/* Tasks Header */}
         <View
           onLayout={(event) => {
             tasksSectionY.current = event.nativeEvent.layout.y;
           }}
-          style={{ marginTop: 40 }}
+          style={{
+            marginTop: 30,
+            backgroundColor: Colors[theme].background,
+            paddingVertical: 10,
+            zIndex: 10,
+          }}
         >
           <View
             style={{
@@ -599,7 +610,17 @@ const Home = () => {
             }}
           >
             <ThemedText style={{ fontFamily: "NunitoExtraBold", fontSize: 20 }}>
-              Daily Habibees
+              Daily Habibees{" "}
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: allHabitsDone
+                    ? Colors[theme].primary
+                    : Colors[theme].text_secondary,
+                }}
+              >
+                ({completedHabits}/{totalHabits})
+              </Text>
             </ThemedText>
             <Pressable
               onPress={scrollToTasks}
@@ -624,6 +645,10 @@ const Home = () => {
               </ThemedText>
             </Pressable>
           </View>
+        </View>
+
+        {/* Tasks List */}
+        <View>
           <View>
             {habitData.length > 0 ? (
               habitData?.map((habit) => {
@@ -738,8 +763,8 @@ const Home = () => {
                           <SubHabitItem
                             key={sh._id}
                             subHabit={sh}
-                            onToggle={() =>
-                              toggle_sub_habit({
+                            onToggle={async () => {
+                              await toggle_sub_habit({
                                 sub_habit_id: sh._id,
                                 current_date: today,
                                 week_day: new Date().toLocaleDateString(
@@ -748,10 +773,14 @@ const Home = () => {
                                     weekday: "short",
                                   },
                                 ),
-                              })
-                            }
+                              });
+                            }}
                             themeColor={habit.theme ?? "#eee"}
                             isLast={index === habitSubHabits.length - 1}
+                            isParentDone={
+                              habit.lastCompleted ===
+                              new Date().toLocaleDateString("en-CA")
+                            }
                           />
                         ))}
                       </View>
