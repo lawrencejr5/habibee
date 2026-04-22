@@ -246,7 +246,7 @@ export const record_streak = mutation({
       .query("hive_members")
       .withIndex("by_user", (q) => q.eq("user", user_id))
       .collect();
-    
+
     for (const membership of user_hives) {
       await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
@@ -705,7 +705,7 @@ export const internal_record_habit_completion = internalMutation({
       .query("hive_members")
       .withIndex("by_user", (q) => q.eq("user", args.user_id))
       .collect();
-    
+
     for (const membership of user_hives) {
       await evaluateHiveStreak(ctx, membership.hive, args.current_date);
     }
