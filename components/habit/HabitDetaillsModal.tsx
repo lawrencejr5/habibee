@@ -147,6 +147,13 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     return () => backHandler.remove();
   }, [visible, setVisible]);
 
+  // Auto-close if the habit is deleted
+  useEffect(() => {
+    if (visible && habitsData && !habitsData.find((h) => h._id === habit_id)) {
+      setVisible(false);
+    }
+  }, [visible, habitsData, habit_id, setVisible]);
+
   const record_streak = useMutation(api.habits.record_streak);
 
   const handleStart = async () => {

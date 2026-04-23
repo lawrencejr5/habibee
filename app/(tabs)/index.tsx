@@ -49,6 +49,9 @@ import {
 } from "@/services/notifications";
 import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
 import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
+import HabitContextMenu from "@/components/habit/HabitContextMenu";
+import EditHabitModal from "@/components/habit/EditHabitModal";
+import DeleteHabitModal from "@/components/habit/DeleteHabitModal";
 import { HabitType } from "@/constants/Types";
 
 const Home = () => {
@@ -90,6 +93,13 @@ const Home = () => {
   const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
   const [goalCompletedHabit, setGoalCompletedHabit] =
     useState<HabitType | null>(null);
+
+  const [contextMenuHabit, setContextMenuHabit] = useState<HabitType | null>(
+    null,
+  );
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [reminderHabitId, setReminderHabitId] = useState<Id<"habits"> | null>(
@@ -210,7 +220,13 @@ const Home = () => {
     addModalVisible ||
     detailsModalVisible ||
     aiChatModalVisible ||
-    showNudgeModal;
+    showNudgeModal ||
+    contextMenuOpen ||
+    editModalVisible ||
+    deleteModalVisible ||
+    reminderModalVisible ||
+    createHiveModalVisible ||
+    !!goalCompletedHabit;
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -751,6 +767,11 @@ const Home = () => {
                           setTimerModalVisible(true);
                         }
                       }}
+                      onLongPress={() => {
+                        haptics.impact("medium");
+                        setContextMenuHabit(habit as HabitType);
+                        setContextMenuOpen(true);
+                      }}
                       onCardPress={() => {
                         haptics.impact("light");
                         setSelectedHabitId(habit._id);
@@ -889,6 +910,31 @@ const Home = () => {
           visible={!!goalCompletedHabit}
           onClose={() => setGoalCompletedHabit(null)}
           habit={goalCompletedHabit}
+        />
+      )}
+      <HabitContextMenu
+        visible={contextMenuOpen}
+        onClose={() => setContextMenuOpen(false)}
+        habit={contextMenuHabit}
+        onEdit={() => setEditModalVisible(true)}
+        onDelete={() => setDeleteModalVisible(true)}
+      />
+      {contextMenuHabit && editModalVisible && (
+        <EditHabitModal
+          visible={editModalVisible}
+          setVisible={setEditModalVisible}
+          habit={contextMenuHabit}
+        />
+      )}
+      {contextMenuHabit && deleteModalVisible && (
+        <DeleteHabitModal
+          visible={deleteModalVisible}
+          onClose={() => {
+            setDeleteModalVisible(false);
+            setContextMenuHabit(null);
+            setContextMenuOpen(false);
+          }}
+          habit={contextMenuHabit}
         />
       )}
     </View>

@@ -41,6 +41,7 @@ export const HabitCard: React.FC<{
   reminder_time?: string;
   onReminderPress?: () => void;
   onRemoveReminder?: () => void;
+  onLongPress?: () => void;
 }> = ({
   duration,
   title,
@@ -59,6 +60,7 @@ export const HabitCard: React.FC<{
   reminder_time,
   onReminderPress,
   onRemoveReminder,
+  onLongPress,
 }) => {
   const { theme } = useTheme();
 
@@ -208,9 +210,7 @@ export const HabitCard: React.FC<{
         onPressOut={handlePressOut}
         onLongPress={() => {
           haptics.impact();
-          if (subHabitsCount > 0 && onToggleExpand) {
-            onToggleExpand();
-          }
+          if (onLongPress) onLongPress();
         }}
         style={[
           {
