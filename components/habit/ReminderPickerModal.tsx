@@ -6,7 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useCustomAlert } from "@/context/AlertContext";
+import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 
 interface Props {
   visible: boolean;
@@ -119,6 +119,7 @@ export default function ReminderPickerModal({ visible, setVisible, habitId, init
               </View>
             </View>
           </View>
+          <CustomAlertPortal />
         </Modal>
       )}
     </>

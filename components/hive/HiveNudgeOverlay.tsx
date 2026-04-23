@@ -18,7 +18,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHapitcs } from "@/context/HapticsContext";
 import HiveHexagonGrid from "./HiveHexagonGrid";
-import { useCustomAlert } from "@/context/AlertContext";
+import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 
 const { width } = Dimensions.get("window");
 
@@ -342,6 +342,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
           </View>
         )}
       </View>
+      <CustomAlertPortal />
     </Modal>
   );
 };

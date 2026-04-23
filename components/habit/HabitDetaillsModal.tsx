@@ -144,6 +144,17 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   const handleStart = async () => {
     haptics.impact();
+
+    // Check for uncompleted sub-habits
+    if (subHabits && subHabits.length > 0) {
+      const allCompleted = subHabits.every((sh) => sh.completed);
+      if (!allCompleted) {
+        setCheckSubHabitModalVisible(true);
+        showCustomAlert("Complete your sub-habits first!", "warning");
+        return;
+      }
+    }
+
     if (habit && !habit?.duration) {
       try {
         const res = await record_streak({

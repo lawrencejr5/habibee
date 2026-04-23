@@ -16,7 +16,7 @@ import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHapitcs } from "@/context/HapticsContext";
-import { useCustomAlert } from "@/context/AlertContext";
+import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -453,6 +453,7 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
           </ViewShot>
         </View>
       </View>
+      <CustomAlertPortal />
     </Modal>
   );
 };

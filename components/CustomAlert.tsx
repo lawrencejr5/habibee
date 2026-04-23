@@ -3,15 +3,12 @@ import {
   Animated,
   Text,
   StyleSheet,
-  View,
   TouchableOpacity,
-  Modal,
-  Pressable, // <--- Added Modal import
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
-import { Image } from "react-native";
 
 interface CustomAlertProps {
   visible: boolean;
@@ -54,7 +51,6 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      // Only now do we tell the parent to unmount the Modal
       onHide();
     });
   };
@@ -86,65 +82,49 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
     }
   };
 
-  // If the parent says visible=false, we don't render the Modal
-  // (unless we are mid-animation, but the parent state controls the mount)
   if (!visible) return null;
 
   return (
-    <Modal
-      transparent={true}
-      visible={visible}
+    <Animated.View
       pointerEvents="box-none"
-      animationType="none" // We use your custom Animated.spring instead
-      statusBarTranslucent={true} // Allows it to cover status bar area
-      onRequestClose={hideAlert} // Android back button support
+      style={[
+        styles.container,
+        {
+          backgroundColor: Colors[deviceTheme].surface,
+          borderColor: getBackgroundColor(),
+          transform: [{ translateY }],
+        },
+      ]}
     >
-      <Pressable onPress={hideAlert} style={{ flex: 1 }}>
-        <View style={styles.modalOverlay} pointerEvents="box-none">
-          <Animated.View
-            style={[
-              styles.container,
-              {
-                backgroundColor: Colors[deviceTheme].surface,
-                borderColor: getBackgroundColor(),
-                transform: [{ translateY }],
-              },
-            ]}
-          >
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={hideAlert}
-              style={styles.contentContainer}
-            >
-              <Image
-                source={getIcon()}
-                style={{
-                  width: 16,
-                  height: 16,
-                  tintColor: getBackgroundColor(),
-                }}
-              />
-              <Text
-                style={[styles.messageText, { color: getBackgroundColor() }]}
-                numberOfLines={2}
-              >
-                {msg}
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      </Pressable>
-    </Modal>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={hideAlert}
+        style={styles.contentContainer}
+      >
+        <Image
+          source={getIcon()}
+          style={{
+            width: 16,
+            height: 16,
+            tintColor: getBackgroundColor(),
+          }}
+        />
+        <Text
+          style={[styles.messageText, { color: getBackgroundColor() }]}
+          numberOfLines={2}
+        >
+          {msg}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-  },
   container: {
     position: "absolute",
     top: 0,
+    alignSelf: "center",
     borderRadius: 50,
     borderWidth: 1,
     shadowColor: "#000",
@@ -154,8 +134,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 8,
-    alignSelf: "center",
+    elevation: 9999,
+    zIndex: 9999,
   },
   contentContainer: {
     gap: 10,

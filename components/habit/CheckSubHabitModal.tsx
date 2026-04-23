@@ -44,6 +44,11 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
 
+  const habits = useQuery(api.habits.get_user_habits);
+  const habit = habits?.find((h) => h._id === habit_id);
+  const today = new Date().toLocaleDateString("en-CA");
+  const isParentDone = habit?.lastCompleted === today;
+
   const subHabits = useQuery(api.sub_habits.get_sub_habits, {
     parent_habit_id: habit_id,
   });
@@ -184,7 +189,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   };
 
   const handleAdd = async () => {
-    if (!newSubHabitName.trim()) return;
+    if (!newSubHabitName.trim() || isParentDone) return;
 
     setAdding(true);
     try {
@@ -205,6 +210,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   };
 
   const handleDelete = async (subHabitId: Id<"sub_habits">) => {
+    if (isParentDone) return;
     haptics.impact();
     setDeletingId(subHabitId);
     try {
@@ -217,6 +223,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   };
 
   const startEditing = (id: Id<"sub_habits">, name: string) => {
+    if (isParentDone) return;
     haptics.impact();
     setEditingId(id);
     setEditName(name);
@@ -346,7 +353,8 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
           )}
 
           {/* Add new sub-habit row */}
-          <View style={{ marginBottom: 10 }}>
+          {!isParentDone && (
+            <View style={{ marginBottom: 10 }}>
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}>
               <View
                 style={{
@@ -468,7 +476,8 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                 )}
               </View>
             )}
-          </View>
+            </View>
+          )}
 
           {/* iOS Time Picker */}
           {showTimePicker && Platform.OS === "ios" && (
@@ -637,7 +646,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                 flex: 1,
                               }}
                               onPress={() => handleToggle(item._id)}
-                              disabled={togglingId === item._id}
+                              disabled={togglingId === item._id || isParentDone}
                             >
                               <View
                                 style={{
@@ -661,7 +670,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                     size={24}
                                     color={
                                       item.completed
-                                        ? themeColor
+                                        ? isParentDone ? themeColor + "80" : themeColor
                                         : Colors[theme].text_secondary
                                     }
                                   />
@@ -685,13 +694,14 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                             </Pressable>
 
                             {/* Edit & Delete buttons */}
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                gap: 15,
-                                marginLeft: 10,
-                              }}
-                            >
+                            {!isParentDone && (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  gap: 15,
+                                  marginLeft: 10,
+                                }}
+                              >
                               <Pressable
                                 onPress={() =>
                                   startEditing(item._id, item.name)
@@ -721,7 +731,8 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                 )}
                               </Pressable>
                             </View>
-                          </View>
+                          )}
+                        </View>
 
                           {/* Reminder row */}
                           <View
@@ -739,7 +750,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                   item.reminder_time ?? undefined,
                                 )
                               }
-                              disabled={updatingId === item._id}
+                              disabled={updatingId === item._id || isParentDone}
                               style={{
                                 flexDirection: "row",
                                 alignItems: "center",
@@ -754,7 +765,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                   ? themeColor + "40"
                                   : Colors[theme].border,
                                 gap: 5,
-                                opacity: updatingId === item._id ? 0.5 : 1,
+                                opacity: updatingId === item._id || isParentDone ? 0.5 : 1,
                               }}
                             >
                               {updatingId === item._id ? (
@@ -788,7 +799,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                               </Text>
                             </Pressable>
 
-                            {item.reminder_time && (
+                            {item.reminder_time && !isParentDone && (
                               <Pressable
                                 onPress={() => clearReminder(item._id)}
                                 disabled={updatingId === item._id}

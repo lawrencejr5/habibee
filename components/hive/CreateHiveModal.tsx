@@ -15,7 +15,7 @@ import { View as ThemedView } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
 import { useHapitcs } from "@/context/HapticsContext";
-import { useCustomAlert } from "@/context/AlertContext";
+import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Image } from "react-native";
@@ -343,6 +343,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
           </View>
         )}
       </ThemedView>
+      <CustomAlertPortal />
     </Modal>
   );
 };

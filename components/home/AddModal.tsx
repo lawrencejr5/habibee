@@ -28,7 +28,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "@/context/ThemeContext";
-import { useCustomAlert } from "@/context/AlertContext";
+import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 import { Id } from "@/convex/_generated/dataModel";
 import AddSubHabitModal, { SubHabitEntry } from "../habit/AddSubHabitModal";
 const AddModal: React.FC<{
@@ -500,6 +500,7 @@ const AddModal: React.FC<{
             )}
           </Pressable>
         </ThemedView>
+        <CustomAlertPortal />
       </Modal>
       <IconColorPicker
         visible={iconPickerVisible}

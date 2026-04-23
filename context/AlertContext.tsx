@@ -5,7 +5,7 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import CustomAlert from "@/components/CustomAlert"; // We will build this next
+import CustomAlert from "@/components/CustomAlert";
 import { useHapitcs } from "./HapticsContext";
 
 type AlertTheme = "success" | "danger" | "warning";
@@ -64,4 +64,28 @@ export const useCustomAlert = () => {
     throw new Error("useCustomAlert must be used within a CustomAlertProvider");
   }
   return context;
+};
+
+/**
+ * Drop this component inside any <Modal> that needs to show custom alerts.
+ * It renders a duplicate alert view within the Modal's native window,
+ * sharing the same state from AlertContext. No extra logic needed.
+ *
+ * Usage:
+ *   <Modal visible={...}>
+ *     {/* ...your modal content... *\/}
+ *     <CustomAlertPortal />
+ *   </Modal>
+ */
+export const CustomAlertPortal = () => {
+  const { alert, hideAlert } = useCustomAlert();
+
+  return (
+    <CustomAlert
+      visible={alert.visible}
+      msg={alert.msg}
+      theme={alert.theme}
+      onHide={hideAlert}
+    />
+  );
 };
