@@ -56,20 +56,23 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [extendingGoal, setExtendingGoal] = useState(false);
-
   const themeColor = habit.theme ?? Colors[theme].primary;
+  const [selectedExtension, setSelectedExtension] = useState<number | null>(
+    null,
+  );
 
-  const handleExtendGoal = async (extraDays: number) => {
+  const handleExtendGoal = async () => {
+    if (!selectedExtension) return;
     haptics.impact("medium");
     setExtendingGoal(true);
     try {
-      const newGoal = habit.goal + extraDays;
+      const newGoal = habit.goal + selectedExtension;
       await update_habit({
         habit_id: habit._id,
         goal: newGoal,
       });
       showCustomAlert(
-        `Goal extended to ${newGoal} days! Keep going! 🚀`,
+        `Goal extended by ${selectedExtension} days! Keep going! 🚀`,
         "success",
       );
       onClose();
@@ -162,23 +165,15 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
           {
             backgroundColor: Colors[theme].background,
             paddingTop: insets.top,
+            paddingBottom: insets.bottom,
           },
         ]}
       >
-        <Pressable
-          onPress={() => {
-            haptics.impact("light");
-            onClose();
-          }}
-          style={styles.closeButton}
-        >
-          <Feather name="x" size={24} color={Colors[theme].text} />
-        </Pressable>
-
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingBottom: insets.bottom + 30,
+            paddingTop: insets.top,
             alignItems: "center",
             flexGrow: 1,
             justifyContent: "space-between",
@@ -254,6 +249,13 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
                     {habit.duration
                       ? `${habit.duration} min(s) daily`
                       : "Daily Task"}
+                    {subHabits && subHabits.length > 0 && (
+                      <Text style={{ color: themeColor }}>
+                        {" "}
+                        • {subHabits.length} sub habit
+                        {subHabits.length > 1 ? "s" : ""}
+                      </Text>
+                    )}
                   </Text>
                 </View>
               </View>
@@ -301,49 +303,50 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
                 </View>
               </View>
 
-              {/* Sub Habits */}
-              {subHabits && subHabits.length > 0 && (
-                <View style={styles.subHabitsSection}>
-                  <Text
-                    style={[
-                      styles.subHabitsTitle,
-                      { color: Colors[theme].text },
-                    ]}
-                  >
-                    Sub-Habits
-                  </Text>
-                  {subHabits.map((sh) => (
-                    <View key={sh._id} style={styles.subHabitRow}>
-                      <View
-                        style={[
-                          styles.subHabitCheck,
-                          {
-                            borderColor: sh.completed
-                              ? themeColor
-                              : Colors[theme].text_secondary,
-                            backgroundColor: sh.completed
-                              ? themeColor
-                              : "transparent",
-                          },
-                        ]}
-                      >
-                        {sh.completed && (
-                          <Feather name="check" size={10} color="#fff" />
-                        )}
-                      </View>
-                      <Text
-                        style={{
-                          fontFamily: "NunitoMedium",
-                          fontSize: 14,
-                          color: Colors[theme].text,
-                        }}
-                      >
-                        {sh.name}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+              {/* Sub Habits removed from here */}
+            </View>
+
+            {/* Share Button Below Card */}
+            <View
+              style={{
+                width: width - 40,
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                marginTop: 10,
+              }}
+            >
+              <Pressable
+                onPress={handleShare}
+                disabled={isSharing}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: Colors[theme].surface,
+                  borderWidth: 1,
+                  borderColor: Colors[theme].border,
+                }}
+              >
+                {isSharing ? (
+                  <ActivityIndicator size="small" color={themeColor} />
+                ) : (
+                  <>
+                    <Feather name="share-2" size={14} color={themeColor} />
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 12,
+                        color: themeColor,
+                      }}
+                    >
+                      Share
+                    </Text>
+                  </>
+                )}
+              </Pressable>
             </View>
           </View>
 
@@ -371,18 +374,30 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
                 {EXTENSION_OPTIONS.map((days) => (
                   <Pressable
                     key={days}
-                    onPress={() => handleExtendGoal(days)}
+                    onPress={() => {
+                      haptics.impact("light");
+                      setSelectedExtension(days);
+                    }}
                     disabled={extendingGoal}
                     style={[
                       styles.extensionPill,
                       {
-                        backgroundColor: themeColor + "15",
-                        borderColor: themeColor + "50",
+                        backgroundColor: themeColor + "08",
+                        borderColor:
+                          selectedExtension === days
+                            ? themeColor
+                            : themeColor + "30",
+                        borderWidth: selectedExtension === days ? 2.5 : 1.5,
                       },
                     ]}
                   >
                     <Text
-                      style={[styles.extensionPillText, { color: themeColor }]}
+                      style={[
+                        styles.extensionPillText,
+                        {
+                          color: themeColor,
+                        },
+                      ]}
                     >
                       +{days} days
                     </Text>
@@ -396,49 +411,42 @@ const GoalCompletedModal: FC<GoalCompletedModalProps> = ({
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <Pressable
-            onPress={handleShare}
-            disabled={isSharing}
+            onPress={handleExtendGoal}
+            disabled={extendingGoal || !selectedExtension}
             style={[
               styles.actionBtn,
               {
                 backgroundColor: themeColor,
-                opacity: isSharing ? 0.6 : 1,
+                opacity: extendingGoal || !selectedExtension ? 0.6 : 1,
+                flex: 2,
               },
             ]}
           >
-            {isSharing ? (
+            {extendingGoal ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <>
-                <Feather name="share-2" size={18} color="#fff" />
-                <Text style={styles.actionBtnText}>Share</Text>
+                <Octicons name="rocket" size={18} color="#fff" />
+                <Text style={styles.actionBtnText}>Extend Goal</Text>
               </>
             )}
           </Pressable>
 
           <Pressable
-            onPress={handleDownload}
-            disabled={isDownloading}
+            onPress={onClose}
             style={[
               styles.actionBtn,
               {
                 backgroundColor: Colors[theme].surface,
                 borderWidth: 2,
                 borderColor: themeColor,
-                opacity: isDownloading ? 0.6 : 1,
+                flex: 1,
               },
             ]}
           >
-            {isDownloading ? (
-              <ActivityIndicator color={themeColor} size="small" />
-            ) : (
-              <>
-                <Feather name="download" size={18} color={themeColor} />
-                <Text style={[styles.actionBtnText, { color: themeColor }]}>
-                  Save
-                </Text>
-              </>
-            )}
+            <Text style={[styles.actionBtnText, { color: themeColor }]}>
+              Close
+            </Text>
           </Pressable>
         </View>
 
@@ -465,30 +473,22 @@ const ShareableCard: FC<{
   themeColor: string;
   subHabits?: any[] | null;
 }> = ({ habit, themeColor, subHabits }) => {
-  const darkBg = "#1a1d21";
+  const darkBg = "#111316";
   const lightText = "#ffffff";
-  const subtleText = "#9ca3af";
+  const subtleText = "rgba(255,255,255,0.45)";
 
   return (
     <View style={[shareStyles.card, { backgroundColor: darkBg }]}>
-      {/* Accent gradient stripe at top */}
-      <View
-        style={[shareStyles.accentStripe, { backgroundColor: themeColor }]}
-      />
-
-      {/* Logo */}
-      <View style={shareStyles.logoRow}>
-        <Image
-          source={require("@/assets/images/icon-nobg-white.png")}
-          style={shareStyles.logo}
-        />
-        <Text style={shareStyles.logoText}>habibee</Text>
+      {/* Top bar: branding */}
+      <View style={shareStyles.topBar}>
+        <View style={[shareStyles.dot, { backgroundColor: themeColor }]} />
+        <Text style={shareStyles.brandName}>habibee</Text>
       </View>
 
-      {/* Main streak text */}
-      <View style={shareStyles.mainContent}>
-        <Text style={[shareStyles.streakLabel, { color: subtleText }]}>
-          CURRENT STREAK
+      {/* Center: streak */}
+      <View style={shareStyles.centerBlock}>
+        <Text style={[shareStyles.goalLabel, { color: subtleText }]}>
+          GOAL ACHIEVED
         </Text>
         <View style={shareStyles.streakRow}>
           <Text style={[shareStyles.streakNumber, { color: lightText }]}>
@@ -496,85 +496,41 @@ const ShareableCard: FC<{
           </Text>
           <Text style={shareStyles.fireEmoji}>🔥</Text>
         </View>
-        <Text style={[shareStyles.daysText, { color: themeColor }]}>
-          DAY(S)
+        <Text style={[shareStyles.daysWord, { color: themeColor }]}>
+          day{(habit.current_streak + 1) !== 1 ? "s" : ""} streak
         </Text>
       </View>
 
-      {/* Habit info */}
-      <View
-        style={[
-          shareStyles.habitInfo,
-          {
-            backgroundColor: themeColor + "18",
-            borderColor: themeColor + "35",
-          },
-        ]}
-      >
+      {/* Bottom: habit chip */}
+      <View style={shareStyles.bottomBlock}>
         <View
           style={[
-            shareStyles.habitIconCircle,
-            { backgroundColor: themeColor + "30" },
+            shareStyles.habitChip,
+            {
+              backgroundColor: themeColor + "12",
+              borderColor: themeColor + "30",
+            },
           ]}
         >
           <Image
             source={habitIcons[habit.icon ?? "default"]}
-            style={{
-              width: 22,
-              height: 22,
-              tintColor: themeColor,
-            }}
+            style={{ width: 16, height: 16, tintColor: themeColor }}
           />
-        </View>
-        <View style={{ flex: 1 }}>
           <Text
-            style={[shareStyles.habitName, { color: lightText }]}
+            style={[shareStyles.habitChipText, { color: lightText }]}
             numberOfLines={1}
           >
             {habit.habit}
           </Text>
-          <Text style={[shareStyles.habitMeta, { color: subtleText }]}>
-            Goal: {habit.goal} days •{" "}
-            {habit.duration ? `${habit.duration} min/day` : "Daily"}
-          </Text>
-        </View>
-      </View>
-
-      {/* Sub-habits if any */}
-      {subHabits && subHabits.length > 0 && (
-        <View style={shareStyles.subHabitsList}>
-          {subHabits.slice(0, 4).map((sh, index) => (
-            <View key={index} style={shareStyles.subHabitPill}>
-              <Text style={[shareStyles.subHabitText, { color: subtleText }]}>
-                ✓ {sh.name}
-              </Text>
-            </View>
-          ))}
-          {subHabits.length > 4 && (
-            <Text style={[shareStyles.moreText, { color: subtleText }]}>
-              +{subHabits.length - 4} more
+          {subHabits && subHabits.length > 0 && (
+            <Text style={[shareStyles.habitChipMeta, { color: subtleText }]}>
+              · {subHabits.length} sub habit{subHabits.length > 1 ? "s" : ""}
             </Text>
           )}
         </View>
-      )}
-
-      {/* Motivational quote */}
-      <Text style={[shareStyles.motivation, { color: subtleText }]}>
-        "Consistency is the mother of mastery."
-      </Text>
-
-      {/* Bottom branding */}
-      <View
-        style={[
-          shareStyles.bottomBranding,
-          { borderTopColor: themeColor + "20" },
-        ]}
-      >
-        <Text style={[shareStyles.brandingText, { color: subtleText }]}>
-          Track your habits with
-        </Text>
-        <Text style={[shareStyles.brandingApp, { color: themeColor }]}>
-          habibee
+        <Text style={[shareStyles.goalMeta, { color: subtleText }]}>
+          {habit.goal}-day goal
+          {habit.duration ? ` · ${habit.duration} min/day` : ""}
         </Text>
       </View>
     </View>
@@ -761,127 +717,86 @@ const styles = StyleSheet.create({
 const shareStyles = StyleSheet.create({
   card: {
     width: 400,
-    height: 400,
-    padding: 30,
+    height: 500,
+    padding: 36,
     justifyContent: "space-between",
     overflow: "hidden",
   },
-  accentStripe: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 5,
-  },
-  logoRow: {
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  logo: {
-    width: 28,
-    height: 28,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  logoText: {
+  brandName: {
     fontFamily: "NunitoExtraBold",
-    fontSize: 18,
-    color: "#ffffff",
-    letterSpacing: 1,
+    fontSize: 14,
+    color: "rgba(255,255,255,0.5)",
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
-  mainContent: {
+  centerBlock: {
     alignItems: "center",
-    marginVertical: -5,
+    gap: 4,
   },
-  streakLabel: {
+  goalLabel: {
     fontFamily: "NunitoBold",
-    fontSize: 11,
-    letterSpacing: 3,
+    fontSize: 10,
+    letterSpacing: 4,
+    textTransform: "uppercase",
+    marginBottom: 8,
   },
   streakRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    alignItems: "flex-start",
+    gap: 6,
   },
   streakNumber: {
     fontFamily: "NunitoExtraBold",
-    fontSize: 72,
-    lineHeight: 82,
+    fontSize: 96,
+    lineHeight: 100,
   },
   fireEmoji: {
-    fontSize: 36,
+    fontSize: 40,
+    marginTop: 10,
   },
-  daysText: {
-    fontFamily: "NunitoExtraBold",
-    fontSize: 20,
-    letterSpacing: 6,
-    marginTop: -5,
+  daysWord: {
+    fontFamily: "NunitoBold",
+    fontSize: 16,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
-  habitInfo: {
+  bottomBlock: {
+    gap: 10,
+  },
+  habitChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  habitIconCircle: {
-    width: 40,
-    height: 40,
     borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+    borderWidth: 1,
+    overflow: "hidden",
   },
-  habitName: {
-    fontFamily: "NunitoExtraBold",
-    fontSize: 15,
-  },
-  habitMeta: {
-    fontFamily: "NunitoMedium",
-    fontSize: 11,
-    marginTop: 2,
-  },
-  subHabitsList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  subHabitPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
-  subHabitText: {
-    fontFamily: "NunitoMedium",
-    fontSize: 10,
-  },
-  moreText: {
-    fontFamily: "NunitoMedium",
-    fontSize: 10,
-    alignSelf: "center",
-  },
-  motivation: {
-    fontFamily: "NunitoRegular",
-    fontSize: 12,
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-  bottomBranding: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    borderTopWidth: 1,
-    paddingTop: 12,
-  },
-  brandingText: {
-    fontFamily: "NunitoMedium",
-    fontSize: 12,
-  },
-  brandingApp: {
-    fontFamily: "NunitoExtraBold",
+  habitChipText: {
+    fontFamily: "NunitoBold",
     fontSize: 14,
+    flex: 1,
+  },
+  habitChipMeta: {
+    fontFamily: "NunitoMedium",
+    fontSize: 12,
+  },
+  goalMeta: {
+    fontFamily: "NunitoMedium",
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
 });
 

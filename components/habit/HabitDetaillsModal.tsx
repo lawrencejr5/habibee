@@ -7,7 +7,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { Text as ThemedText } from "../Themed";
 
@@ -30,7 +37,6 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 import { useTheme } from "@/context/ThemeContext";
-import { ActivityIndicator } from "react-native";
 import { useCustomAlert } from "@/context/AlertContext";
 import { HabitType } from "@/constants/Types";
 
@@ -118,6 +124,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false); // State for delete modal
   const [checkSubHabitModalVisible, setCheckSubHabitModalVisible] =
     useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   const subHabits = useQuery(api.sub_habits.get_sub_habits, {
     parent_habit_id: habit_id,
@@ -156,6 +163,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     }
 
     if (habit && !habit?.duration) {
+      setIsRecording(true);
       try {
         const res = await record_streak({
           habit_id: habit._id,
@@ -165,13 +173,21 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
           }),
         });
         showCustomAlert("Streak recorded", "success");
-        if (res?.newStreak && res?.goal && res.newStreak >= res.goal && onGoalCompleted && habit) {
+        if (
+          res?.newStreak &&
+          res?.goal &&
+          res.newStreak >= res.goal &&
+          onGoalCompleted &&
+          habit
+        ) {
           onGoalCompleted(habit as HabitType);
         } else if (res?.isFirstOfDay && onFirstStreakOfDay) {
           onFirstStreakOfDay();
         }
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsRecording(false);
       }
     } else {
       setTimerModalVisible(true);
@@ -615,12 +631,13 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             >
               <Pressable
                 onPress={handleStart}
-                disabled={isDone}
+                disabled={isDone || isRecording}
                 style={{
                   backgroundColor: habit.theme ?? Colors[theme].primary,
                   paddingVertical: 16,
                   borderRadius: 50,
                   alignItems: "center",
+                  justifyContent: "center",
                   shadowColor: "#000",
                   shadowOffset: {
                     width: 0,
@@ -629,10 +646,12 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   shadowOpacity: 0.3,
                   shadowRadius: 4.65,
                   elevation: 8,
-                  opacity: isDone ? 0.5 : 1,
+                  opacity: isDone || isRecording ? 0.5 : 1,
                 }}
               >
-                {habit.duration ? (
+                {isRecording ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : habit.duration ? (
                   <Text
                     style={{
                       fontFamily: "NunitoExtraBold",
