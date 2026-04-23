@@ -102,6 +102,20 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signedIn } = useUser();
   const [showSplash, setShowSplash] = useState<boolean>(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
+  // Check if user has seen onboarding
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const seen = await AsyncStorage.getItem("habibee_onboarding_seen");
+        setHasSeenOnboarding(seen === "true");
+      } catch {
+        setHasSeenOnboarding(false);
+      }
+    };
+    checkOnboarding();
+  }, []);
 
   useEffect(() => {
     performStreakCheck();
@@ -137,24 +151,30 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // 5. Handle Auth Navigation Logic HERE
   useEffect(() => {
-    // Wait until fonts are loaded and auth is done loading
-    if (!loaded || isLoading) return;
+    // Wait until fonts are loaded, auth is done loading, and onboarding check is complete
+    if (!loaded || isLoading || hasSeenOnboarding === null) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "onboarding";
 
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/(auth)/signin");
-    } else if (isAuthenticated && inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup && !inOnboarding) {
+      // First-time users go to onboarding, returning users go to signin
+      if (!hasSeenOnboarding) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/(auth)/signin");
+      }
+    } else if (isAuthenticated && (inAuthGroup || inOnboarding)) {
       if (signedIn?.username === undefined) {
         router.replace("/(auth)/addUsername");
       } else {
         router.replace("/(tabs)");
       }
     }
-  }, [isAuthenticated, segments, loaded, isLoading, signedIn?.username]);
+  }, [isAuthenticated, segments, loaded, isLoading, signedIn?.username, hasSeenOnboarding]);
 
   // Show Custom Splash until fonts load AND Auth determines state
-  if (!loaded || showSplash) {
+  if (!loaded || showSplash || hasSeenOnboarding === null) {
     return <CustomSplash />;
   }
 
