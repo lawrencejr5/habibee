@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import styles from "./page.module.css";
 
@@ -96,20 +97,20 @@ export default function Home() {
         </div>
 
         <div className={styles.navLinks}>
-          <a href="#features" className={styles.navLink}>
+          <Link href="#features" className={styles.navLink}>
             Features
-          </a>
-          <a href="#faq" className={styles.navLink}>
+          </Link>
+          <Link href="#faq" className={styles.navLink}>
             FAQ
-          </a>
-          <a href="/privacy" className={styles.navLink}>
+          </Link>
+          <Link href="/privacy" className={styles.navLink}>
             Privacy Policy
-          </a>
-          <a href="/terms" className={styles.navLink}>
+          </Link>
+          <Link href="/terms" className={styles.navLink}>
             Terms &amp; Conditions
-          </a>
+          </Link>
           <a
-            href="https://play.google.com/store"
+            href="https://play.google.com/store/apps/details?id=com.lawrencejr.habibee"
             target="_blank"
             rel="noopener noreferrer"
             className={styles.navCta}
@@ -141,34 +142,34 @@ export default function Home() {
         >
           ✕
         </button>
-        <a
+        <Link
           href="#features"
           className={styles.mobileMenuLink}
           onClick={() => setMobileMenuOpen(false)}
         >
           Features
-        </a>
-        <a
+        </Link>
+        <Link
           href="#faq"
           className={styles.mobileMenuLink}
           onClick={() => setMobileMenuOpen(false)}
         >
           FAQ
-        </a>
-        <a
+        </Link>
+        <Link
           href="/privacy"
           className={styles.mobileMenuLink}
           onClick={() => setMobileMenuOpen(false)}
         >
           Privacy Policy
-        </a>
-        <a
+        </Link>
+        <Link
           href="/terms"
           className={styles.mobileMenuLink}
           onClick={() => setMobileMenuOpen(false)}
         >
           Terms &amp; Conditions
-        </a>
+        </Link>
         <a
           href="https://play.google.com/store"
           target="_blank"
@@ -196,13 +197,13 @@ export default function Home() {
             </p>
             <div className={styles.heroCtas}>
               <a
-                href="https://play.google.com/store"
+                href="https://play.google.com/store/apps/details?id=com.lawrencejr.habibee"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${styles.storeBtn} ${styles.storeBtnPrimary}`}
               >
                 <Image
-                  src="/images/google-play-1.png"
+                  src="/images/googleplay-icon.png"
                   alt="Google Play"
                   width={24}
                   height={24}
@@ -318,12 +319,12 @@ export default function Home() {
       {/* ─── FOOTER ─── */}
       <footer className={styles.footer}>
         <div className={styles.footerLinks}>
-          <a href="/privacy" className={styles.footerLink}>
+          <Link href="/privacy" className={styles.footerLink}>
             Privacy Policy
-          </a>
-          <a href="/terms" className={styles.footerLink}>
+          </Link>
+          <Link href="/terms" className={styles.footerLink}>
             Terms &amp; Conditions
-          </a>
+          </Link>
         </div>
         <span className={styles.footerCopy}>© Lawjun Labs 2026</span>
       </footer>
