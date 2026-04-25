@@ -20,6 +20,7 @@ export const metadata: Metadata = {
     "accountability",
     "focus timer",
     "habibee",
+    "Lawjun Labs",
   ],
   icons: {
     icon: "/images/icon-nobg-white.png",
