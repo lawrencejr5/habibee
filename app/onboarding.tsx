@@ -177,7 +177,7 @@ const OnboardingScreen = () => {
         runOnJS(goToPrev)();
       }
 
-      translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
+      translateX.value = withSpring(0, { damping: 30, stiffness: 300 });
     });
 
   const dragStyle = useAnimatedStyle(() => ({
@@ -189,8 +189,8 @@ const OnboardingScreen = () => {
   // Animation configs for enter/leave based on direction
   const imageEntering =
     direction === "forward"
-      ? SlideInRight.duration(500).springify().damping(18).stiffness(120)
-      : SlideInLeft.duration(500).springify().damping(18).stiffness(120);
+      ? SlideInRight.duration(400).springify().damping(26).stiffness(180)
+      : SlideInLeft.duration(400).springify().damping(26).stiffness(180);
 
   const imageExiting =
     direction === "forward"
@@ -206,7 +206,7 @@ const OnboardingScreen = () => {
 
         {/* Header area */}
         <Animated.View
-          entering={FadeInDown.duration(600).delay(100)}
+          entering={FadeInDown.duration(400).delay(100)}
           style={[styles.headerContainer, { paddingTop: insets.top + 20 }]}
         >
           <Image
@@ -278,7 +278,7 @@ const OnboardingScreen = () => {
         <View style={styles.textSection}>
           <Animated.Text
             key={`title-${animKey}`}
-            entering={FadeInUp.duration(500).delay(150).springify().damping(16)}
+            entering={FadeInUp.duration(400).delay(100).springify().damping(24)}
             exiting={FadeOutUp.duration(200)}
             style={[styles.title, { color: colors.text }]}
           >
@@ -286,7 +286,7 @@ const OnboardingScreen = () => {
           </Animated.Text>
           <Animated.Text
             key={`subtitle-${animKey}`}
-            entering={FadeInUp.duration(500).delay(250).springify().damping(16)}
+            entering={FadeInUp.duration(400).delay(200).springify().damping(24)}
             exiting={FadeOutDown.duration(200)}
             style={[styles.subtitle, { color: colors.text_secondary }]}
           >
@@ -296,7 +296,7 @@ const OnboardingScreen = () => {
 
         {/* Bottom controls */}
         <Animated.View
-          entering={FadeInDown.duration(500).delay(400)}
+          entering={FadeInDown.duration(400).delay(300)}
           style={[
             styles.bottomControls,
             { paddingBottom: insets.bottom + 24 },
