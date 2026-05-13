@@ -15,4 +15,5 @@ export interface HabitType {
   timer_start_time?: number;
   timer_elapsed?: number;
   reminder_time?: string;
+  archived?: boolean;
 }

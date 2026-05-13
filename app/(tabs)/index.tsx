@@ -52,6 +52,7 @@ import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
 import HabitContextMenu from "@/components/habit/HabitContextMenu";
 import EditHabitModal from "@/components/habit/EditHabitModal";
 import DeleteHabitModal from "@/components/habit/DeleteHabitModal";
+import ArchiveHabitModal from "@/components/habit/ArchiveHabitModal";
 import { HabitType } from "@/constants/Types";
 
 const Home = () => {
@@ -64,6 +65,7 @@ const Home = () => {
   const today = new Date().toLocaleDateString("en-CA");
 
   const habitData = useQuery(api.habits.get_user_habits);
+  const archivedHabits = useQuery(api.habits.get_archived_habits);
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
 
   const pathname = usePathname();
@@ -100,6 +102,7 @@ const Home = () => {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [archiveModalVisible, setArchiveModalVisible] = useState(false);
 
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [reminderHabitId, setReminderHabitId] = useState<Id<"habits"> | null>(
@@ -359,7 +362,7 @@ const Home = () => {
           },
         ]}
         contentContainerStyle={{
-          paddingBottom: 40,
+          paddingBottom: 80,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -663,6 +666,50 @@ const Home = () => {
           </View>
         </View>
 
+        {/* Archived Habits Card */}
+        {archivedHabits && archivedHabits.length > 0 && (
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              router.push("/archived-habits");
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: pressed
+                ? Colors[theme].border
+                : Colors[theme].surface,
+              paddingHorizontal: 15,
+              paddingVertical: 10,
+              borderRadius: 10,
+              borderWidth: 1.5,
+              borderColor: Colors[theme].border,
+              marginBottom: 5,
+            })}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 15 }}
+            >
+              <Feather name="archive" size={14} color={Colors[theme].text} />
+              <Text
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 13,
+                  color: Colors[theme].text,
+                }}
+              >
+                Archived habits
+              </Text>
+            </View>
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={Colors[theme].text_secondary}
+            />
+          </Pressable>
+        )}
+
         {/* Tasks List */}
         <View>
           <View>
@@ -917,6 +964,10 @@ const Home = () => {
         onClose={() => setContextMenuOpen(false)}
         habit={contextMenuHabit}
         onEdit={() => setEditModalVisible(true)}
+        onArchive={() => {
+          setContextMenuOpen(false);
+          setArchiveModalVisible(true);
+        }}
         onDelete={() => setDeleteModalVisible(true)}
       />
       {contextMenuHabit && editModalVisible && (
@@ -931,6 +982,17 @@ const Home = () => {
           visible={deleteModalVisible}
           onClose={() => {
             setDeleteModalVisible(false);
+            setContextMenuHabit(null);
+            setContextMenuOpen(false);
+          }}
+          habit={contextMenuHabit}
+        />
+      )}
+      {contextMenuHabit && archiveModalVisible && (
+        <ArchiveHabitModal
+          visible={archiveModalVisible}
+          onClose={() => {
+            setArchiveModalVisible(false);
             setContextMenuHabit(null);
             setContextMenuOpen(false);
           }}

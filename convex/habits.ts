@@ -90,7 +90,24 @@ export const get_user_habits = query({
       .withIndex("by_user", (q) => q.eq("user", user))
       .order("desc")
       .collect();
-    return user_habits;
+      
+    return user_habits.filter((h) => !h.archived);
+  },
+});
+
+export const get_archived_habits = query({
+  args: {},
+  handler: async (ctx, args) => {
+    const user = await getAuthUserId(ctx);
+    if (!user) throw new Error("Unathenticated");
+
+    const user_habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", user))
+      .order("desc")
+      .collect();
+      
+    return user_habits.filter((h) => h.archived === true);
   },
 });
 
@@ -341,6 +358,36 @@ export const delete_habit = mutation({
 
     await ctx.db.delete(args.habit_id);
     return { msg: "Habit deleted", habit: args.habit_id };
+  },
+});
+
+export const archive_habit = mutation({
+  args: { habit_id: v.id("habits") },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated");
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (!habit) throw new Error("Habit not found");
+    if (habit.user !== user_id) throw new Error("Unauthorized");
+
+    await ctx.db.patch(args.habit_id, { archived: true });
+    return { msg: "Habit archived", habit: args.habit_id };
+  },
+});
+
+export const restore_habit = mutation({
+  args: { habit_id: v.id("habits") },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated");
+
+    const habit = await ctx.db.get(args.habit_id);
+    if (!habit) throw new Error("Habit not found");
+    if (habit.user !== user_id) throw new Error("Unauthorized");
+
+    await ctx.db.patch(args.habit_id, { archived: false, current_streak: 0 });
+    return { msg: "Habit restored", habit: args.habit_id };
   },
 });
 
@@ -796,11 +843,13 @@ export const getUsersWithIncompleteHabitsToday = internalQuery({
     const incompleteUsers = [];
 
     for (const user of usersWithTokens) {
-      // 2. Get all habits for this user
-      const habits = await ctx.db
+      // 2. Get all non-archived habits for this user
+      const all_habits = await ctx.db
         .query("habits")
         .withIndex("by_user", (q) => q.eq("user", user._id))
         .collect();
+        
+      const habits = all_habits.filter((h) => !h.archived);
 
       if (habits.length === 0) {
         // No habits — nothing to complete, skip

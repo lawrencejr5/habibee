@@ -16,6 +16,7 @@ interface HabitContextMenuProps {
   onClose: () => void;
   habit: HabitType | null;
   onEdit: () => void;
+  onArchive: () => void;
   onDelete: () => void;
 }
 
@@ -24,6 +25,7 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
   onClose,
   habit,
   onEdit,
+  onArchive,
   onDelete,
 }) => {
   const { theme } = useTheme();
@@ -75,7 +77,12 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
       }}
     >
       <BottomSheetView
-        style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8 }}
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: 10,
+        }}
       >
         {/* Habit identifier row */}
         <View
@@ -131,45 +138,52 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
-              gap: 14,
+              gap: 30,
               paddingVertical: 14,
-              paddingHorizontal: 12,
+              paddingHorizontal: 4,
               borderRadius: 14,
               backgroundColor: pressed ? Colors[theme].border : "transparent",
             })}
           >
-            <View
+            <Feather name="edit-2" size={18} color={Colors[theme].text} />
+            <Text
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                backgroundColor: Colors[theme].primary + "15",
-                justifyContent: "center",
-                alignItems: "center",
+                fontFamily: "NunitoBold",
+                fontSize: 15,
+                color: Colors[theme].text,
               }}
             >
-              <Feather name="edit-2" size={16} color={Colors[theme].primary} />
-            </View>
-            <View>
-              <Text
-                style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 15,
-                  color: Colors[theme].text,
-                }}
-              >
-                Edit Habit
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "NunitoMedium",
-                  fontSize: 12,
-                  color: Colors[theme].text_secondary,
-                }}
-              >
-                Update name, duration, goal & more
-              </Text>
-            </View>
+              Edit Habit
+            </Text>
+          </Pressable>
+
+          {/* Archive */}
+          <Pressable
+            onPress={() => {
+              haptics.impact("light");
+              onClose();
+              onArchive();
+            }}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 30,
+              paddingVertical: 14,
+              paddingHorizontal: 4,
+              borderRadius: 14,
+              backgroundColor: pressed ? Colors[theme].border : "transparent",
+            })}
+          >
+            <Feather name="archive" size={18} color={Colors[theme].text} />
+            <Text
+              style={{
+                fontFamily: "NunitoBold",
+                fontSize: 15,
+                color: Colors[theme].text,
+              }}
+            >
+              Archive Habit
+            </Text>
           </Pressable>
 
           {/* Delete */}
@@ -182,47 +196,23 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
-              gap: 14,
+              gap: 30,
               paddingVertical: 14,
-              paddingHorizontal: 12,
+              paddingHorizontal: 4,
               borderRadius: 14,
-              backgroundColor: pressed
-                ? Colors[theme].danger + "15"
-                : "transparent",
+              backgroundColor: pressed ? Colors[theme].border : "transparent",
             })}
           >
-            <View
+            <Feather name="trash-2" size={18} color={Colors[theme].text} />
+            <Text
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                backgroundColor: Colors[theme].danger + "15",
-                justifyContent: "center",
-                alignItems: "center",
+                fontFamily: "NunitoBold",
+                fontSize: 15,
+                color: Colors[theme].text,
               }}
             >
-              <Feather name="trash-2" size={16} color={Colors[theme].danger} />
-            </View>
-            <View>
-              <Text
-                style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 15,
-                  color: Colors[theme].danger,
-                }}
-              >
-                Delete Habit
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "NunitoMedium",
-                  fontSize: 12,
-                  color: Colors[theme].text_secondary,
-                }}
-              >
-                This action cannot be undone
-              </Text>
-            </View>
+              Delete Habit
+            </Text>
           </Pressable>
         </View>
       </BottomSheetView>

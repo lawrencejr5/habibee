@@ -43,6 +43,7 @@ const schema = defineSchema({
     timer_elapsed: v.optional(v.number()), // Accumulated elapsed time in seconds
     last_daily_reset_date: v.optional(v.string()), // Date when sub-habits were last reset
     reminder_time: v.optional(v.string()),
+    archived: v.optional(v.boolean()),
   })
     .index("by_user", ["user"])
     .index("by_user_habit", ["user", "habit"]),

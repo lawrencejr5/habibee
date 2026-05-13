@@ -67,6 +67,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const today = new Date().toLocaleDateString("en-CA");
 
   const habitsData = useQuery(api.habits.get_user_habits);
+  const archivedHabits = useQuery(api.habits.get_archived_habits);
   const habitEnteries = useQuery(api.habits.get_habit_enteries, { habit_id });
 
   // Generate heat map data (365 days) — memoized so it only runs when `habit_id` changes
@@ -149,12 +150,16 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   // Auto-close if the habit is deleted
   useEffect(() => {
-    if (visible && habitsData && !habitsData.find((h) => h._id === habit_id)) {
-      setVisible(false);
+    if (visible && habitsData && archivedHabits) {
+      const exists =
+        habitsData.find((h) => h._id === habit_id) ||
+        archivedHabits.find((h) => h._id === habit_id);
+      if (!exists) setVisible(false);
     }
-  }, [visible, habitsData, habit_id, setVisible]);
+  }, [visible, habitsData, archivedHabits, habit_id, setVisible]);
 
   const record_streak = useMutation(api.habits.record_streak);
+  const restore_habit = useMutation(api.habits.restore_habit);
 
   const handleStart = async () => {
     haptics.impact();
@@ -201,11 +206,27 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     }
   };
 
+  const handleRestore = async () => {
+    haptics.impact();
+    setIsRecording(true);
+    try {
+      await restore_habit({ habit_id });
+      showCustomAlert("Habit restored", "success");
+      setVisible(false);
+    } catch (error) {
+      showCustomAlert("Failed to restore habit", "danger");
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
   // Render nothing when not visible to avoid mounting BottomSheet in a closed/half state
   if (!visible) return null;
 
   // Find the habit by id
-  const habit = habitsData?.find((h) => h._id === habit_id);
+  const habit =
+    habitsData?.find((h) => h._id === habit_id) ||
+    archivedHabits?.find((h) => h._id === habit_id);
   const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
@@ -545,7 +566,9 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       {subHabits === undefined
                         ? "Loading..."
                         : subHabits.length > 0
-                          ? `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
+                          ? habit.archived
+                            ? `${subHabits.length}/${subHabits.length} completed`
+                            : `${subHabits.filter((s) => s.completed).length}/${subHabits.length} completed`
                           : "Add sub habits"}
                     </Text>
                   </View>
@@ -625,11 +648,10 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               </View>
             </ScrollView>
 
-            {/* Start Button - Fixed at bottom */}
             <View
               style={{
                 position: "absolute",
-                bottom: 0,
+                bottom: habit.archived ? 30 : 0,
                 backgroundColor: Colors[theme].background,
                 paddingVertical: 10,
                 left: 20,
@@ -637,8 +659,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
               }}
             >
               <Pressable
-                onPress={handleStart}
-                disabled={isDone || isRecording}
+                onPress={habit.archived ? handleRestore : handleStart}
+                disabled={(isDone && !habit.archived) || isRecording}
                 style={{
                   backgroundColor: habit.theme ?? Colors[theme].primary,
                   paddingVertical: 16,
@@ -653,11 +675,21 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                   shadowOpacity: 0.3,
                   shadowRadius: 4.65,
                   elevation: 8,
-                  opacity: isDone || isRecording ? 0.5 : 1,
+                  opacity: (isDone && !habit.archived) || isRecording ? 0.5 : 1,
                 }}
               >
                 {isRecording ? (
                   <ActivityIndicator color="#fff" size="small" />
+                ) : habit.archived ? (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    Restore Habit
+                  </Text>
                 ) : habit.duration ? (
                   <Text
                     style={{

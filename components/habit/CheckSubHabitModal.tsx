@@ -45,9 +45,10 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   const { showCustomAlert } = useCustomAlert();
 
   const habits = useQuery(api.habits.get_user_habits);
-  const habit = habits?.find((h) => h._id === habit_id);
+  const archivedHabits = useQuery(api.habits.get_archived_habits);
+  const habit = habits?.find((h) => h._id === habit_id) || archivedHabits?.find((h) => h._id === habit_id);
   const today = new Date().toLocaleDateString("en-CA");
-  const isParentDone = habit?.lastCompleted === today;
+  const isParentDone = habit?.lastCompleted === today || habit?.archived;
 
   const subHabits = useQuery(api.sub_habits.get_sub_habits, {
     parent_habit_id: habit_id,
@@ -631,15 +632,18 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                         </View>
                       ) : (
                         // ── View mode ───────────────────────────────────────
-                        <>
-                          {/* Top row: checkbox + name + actions */}
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Pressable
+                        (() => {
+                          const isCompleted = habit?.archived ? true : item.completed;
+                          return (
+                          <>
+                            {/* Top row: checkbox + name + actions */}
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Pressable
                               style={{
                                 flexDirection: "row",
                                 alignItems: "center",
@@ -665,11 +669,11 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                 ) : (
                                   <Feather
                                     name={
-                                      item.completed ? "check-circle" : "circle"
+                                      isCompleted ? "check-circle" : "circle"
                                     }
                                     size={24}
                                     color={
-                                      item.completed
+                                      isCompleted
                                         ? isParentDone ? themeColor + "80" : themeColor
                                         : Colors[theme].text_secondary
                                     }
@@ -680,10 +684,10 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                 style={{
                                   fontFamily: "NunitoMedium",
                                   fontSize: 16,
-                                  color: item.completed
+                                  color: isCompleted
                                     ? Colors[theme].text_secondary
                                     : Colors[theme].text,
-                                  textDecorationLine: item.completed
+                                  textDecorationLine: isCompleted
                                     ? "line-through"
                                     : "none",
                                   flex: 1,
@@ -814,6 +818,8 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                             )}
                           </View>
                         </>
+                        );
+                        })()
                       )}
                     </View>
                   ))}
