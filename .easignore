@@ -45,3 +45,6 @@ convex/_data
 
 #gemini
 .gemini
+
+# Folders to ignore
+landing/
