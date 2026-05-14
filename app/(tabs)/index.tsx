@@ -54,12 +54,21 @@ import EditHabitModal from "@/components/habit/EditHabitModal";
 import DeleteHabitModal from "@/components/habit/DeleteHabitModal";
 import ArchiveHabitModal from "@/components/habit/ArchiveHabitModal";
 import { HabitType } from "@/constants/Types";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useSyncPendingStreaks } from "@/hooks/useSyncPendingStreaks";
+import OfflineBanner from "@/components/OfflineBanner";
+import {
+  enqueuePendingStreak,
+  setLocalLastCompleted,
+} from "@/store/offlineStreakStore";
 
 const Home = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
+
+  const { isOnline } = useNetworkStatus();
 
   const { signedIn } = useUser();
   const today = new Date().toLocaleDateString("en-CA");
@@ -86,9 +95,24 @@ const Home = () => {
     null,
   );
 
+  // Tracks habit IDs completed while offline (for optimistic UI)
+  const [offlineCompletedIds, setOfflineCompletedIds] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Whether it is safe to run check_streak_and_reset (i.e. sync has finished)
+  const [syncReady, setSyncReady] = useState(false);
+
   const record_streak = useMutation(api.habits.record_streak);
   const toggle_sub_habit = useMutation(api.sub_habits.toggle_sub_habit);
   const update_habit = useMutation(api.habits.update_habit);
+  const check_streak_and_reset = useMutation(api.habits.check_streak_and_reset);
+
+  // Flush pending offline streaks when we come back online
+  useSyncPendingStreaks({
+    isOnline,
+    onSyncComplete: () => setSyncReady(true),
+  });
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
@@ -118,6 +142,12 @@ const Home = () => {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const adScrollViewRef = useRef<RNScrollView>(null);
   const adData = ["hive", "ai"];
+
+  // ── check_streak_and_reset: only run after sync queue is flushed ──────────
+  useEffect(() => {
+    if (!syncReady) return;
+    check_streak_and_reset({ today });
+  }, [syncReady]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -247,17 +277,22 @@ const Home = () => {
 
   const totalHabits = habitData?.length || 0;
   const completedHabits =
-    habitData?.filter((h) => h.lastCompleted === today).length || 0;
+    habitData?.filter(
+      (h) =>
+        h.lastCompleted === today || offlineCompletedIds.has(h._id),
+    ).length || 0;
   const allHabitsDone = totalHabits > 0 && completedHabits === totalHabits;
 
   if (loading) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
+      {/* Offline banner — floats above all content */}
+      <OfflineBanner isOnline={isOnline} />
       {/* User - Fixed Header */}
       <View
         style={{
-          paddingTop: insets.top + 10,
+          paddingTop: isOnline ? insets.top + 10 : 10,
           paddingBottom: 10,
           paddingHorizontal: 10,
           backgroundColor: Colors[theme].background,
@@ -729,7 +764,8 @@ const Home = () => {
                       title={habit.habit}
                       done={
                         habit.lastCompleted ===
-                        new Date().toLocaleDateString("en-CA")
+                          new Date().toLocaleDateString("en-CA") ||
+                        offlineCompletedIds.has(habit._id)
                       }
                       streak={habit.current_streak}
                       habitType={habit.icon ?? "default"}
@@ -763,29 +799,65 @@ const Home = () => {
                       onFireIconPress={async () => {
                         haptics.impact();
                         if (!habit.duration) {
-                          try {
-                            // Check if all sub-habits are completed if any exist
-                            if (habitSubHabits.length > 0) {
-                              const allCompleted = habitSubHabits.every(
-                                (sh) => sh.completed,
-                              );
-                              if (!allCompleted) {
-                                // If sub-habits are not completed, open them first
-                                if (!isExpanded) {
-                                  toggleExpansion(habit._id);
-                                  return;
-                                }
-
-                                if (habit.strict) {
-                                  showCustomAlert(
-                                    "Complete all sub-habits first!",
-                                    "warning",
-                                  );
-                                  return;
-                                }
+                          // ── Shared sub-habit validation ──────────────────
+                          if (habitSubHabits.length > 0) {
+                            const allCompleted = habitSubHabits.every(
+                              (sh) => sh.completed,
+                            );
+                            if (!allCompleted) {
+                              if (!isExpanded) {
+                                toggleExpansion(habit._id);
+                                return;
+                              }
+                              if (habit.strict) {
+                                showCustomAlert(
+                                  "Complete all sub-habits first!",
+                                  "warning",
+                                );
+                                return;
                               }
                             }
+                          }
 
+                          // ── Already done (online or offline) ─────────────
+                          const alreadyDone =
+                            habit.lastCompleted === today ||
+                            offlineCompletedIds.has(habit._id);
+
+                          if (alreadyDone) {
+                            showCustomAlert(
+                              "Streak already counted for today",
+                              "warning",
+                            );
+                            return;
+                          }
+
+                          // ── OFFLINE path ──────────────────────────────────
+                          if (!isOnline) {
+                            const weekDay = new Date().toLocaleDateString(
+                              "en-US",
+                              { weekday: "short" },
+                            );
+                            enqueuePendingStreak({
+                              habit_id: habit._id,
+                              current_date: today,
+                              week_day: weekDay,
+                            });
+                            setLocalLastCompleted(habit._id, today);
+                            setOfflineCompletedIds((prev) => {
+                              const next = new Set(prev);
+                              next.add(habit._id);
+                              return next;
+                            });
+                            showCustomAlert(
+                              "Saved offline — syncs when back online",
+                              "success",
+                            );
+                            return;
+                          }
+
+                          // ── ONLINE path ───────────────────────────────────
+                          try {
                             const res = await record_streak({
                               habit_id: habit._id,
                               current_date: today,
@@ -810,6 +882,14 @@ const Home = () => {
                             else showCustomAlert("An error occured", "danger");
                           }
                         } else {
+                          // Timer habit — requires connection
+                          if (!isOnline) {
+                            showCustomAlert(
+                              "Timer habits require a connection",
+                              "warning",
+                            );
+                            return;
+                          }
                           setSelectedHabitId(habit._id);
                           setTimerModalVisible(true);
                         }
