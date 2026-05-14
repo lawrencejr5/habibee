@@ -386,7 +386,19 @@ export const restore_habit = mutation({
     if (!habit) throw new Error("Habit not found");
     if (habit.user !== user_id) throw new Error("Unauthorized");
 
-    await ctx.db.patch(args.habit_id, { archived: false, current_streak: 0 });
+    let newStreak = habit.current_streak || 0;
+    const today = new Date().toLocaleDateString("en-CA");
+    
+    if (habit.lastCompleted) {
+      const diff = getDaysDifference(habit.lastCompleted, today);
+      if (diff > 1) {
+        newStreak = 0;
+      }
+    } else {
+      newStreak = 0;
+    }
+
+    await ctx.db.patch(args.habit_id, { archived: false, current_streak: newStreak });
     return { msg: "Habit restored", habit: args.habit_id };
   },
 });
