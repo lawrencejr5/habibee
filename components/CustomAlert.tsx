@@ -37,7 +37,7 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         hideAlert();
-      }, 2000);
+      }, 2_000);
     }
 
     return () => {
@@ -91,7 +91,7 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
         styles.container,
         {
           backgroundColor: Colors[deviceTheme].surface,
-          borderColor: getBackgroundColor(),
+          borderColor: Colors[deviceTheme].border,
           transform: [{ translateY }],
         },
       ]}
@@ -110,7 +110,7 @@ const CustomAlert = ({ visible, msg, theme, onHide }: CustomAlertProps) => {
           }}
         />
         <Text
-          style={[styles.messageText, { color: getBackgroundColor() }]}
+          style={[styles.messageText, { color: Colors[deviceTheme].text }]}
           numberOfLines={2}
         >
           {msg}
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     alignSelf: "center",
-    borderRadius: 50,
-    borderWidth: 1,
+    borderRadius: 10,
+    borderWidth: 3,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
