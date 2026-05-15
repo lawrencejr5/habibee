@@ -166,7 +166,7 @@ const SigninPage = () => {
           }
           style={{
             width: 160,
-            height: 40,
+            height: 45,
             alignSelf: "flex-start",
           }}
         />
@@ -174,7 +174,6 @@ const SigninPage = () => {
           style={{
             color: Colors[theme].text_secondary,
             fontFamily: "NunitoMedium",
-            marginTop: 10,
           }}
         >
           Welcome back, we're happy to have u back
