@@ -23,12 +23,15 @@ import { useLoadingContext } from "@/context/LoadingContext";
 import { useUser } from "@/context/UserContext";
 import { useConvexAuth } from "convex/react";
 import Loading from "@/components/Loading";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import OfflineBanner from "@/components/OfflineBanner";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
 
   const { theme, toggleTheme } = useTheme();
   const haptics = useHapitcs();
+  const { isOnline } = useNetworkStatus();
 
   const { appLoading } = useLoadingContext();
   const { signedIn } = useUser();
@@ -43,8 +46,9 @@ export default function Account() {
   if (appLoading || authLoading || !signedIn) return <Loading />;
 
   return (
-    <>
-      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner isOnline={isOnline} />
+      <ThemedView style={[styles.container, { paddingTop: isOnline ? insets.top : 10 }]}>
         <View style={{ paddingBottom: 20 }}>
           <ThemedText style={styles.title}>Account</ThemedText>
         </View>
@@ -514,7 +518,7 @@ export default function Account() {
         visible={openDeleteAccountModal}
         setVisible={setOpenDeleteAccountModal}
       />
-    </>
+    </View>
   );
 }
 

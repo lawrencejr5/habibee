@@ -57,13 +57,16 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
     }
   };
 
-  const handleNudge = async (targetUserId: any, username: string | undefined) => {
+  const handleNudge = async (
+    targetUserId: any,
+    username: string | undefined,
+  ) => {
     if (!targetUserId || !username || nudgedUsers.has(username)) return;
 
     haptics.impact("medium");
     setNudgedUsers((prev) => new Set(prev).add(username));
     showCustomAlert(`Nudged ${username}!`, "success");
-    
+
     try {
       await sendNudgePush({ targetUserId });
     } catch (error) {
@@ -74,14 +77,14 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
   return (
     <Modal
       visible={visible}
-      transparent={true}
+      transparent={false}
       animationType="fade"
       onShow={() => haptics.impact("success")}
     >
       <View
         style={[
           styles.overlay,
-          { backgroundColor: Colors[theme].background + "E6" }, // 90% opacity
+          { backgroundColor: Colors[theme].background }, // 90% opacity
         ]}
       >
         {/* Header Options */}
@@ -89,7 +92,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
           <Text style={[styles.title, { color: Colors[theme].text }]}>
             Habit Completed! 🚀
           </Text>
-          <Pressable
+          {/* <Pressable
             onPress={() => {
               haptics.impact("light");
               onClose();
@@ -97,7 +100,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
             style={styles.closeButton}
           >
             <Feather name="x" size={24} color={Colors[theme].text} />
-          </Pressable>
+          </Pressable> */}
         </View>
 
         <Text
@@ -252,7 +255,9 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
 
                             {!member?.completedToday && (
                               <Pressable
-                                onPress={() => handleNudge(member?._id, member?.username)}
+                                onPress={() =>
+                                  handleNudge(member?._id, member?.username)
+                                }
                                 disabled={nudgedUsers.has(
                                   member?.username as string,
                                 )}
@@ -310,7 +315,7 @@ const HiveNudgeOverlay: FC<HiveNudgeOverlayProps> = ({ visible, onClose }) => {
                         backgroundColor:
                           i === currentIndex
                             ? Colors[theme].primary
-                            : Colors[theme].border,
+                            : "#9ca2a8",
                         width: i === currentIndex ? 24 : 8,
                       },
                     ]}
@@ -353,7 +358,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
   },

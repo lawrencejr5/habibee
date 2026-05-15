@@ -33,6 +33,7 @@ import {
   PushNotificationProvider,
   usePushNotification,
 } from "@/context/PushNotification";
+import { getPendingStreaks } from "@/store/offlineStreakStore";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -92,6 +93,15 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
     try {
+      // Don't reset streaks if there are pending offline completions —
+      // wait for useSyncPendingStreaks in index.tsx to flush them first.
+      const pending = getPendingStreaks();
+      if (pending.length > 0) {
+        console.log(
+          `Skipping streak reset — ${pending.length} offline streak(s) pending sync.`,
+        );
+        return;
+      }
       const today = new Date().toLocaleDateString("en-CA");
       await checkStreak({ today });
     } catch (err) {
@@ -139,15 +149,12 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // Handle Splash Screen hiding
   useEffect(() => {
-    if (loaded) {
-      // Wait a tiny bit to ensure smooth transition
-      const timer = setTimeout(() => {
-        SplashScreen.hideAsync();
-        setShowSplash(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [loaded]);
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync();
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 5. Handle Auth Navigation Logic HERE
   useEffect(() => {

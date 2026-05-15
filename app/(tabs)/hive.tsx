@@ -27,12 +27,15 @@ import CreateHiveModal from "@/components/hive/CreateHiveModal";
 import JoinHiveModal from "@/components/hive/JoinHiveModal";
 import HiveHexagonGrid from "@/components/hive/HiveHexagonGrid";
 import HiveMemberList from "@/components/hive/HiveMemberList";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import OfflineBanner from "@/components/OfflineBanner";
 
 export default function HivePage() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
+  const { isOnline } = useNetworkStatus();
 
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
@@ -124,7 +127,9 @@ export default function HivePage() {
   const hasHives = myHives && myHives.length > 0;
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top + 10 }]}>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner isOnline={isOnline} />
+      <ThemedView style={[styles.container, { paddingTop: isOnline ? insets.top + 10 : 10 }]}>
       {showSettings && (
         <Pressable
           style={[
@@ -800,6 +805,7 @@ export default function HivePage() {
         </View>
       </Modal>
     </ThemedView>
+    </View>
   );
 }
 

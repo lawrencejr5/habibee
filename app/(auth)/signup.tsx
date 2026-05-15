@@ -164,7 +164,7 @@ const SignUpPage = () => {
           }
           style={{
             width: 160,
-            height: 40,
+            height: 45,
             alignSelf: "flex-start",
           }}
         />
@@ -172,7 +172,6 @@ const SignUpPage = () => {
           style={{
             color: Colors[theme].text_secondary,
             fontFamily: "NunitoMedium",
-            marginTop: 10,
           }}
         >
           Signup now! Let's get the best out of you
