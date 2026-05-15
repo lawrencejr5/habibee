@@ -13,7 +13,11 @@
       "backgroundColor": "#1f2428"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lawrencejr.habibee",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -54,7 +58,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-7078901325871517~8256492058"
+          "androidAppId": "ca-app-pub-7078901325871517~8256492058",
+          "iosAppId": "ca-app-pub-7078901325871517~7409093059"
         }
       ]
     ],

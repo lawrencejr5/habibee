@@ -476,13 +476,18 @@ const ShareableCard: FC<{
   const darkBg = "#111316";
   const lightText = "#ffffff";
   const subtleText = "rgba(255,255,255,0.45)";
+  const { theme } = useTheme();
 
   return (
-    <View style={[shareStyles.card, { backgroundColor: darkBg }]}>
-      {/* Top bar: branding */}
+    <View
+      style={[shareStyles.card, { backgroundColor: Colors[theme].background }]}
+    >
       <View style={shareStyles.topBar}>
-        <View style={[shareStyles.dot, { backgroundColor: themeColor }]} />
-        <Text style={shareStyles.brandName}>habibee</Text>
+        <Image
+          source={require("@/assets/images/name-logo-black.png")}
+          style={shareStyles.logo}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Center: streak */}
@@ -497,7 +502,7 @@ const ShareableCard: FC<{
           <Text style={shareStyles.fireEmoji}>🔥</Text>
         </View>
         <Text style={[shareStyles.daysWord, { color: themeColor }]}>
-          day{(habit.current_streak + 1) !== 1 ? "s" : ""} streak
+          day{habit.current_streak + 1 !== 1 ? "s" : ""} streak
         </Text>
       </View>
 
@@ -512,25 +517,78 @@ const ShareableCard: FC<{
             },
           ]}
         >
-          <Image
-            source={habitIcons[habit.icon ?? "default"]}
-            style={{ width: 16, height: 16, tintColor: themeColor }}
-          />
-          <Text
-            style={[shareStyles.habitChipText, { color: lightText }]}
-            numberOfLines={1}
+          {/* Icon Container */}
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              backgroundColor: themeColor + "20",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            {habit.habit}
-          </Text>
-          {subHabits && subHabits.length > 0 && (
-            <Text style={[shareStyles.habitChipMeta, { color: subtleText }]}>
-              · {subHabits.length} sub habit{subHabits.length > 1 ? "s" : ""}
+            <Image
+              source={habitIcons[habit.icon ?? "default"]}
+              style={{ width: 22, height: 22, tintColor: themeColor }}
+            />
+          </View>
+
+          {/* Text & Meta Container */}
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text
+              style={[shareStyles.habitChipText, { color: lightText }]}
+              numberOfLines={1}
+            >
+              {habit.habit}
             </Text>
-          )}
+
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              {subHabits && subHabits.length > 0 ? (
+                <>
+                  <Image
+                    source={require("../../assets/icons/check-outline.png")}
+                    style={{ width: 12, height: 12, tintColor: subtleText }}
+                  />
+                  <Text
+                    style={{
+                      color: subtleText,
+                      fontSize: 12,
+                      fontFamily: "NunitoBold",
+                    }}
+                  >
+                    {subHabits.filter((s) => s.completed).length}/
+                    {subHabits.length}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Image
+                    source={
+                      habit.duration
+                        ? require("../../assets/icons/clock.png")
+                        : require("../../assets/icons/calendar.png")
+                    }
+                    style={{ width: 12, height: 12, tintColor: subtleText }}
+                  />
+                  <Text
+                    style={{
+                      color: subtleText,
+                      fontSize: 12,
+                      fontFamily: "NunitoBold",
+                    }}
+                  >
+                    {habit.duration ? `${habit.duration} min(s)` : "Daily Task"}
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
         </View>
         <Text style={[shareStyles.goalMeta, { color: subtleText }]}>
-          {habit.goal}-day goal
-          {habit.duration ? ` · ${habit.duration} min/day` : ""}
+          {habit.goal}-day goal reached
         </Text>
       </View>
     </View>
@@ -725,19 +783,11 @@ const shareStyles = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  brandName: {
-    fontFamily: "NunitoExtraBold",
-    fontSize: 14,
-    color: "rgba(255,255,255,0.5)",
-    letterSpacing: 2,
-    textTransform: "uppercase",
+  logo: {
+    width: 180,
+    height: 50,
+    marginLeft: -20,
   },
   centerBlock: {
     alignItems: "center",
@@ -777,16 +827,16 @@ const shareStyles = StyleSheet.create({
   habitChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    gap: 15,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
     borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
   },
   habitChipText: {
     fontFamily: "NunitoBold",
-    fontSize: 14,
+    fontSize: 16,
     flex: 1,
   },
   habitChipMeta: {
