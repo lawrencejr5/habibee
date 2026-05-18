@@ -97,7 +97,7 @@ const Home = () => {
 
   // Tracks habit IDs completed while offline (for optimistic UI)
   const [offlineCompletedIds, setOfflineCompletedIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Whether it is safe to run check_streak_and_reset (i.e. sync has finished)
@@ -278,8 +278,7 @@ const Home = () => {
   const totalHabits = habitData?.length || 0;
   const completedHabits =
     habitData?.filter(
-      (h) =>
-        h.lastCompleted === today || offlineCompletedIds.has(h._id),
+      (h) => h.lastCompleted === today || offlineCompletedIds.has(h._id),
     ).length || 0;
   const allHabitsDone = totalHabits > 0 && completedHabits === totalHabits;
 
@@ -304,37 +303,13 @@ const Home = () => {
       >
         <View style={styles.user_container}>
           <Image
-            source={
-              signedIn.profile_url
-                ? { uri: signedIn.profile_url }
-                : require("../../assets/images/avatar.png")
-            }
+            source={require("../../assets/images/name-logo-black.png")}
             style={{
-              width: 40,
-              height: 40,
+              width: 130,
+              height: 38,
               borderRadius: 20,
-              borderColor: Colors[theme].text,
-              borderWidth: 2,
             }}
           />
-          <View>
-            <ThemedText style={styles.greeting_user}>
-              {greeting}, {signedIn.username}
-            </ThemedText>
-            <Text
-              style={[
-                styles.date_time,
-                { color: Colors[theme].text_secondary },
-              ]}
-            >
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                day: "2-digit", // '10' (Day of the month)
-                month: "short", // 'March' (Full month name)
-                year: "numeric",
-              })}
-            </Text>
-          </View>
         </View>
 
         <View
