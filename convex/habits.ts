@@ -412,6 +412,9 @@ export const check_streak_and_reset = mutation({
       return;
     }
 
+    const user = await ctx.db.get(user_id);
+    if (!user) return;
+
     const habits = await ctx.db
       .query("habits")
       .withIndex("by_user", (q) => q.eq("user", user_id))
@@ -443,22 +446,89 @@ export const check_streak_and_reset = mutation({
           await ctx.db.patch(habit._id, { last_daily_reset_date: args.today });
         }
       }
-
-      // Streak Check
-      if (!habit.lastCompleted || habit.current_streak === 0) continue;
-
-      const diff = getDaysDifference(habit.lastCompleted, args.today);
-      if (diff > 1) {
-        await ctx.db.patch(habit._id, { current_streak: 0 });
-      }
     }
 
-    const user = await ctx.db.get(user_id);
+    // Freeze logic
+    const yesterdayDate = new Date(args.today);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().split("T")[0];
 
-    if (!user?.last_streak_date || user.streak === 0) return;
+    const activeHabits = habits.filter(
+      (h) => h.lastCompleted && h.current_streak > 0 && h.lastCompleted < yesterday
+    );
 
-    const diff = getDaysDifference(user.last_streak_date, args.today);
-    if (diff > 1) await ctx.db.patch(user_id, { streak: 0 });
+    let userNeedsFreeze = false;
+    if (user.last_streak_date && (user.streak ?? 0) > 0 && user.last_streak_date < yesterday) {
+      userNeedsFreeze = true;
+    }
+
+    if (activeHabits.length > 0 || userNeedsFreeze) {
+      let oldest_date_str = yesterday;
+      
+      activeHabits.forEach((h) => {
+        if (h.lastCompleted! < oldest_date_str) oldest_date_str = h.lastCompleted!;
+      });
+      if (userNeedsFreeze && user.last_streak_date! < oldest_date_str) {
+        oldest_date_str = user.last_streak_date!;
+      }
+
+      let currentFreezes = user.freezes || 0;
+      let freezesUsed = 0;
+      let resetDates: string[] = [];
+
+      let d_date = new Date(oldest_date_str);
+      d_date.setDate(d_date.getDate() + 1);
+
+      while (d_date.toISOString().split("T")[0] <= yesterday) {
+        const d_str = d_date.toISOString().split("T")[0];
+
+        const anyMissing =
+          activeHabits.some((h) => h.lastCompleted! < d_str && !resetDates.includes(h._id)) ||
+          (userNeedsFreeze && user.last_streak_date! < d_str && !resetDates.includes("user"));
+
+        if (anyMissing) {
+          if (currentFreezes > 0) {
+            currentFreezes -= 1;
+            freezesUsed += 1;
+          } else {
+            activeHabits.forEach((h) => {
+              if (h.lastCompleted! < d_str && !resetDates.includes(h._id)) {
+                resetDates.push(h._id);
+              }
+            });
+            if (userNeedsFreeze && user.last_streak_date! < d_str && !resetDates.includes("user")) {
+              resetDates.push("user");
+            }
+          }
+        }
+        d_date.setDate(d_date.getDate() + 1);
+      }
+
+      // Apply resets
+      for (const habitId of resetDates) {
+        if (habitId !== "user") {
+          await ctx.db.patch(habitId as any, { current_streak: 0 });
+        }
+      }
+      if (resetDates.includes("user")) {
+        await ctx.db.patch(user_id, { streak: 0 });
+      }
+
+      // Update freezes and bump lastCompleted to yesterday for surviving streaks
+      if (freezesUsed > 0) {
+        await ctx.db.patch(user_id, { freezes: currentFreezes });
+      }
+
+      for (const h of activeHabits) {
+        if (!resetDates.includes(h._id)) {
+          await ctx.db.patch(h._id, { lastCompleted: yesterday });
+        }
+      }
+
+      if (userNeedsFreeze && !resetDates.includes("user")) {
+        await ctx.db.patch(user_id, { last_streak_date: yesterday });
+      }
+    }
   },
 });
 

@@ -53,6 +53,7 @@ import HabitContextMenu from "@/components/habit/HabitContextMenu";
 import EditHabitModal from "@/components/habit/EditHabitModal";
 import DeleteHabitModal from "@/components/habit/DeleteHabitModal";
 import ArchiveHabitModal from "@/components/habit/ArchiveHabitModal";
+import StreakFreezeModal from "@/components/home/StreakFreezeModal";
 import { HabitType } from "@/constants/Types";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useSyncPendingStreaks } from "@/hooks/useSyncPendingStreaks";
@@ -89,6 +90,8 @@ const Home = () => {
   const [createHiveModalVisible, setCreateHiveModalVisible] =
     useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
+  const [streakFreezeModalVisible, setStreakFreezeModalVisible] =
+    useState<boolean>(false);
   const [detailsModalVisible, setDetailsModalVisible] =
     useState<boolean>(false);
   const [selectedHabitId, setSelectedHabitId] = useState<Id<"habits"> | null>(
@@ -259,6 +262,7 @@ const Home = () => {
     deleteModalVisible ||
     reminderModalVisible ||
     createHiveModalVisible ||
+    streakFreezeModalVisible ||
     !!goalCompletedHabit;
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -298,52 +302,88 @@ const Home = () => {
           zIndex: modalOpen ? 0 : 2,
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "flex-start",
+          alignItems: "center",
         }}
       >
         <View style={styles.user_container}>
           <Image
             source={require("../../assets/images/name-logo-black.png")}
             style={{
-              width: 130,
-              height: 38,
-              borderRadius: 20,
+              width: 140,
+              height: 32,
             }}
           />
         </View>
 
-        <View
+        <Pressable
+          onPress={() => {
+            haptics.impact();
+            setStreakFreezeModalVisible(true);
+          }}
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 5,
+            gap: 10,
             marginTop: 10,
+            backgroundColor: Colors[theme].surface,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 20,
+            borderWidth: 1.5,
+            borderColor: Colors[theme].border,
           }}
         >
-          <Text
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 16,
+                color:
+                  signedIn.last_streak_date === today
+                    ? Colors[theme].accent1
+                    : Colors[theme].text_secondary,
+              }}
+            >
+              {signedIn.streak ?? 0}
+            </Text>
+            <Image
+              source={require("../../assets/icons/fire.png")}
+              style={{
+                width: 20,
+                height: 20,
+                tintColor:
+                  signedIn.last_streak_date === today
+                    ? undefined
+                    : Colors[theme].text_secondary,
+              }}
+            />
+          </View>
+          <View
             style={{
-              fontFamily: "NunitoExtraBold",
-              fontSize: 16,
-              color:
-                signedIn.last_streak_date === today
-                  ? Colors[theme].accent1
-                  : Colors[theme].text_secondary,
-            }}
-          >
-            {signedIn.streak ?? 0}
-          </Text>
-          <Image
-            source={require("../../assets/icons/fire.png")}
-            style={{
-              width: 20,
-              height: 20,
-              tintColor:
-                signedIn.last_streak_date === today
-                  ? undefined
-                  : Colors[theme].text_secondary,
+              width: 1,
+              height: 15,
+              backgroundColor: Colors[theme].border,
             }}
           />
-        </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Image
+              source={require("../../assets/icons/snowflake.png")}
+              style={{
+                width: 20,
+                height: 20,
+              }}
+            />
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 16,
+                color: Colors[theme].blue,
+              }}
+            >
+              {signedIn.freezes ?? 0}
+            </Text>
+          </View>
+        </Pressable>
       </View>
 
       {/* Streak Card */}
@@ -1054,6 +1094,10 @@ const Home = () => {
           habit={contextMenuHabit}
         />
       )}
+      <StreakFreezeModal
+        visible={streakFreezeModalVisible}
+        setVisible={setStreakFreezeModalVisible}
+      />
     </View>
   );
 };
