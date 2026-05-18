@@ -309,9 +309,8 @@ const Home = () => {
           <Image
             source={require("../../assets/images/name-logo-black.png")}
             style={{
-              width: 130,
-              height: 38,
-              borderRadius: 20,
+              width: 140,
+              height: 32,
             }}
           />
         </View>
@@ -378,7 +377,7 @@ const Home = () => {
               style={{
                 fontFamily: "NunitoExtraBold",
                 fontSize: 16,
-                color: "#0088ff",
+                color: Colors[theme].blue,
               }}
             >
               {signedIn.freezes ?? 0}

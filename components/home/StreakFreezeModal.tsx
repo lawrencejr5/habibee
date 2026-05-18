@@ -6,18 +6,13 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from "react";
-import {
-  ActivityIndicator,
-  BackHandler,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  Image,
-} from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, Pressable, Text, View, Image } from "react-native";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import {
   RewardedAd,
   RewardedAdEventType,
@@ -34,7 +29,7 @@ import { useCustomAlert } from "@/context/AlertContext";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-const adUnitId = __DEV__ ? TestIds.REWARDED : TestIds.REWARDED; // User requested test ids for now
+const adUnitId = __DEV__ ? TestIds.REWARDED : TestIds.REWARDED;
 
 interface StreakFreezeModalProps {
   visible: boolean;
@@ -45,16 +40,18 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
   visible,
   setVisible,
 }) => {
-  const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%"], []);
+  const snapPoints = useMemo(() => ["35%"], []);
 
   const user = useQuery(api.users.get_current_user);
   const addStreakFreeze = useMutation(api.users.add_streak_freeze);
+
+  const today = new Date().toLocaleDateString("en-CA");
+  const isStreakDone = user?.last_streak_date === today;
 
   const [loaded, setLoaded] = useState(false);
   const [adLoading, setAdLoading] = useState(false);
@@ -89,7 +86,6 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
       },
     );
 
-    // Start loading the rewarded ad straight away
     rewarded.load();
     setAdLoading(true);
 
@@ -98,25 +94,6 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
       unsubscribeEarned();
     };
   }, [rewarded]);
-
-  useEffect(() => {
-    const backAction = () => {
-      if (visible) {
-        bottomSheetRef.current?.close();
-        return true;
-      }
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction,
-    );
-
-    return () => backHandler.remove();
-  }, [visible, setVisible]);
-
-  if (!visible) return null;
 
   const currentFreezes = user?.freezes || 0;
   const maxFreezes = 5;
@@ -142,13 +119,29 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
     }
   };
 
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
+
+  if (!visible) return null;
+
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={true}
       enablePanDownToClose={true}
       onClose={() => setVisible(false)}
+      backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: Colors[theme].background }}
       handleIndicatorStyle={{
         width: 40,
@@ -158,176 +151,123 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
         opacity: 0.5,
       }}
     >
-      <BottomSheetView style={{ flex: 1 }}>
+      <BottomSheetView
+        style={{
+          padding: 20,
+          paddingBottom: 40,
+          gap: 15,
+        }}
+      >
+        {/* Card 1: Streak Info */}
         <View
           style={{
-            flex: 1,
-            backgroundColor: Colors[theme].background,
-            paddingHorizontal: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: Colors[theme].surface,
+            padding: 15,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: Colors[theme].border,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingTop: 10,
-            }}
-          >
-            <Pressable
-              style={{ padding: 8 }}
-              onPress={() => {
-                haptics.impact();
-                bottomSheetRef.current?.close();
-              }}
-            >
-              <Feather
-                name="chevron-down"
-                size={30}
-                color={Colors[theme].text}
-              />
-            </Pressable>
-          </View>
-
-          <View style={{ alignItems: "center", marginTop: 10 }}>
-            <View
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Image
+              source={require("@/assets/icons/fire.png")}
               style={{
-                width: 100,
-                height: 100,
-                borderRadius: 50,
-                backgroundColor: Colors[theme].surface,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 3,
-                borderColor: Colors[theme].primary,
+                width: 24,
+                height: 24,
+                tintColor: isStreakDone
+                  ? undefined
+                  : Colors[theme].text_secondary,
               }}
-            >
-              <Image
-                source={require("@/assets/icons/snowflake.png")}
-                style={{
-                  width: 50,
-                  height: 50,
-                  tintColor: Colors[theme].primary,
-                }}
-              />
-            </View>
-
-            <ThemedText
-              style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 24,
-                marginTop: 20,
-              }}
-            >
-              Streak Freeze
+            />
+            <ThemedText style={{ fontFamily: "NunitoBold", fontSize: 16 }}>
+              Current Streak
             </ThemedText>
-
-            <Text
-              style={{
-                fontFamily: "NunitoRegular",
-                fontSize: 16,
-                color: Colors[theme].text_secondary,
-                textAlign: "center",
-                marginTop: 10,
-              }}
-            >
-              A streak freeze protects your streaks if you miss a day. Freezes
-              apply to both your general streak and habit streaks!
-            </Text>
           </View>
-
-          <View
+          <ThemedText
             style={{
-              marginTop: 30,
-              backgroundColor: Colors[theme].surface,
-              padding: 20,
-              borderRadius: 15,
-              borderWidth: 2,
-              borderColor: Colors[theme].border,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
+              fontFamily: "NunitoExtraBold",
+              fontSize: 18,
+              color: isStreakDone ? Colors[theme].primary : Colors[theme].text,
             }}
           >
+            {user?.streak || 0}
+          </ThemedText>
+        </View>
+
+        {/* Card 2: Streak Freeze Info */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: Colors[theme].surface,
+            padding: 15,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: Colors[theme].border,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Image
+              source={require("@/assets/icons/snowflake.png")}
+              style={{
+                width: 24,
+                height: 24,
+              }}
+            />
             <View>
+              <ThemedText style={{ fontFamily: "NunitoBold", fontSize: 16 }}>
+                Streak Freezes
+              </ThemedText>
               <Text
                 style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 14,
+                  fontFamily: "NunitoMedium",
+                  fontSize: 12,
                   color: Colors[theme].text_secondary,
                 }}
               >
-                Available Freezes
+                {currentFreezes}/{maxFreezes} available
               </Text>
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 24,
-                  marginTop: 5,
-                }}
-              >
-                {currentFreezes} / {maxFreezes}
-              </ThemedText>
-            </View>
-            <View style={{ flexDirection: "row" }}>
-              {Array.from({ length: maxFreezes }).map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: 15,
-                    height: 15,
-                    borderRadius: 7.5,
-                    backgroundColor:
-                      i < currentFreezes
-                        ? Colors[theme].primary
-                        : Colors[theme].border,
-                    marginLeft: 5,
-                  }}
-                />
-              ))}
             </View>
           </View>
 
-          <View
+          <Pressable
+            onPress={handleWatchAd}
+            disabled={hasMaxFreezes || (!loaded && adLoading)}
             style={{
-              position: "absolute",
-              bottom: insets.bottom + 20,
-              left: 20,
-              right: 20,
+              backgroundColor: hasMaxFreezes
+                ? Colors[theme].border
+                : Colors[theme].blue,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
             }}
           >
-            <Pressable
-              onPress={handleWatchAd}
-              disabled={hasMaxFreezes || (!loaded && adLoading)}
-              style={{
-                backgroundColor: hasMaxFreezes
-                  ? Colors[theme].border
-                  : Colors[theme].primary,
-                paddingVertical: 16,
-                borderRadius: 50,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                opacity: hasMaxFreezes || (!loaded && adLoading) ? 0.5 : 1,
-              }}
-            >
-              {!loaded && adLoading && !hasMaxFreezes ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
+            {!loaded && adLoading && !hasMaxFreezes ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                {!hasMaxFreezes && (
+                  <Feather name="play" size={12} color="#fff" />
+                )}
                 <Text
                   style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 16,
+                    fontFamily: "NunitoBold",
+                    fontSize: 13,
                     color: "#fff",
                   }}
                 >
-                  {hasMaxFreezes
-                    ? "Max freezes reached"
-                    : "Watch Ad for Freeze"}
+                  {hasMaxFreezes ? "Max" : "Watch Ad"}
                 </Text>
-              )}
-            </Pressable>
-          </View>
+              </>
+            )}
+          </Pressable>
         </View>
       </BottomSheetView>
     </BottomSheet>
