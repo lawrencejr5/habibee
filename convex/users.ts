@@ -220,3 +220,20 @@ export const getNudgeData = internalQuery({
     };
   }
 });
+
+export const add_streak_freeze = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("User not authenticated");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const currentFreezes = user.freezes || 0;
+    if (currentFreezes < 5) {
+      await ctx.db.patch(userId, { freezes: currentFreezes + 1 });
+    }
+  },
+});
+

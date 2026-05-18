@@ -13,6 +13,7 @@ const schema = defineSchema({
     profile_pic: v.optional(v.string()),
     streak: v.optional(v.number()),
     last_streak_date: v.optional(v.string()),
+    freezes: v.optional(v.number()),
     emailVerificationTime: v.optional(v.number()),
     pushTokens: v.optional(v.array(v.string())),
   }).index("email", ["email"]),
