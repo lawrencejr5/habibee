@@ -324,7 +324,6 @@ const Home = () => {
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            marginTop: 10,
             backgroundColor: Colors[theme].surface,
             paddingHorizontal: 12,
             paddingVertical: 6,

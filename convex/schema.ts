@@ -16,6 +16,9 @@ const schema = defineSchema({
     freezes: v.optional(v.number()),
     emailVerificationTime: v.optional(v.number()),
     pushTokens: v.optional(v.array(v.string())),
+    is_premium: v.optional(v.boolean()),
+    sub_type: v.optional(v.union(v.literal("monthly"), v.literal("lifetime"))),
+    date_of_sub: v.optional(v.string()),
   }).index("email", ["email"]),
 
   weekly_stats: defineTable({

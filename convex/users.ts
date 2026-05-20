@@ -237,3 +237,23 @@ export const add_streak_freeze = mutation({
   },
 });
 
+export const update_premium_status = mutation({
+  args: {
+    is_premium: v.boolean(),
+    sub_type: v.optional(
+      v.union(v.literal("monthly"), v.literal("lifetime"))
+    ),
+    date_of_sub: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("User not authenticated");
+
+    await ctx.db.patch(userId, {
+      is_premium: args.is_premium,
+      sub_type: args.sub_type,
+      date_of_sub: args.date_of_sub,
+    });
+  },
+});
+

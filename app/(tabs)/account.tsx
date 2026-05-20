@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import DeleteAccountModal from "@/components/account/DeleteAccountModal";
+import UpgradeModal from "@/components/account/UpgradeModal";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
@@ -25,6 +26,7 @@ import { useConvexAuth } from "convex/react";
 import Loading from "@/components/Loading";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import OfflineBanner from "@/components/OfflineBanner";
+import { usePremium } from "@/context/PremiumContext";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
@@ -32,6 +34,7 @@ export default function Account() {
   const { theme, toggleTheme } = useTheme();
   const haptics = useHapitcs();
   const { isOnline } = useNetworkStatus();
+  const { isPremium, planType } = usePremium();
 
   const { appLoading } = useLoadingContext();
   const { signedIn } = useUser();
@@ -42,6 +45,7 @@ export default function Account() {
     useState<boolean>(false);
   const [openDeleteAccountModal, setOpenDeleteAccountModal] =
     useState<boolean>(false);
+  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
 
   if (appLoading || authLoading || !signedIn) return <Loading />;
 
@@ -161,6 +165,105 @@ export default function Account() {
               </View>
             </View>
           </Pressable>
+
+          {/* Premium Upgrade Banner */}
+          {isPremium ? (
+            <View
+              style={{
+                marginTop: 14,
+                backgroundColor: Colors[theme].primary + "15",
+                borderColor: Colors[theme].primary + "40",
+                borderWidth: 2,
+                borderRadius: 15,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>👑</Text>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: Colors[theme].primary,
+                    fontSize: 15,
+                  }}
+                >
+                  Habibee Premium
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    color: Colors[theme].text_secondary,
+                    fontSize: 12,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {planType} plan active
+                </Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: "#fff",
+                    fontSize: 12,
+                  }}
+                >
+                  PRO
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setOpenUpgradeModal(true);
+              }}
+              style={{
+                marginTop: 14,
+                backgroundColor: Colors[theme].primary,
+                borderRadius: 15,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <Text style={{ fontSize: 22 }}>👑</Text>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: "#fff",
+                    fontSize: 16,
+                  }}
+                >
+                  Upgrade to Premium
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: 12,
+                  }}
+                >
+                  Unlock all features & go ad-free
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#fff" />
+            </Pressable>
+          )}
 
           <View style={{ marginTop: 30 }}>
             {/* Personal */}
@@ -517,6 +620,10 @@ export default function Account() {
       <DeleteAccountModal
         visible={openDeleteAccountModal}
         setVisible={setOpenDeleteAccountModal}
+      />
+      <UpgradeModal
+        visible={openUpgradeModal}
+        setVisible={setOpenUpgradeModal}
       />
     </View>
   );
