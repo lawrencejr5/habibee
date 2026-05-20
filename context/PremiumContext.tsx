@@ -33,42 +33,39 @@ interface PremiumContextType {
 
 const PremiumContext = createContext<PremiumContextType | null>(null);
 
-const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { signedIn } = useUser();
   const updatePremium = useMutation(api.users.update_premium_status);
 
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [planType, setPlanType] = useState<"monthly" | "lifetime" | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [monthlyPackage, setMonthlyPackage] =
-    useState<PurchasesPackage | null>(null);
+  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(
+    null,
+  );
   const [lifetimePackage, setLifetimePackage] =
     useState<PurchasesPackage | null>(null);
   const [initialized, setInitialized] = useState(false);
 
   // Derive premium state from CustomerInfo
-  const processCustomerInfo = useCallback(
-    (info: CustomerInfo) => {
-      const entitlement = info.entitlements.active["premium"];
-      if (entitlement) {
-        setIsPremium(true);
-        // Determine plan type based on the product identifier or period
-        const productId = entitlement.productIdentifier || "";
-        if (
-          productId.toLowerCase().includes("lifetime") ||
-          entitlement.expirationDate === null
-        ) {
-          setPlanType("lifetime");
-        } else {
-          setPlanType("monthly");
-        }
+  const processCustomerInfo = useCallback((info: CustomerInfo) => {
+    const entitlement = info.entitlements.active["premium"];
+    if (entitlement) {
+      setIsPremium(true);
+      const productId = entitlement.productIdentifier || "";
+      if (
+        productId.toLowerCase().includes("lifetime") ||
+        entitlement.expirationDate === null
+      ) {
+        setPlanType("lifetime");
       } else {
-        setIsPremium(false);
-        setPlanType(null);
+        setPlanType("monthly");
       }
-    },
-    []
-  );
+    } else {
+      setIsPremium(false);
+      setPlanType(null);
+    }
+  }, []);
 
   // Sync premium status to Convex
   const syncToConvex = useCallback(
@@ -85,19 +82,25 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
         console.warn("Failed to sync premium status to Convex:", err);
       }
     },
-    [updatePremium]
+    [updatePremium],
   );
 
-  // Initialize RevenueCat
+  // Initialize RevenueCat (Safeguarded against duplicate configurations)
   useEffect(() => {
     const init = async () => {
       try {
+        const alreadyConfigured = await Purchases.isConfigured();
+        if (alreadyConfigured) {
+          setInitialized(true);
+          return;
+        }
+
         if (__DEV__) {
           Purchases.setLogLevel(LOG_LEVEL.DEBUG);
         }
 
         const apiKey = Platform.OS === "ios" ? RC_IOS_KEY : RC_ANDROID_KEY;
-        Purchases.configure({ apiKey });
+        await Purchases.configure({ apiKey });
         setInitialized(true);
       } catch (err) {
         console.error("Failed to initialize RevenueCat:", err);
@@ -108,44 +111,54 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     init();
   }, []);
 
-  // Identify user and fetch initial state once RC is initialized + user is signed in
+  // Identify user and fetch layout offerings map smoothly
   useEffect(() => {
     if (!initialized || !signedIn?._id) return;
+
+    let isMounted = true;
 
     const identify = async () => {
       try {
         setLoading(true);
 
-        // Identify user to RevenueCat
-        await Purchases.logIn(signedIn._id);
+        // logIn returns customerInfo directly—saves an unnecessary getCustomerInfo() network ping!
+        const loginResult = await Purchases.logIn(signedIn._id);
+        if (isMounted) {
+          processCustomerInfo(loginResult.customerInfo);
+        }
 
-        // Fetch customer info
-        const info = await Purchases.getCustomerInfo();
-        processCustomerInfo(info);
-
-        // Fetch offerings
         const offerings = await Purchases.getOfferings();
-        if (offerings.current) {
-          const monthly = offerings.current.availablePackages.find(
-            (p) => p.packageType === "MONTHLY"
-          );
-          const lifetime = offerings.current.availablePackages.find(
-            (p) => p.packageType === "LIFETIME"
-          );
+        if (offerings.current && isMounted) {
+          // 1. Grab monthly cleanly
+          const monthly = offerings.current.monthly;
           setMonthlyPackage(monthly ?? null);
+
+          // 2. Fallback check: try out-of-the-box shortcut first, if null, scour the active array manually
+          const lifetime =
+            offerings.current.lifetime ??
+            offerings.current.availablePackages.find(
+              (p) =>
+                p.packageType === "LIFETIME" ||
+                p.identifier.toLowerCase().includes("lifetime"),
+            );
+
           setLifetimePackage(lifetime ?? null);
         }
       } catch (err) {
         console.warn("RevenueCat identify/fetch error:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     identify();
-  }, [initialized, signedIn?._id]);
 
-  // Listen for customer info updates
+    return () => {
+      isMounted = false;
+    };
+  }, [initialized, signedIn?._id, processCustomerInfo]);
+
+  // Listen for background customer info updates
   useEffect(() => {
     if (!initialized) return;
 
@@ -159,16 +172,17 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, [initialized, processCustomerInfo]);
 
-  // Purchase a package
+  // Purchase Execution
   const purchasePackage = useCallback(
     async (type: "monthly" | "lifetime") => {
       const pkg = type === "monthly" ? monthlyPackage : lifetimePackage;
       if (!pkg) {
-        console.warn(`No ${type} package available`);
+        console.warn(`No ${type} package available for purchase operation`);
         return;
       }
 
       try {
+        setLoading(true);
         const { customerInfo } = await Purchases.purchasePackage(pkg);
         processCustomerInfo(customerInfo);
 
@@ -181,14 +195,17 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
           console.error("Purchase error:", err);
           throw err;
         }
+      } finally {
+        setLoading(false);
       }
     },
-    [monthlyPackage, lifetimePackage, processCustomerInfo, syncToConvex]
+    [monthlyPackage, lifetimePackage, processCustomerInfo, syncToConvex],
   );
 
-  // Restore purchases
+  // Restore Purchases
   const restorePurchases = useCallback(async () => {
     try {
+      setLoading(true);
       const info = await Purchases.restorePurchases();
       processCustomerInfo(info);
 
@@ -197,7 +214,7 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
         const productId = entitlement.productIdentifier || "";
         const restoredPlan =
           productId.toLowerCase().includes("lifetime") ||
-            entitlement.expirationDate === null
+          entitlement.expirationDate === null
             ? "lifetime"
             : "monthly";
         await syncToConvex(true, restoredPlan);
@@ -205,6 +222,8 @@ const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } catch (err) {
       console.error("Restore purchases error:", err);
       throw err;
+    } finally {
+      setLoading(false);
     }
   }, [processCustomerInfo, syncToConvex]);
 

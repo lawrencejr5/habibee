@@ -33,11 +33,11 @@ interface UpgradeModalProps {
 }
 
 const BENEFITS = [
-  { icon: "layers" as const, text: "Unlimited habits" },
-  { icon: "eye-off" as const, text: "Ad-free experience" },
-  { icon: "star" as const, text: "Premium themes & icons" },
-  { icon: "bar-chart-2" as const, text: "Advanced statistics" },
-  { icon: "headphones" as const, text: "Priority support" },
+  { text: "Unlimited Habits" },
+  { text: "Habibee AI Features" },
+  { text: "Sub-habit Reminders" },
+  { text: "Streak Freezing" },
+  { text: "Priority Support" },
 ];
 
 const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
@@ -48,13 +48,13 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
   const { showCustomAlert } = useCustomAlert();
 
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "lifetime">(
-    "monthly"
+    "monthly",
   );
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["80%"], []);
+  const snapPoints = useMemo(() => ["93%"], []);
 
   useEffect(() => {
     if (visible) bottomSheetRef.current?.expand();
@@ -101,8 +101,8 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
     }
   };
 
-  const monthlyPrice = monthlyPackage?.product?.priceString ?? "$3.99";
-  const lifetimePrice = lifetimePackage?.product?.priceString ?? "$29.99";
+  const monthlyPrice = monthlyPackage?.product.priceString ?? "₦640";
+  const lifetimePrice = lifetimePackage?.product?.priceString ?? "₦12,600";
 
   if (!visible) return null;
 
@@ -133,289 +133,300 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
           paddingBottom: 40,
         }}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View
-            style={[
-              styles.crownBadge,
-              { backgroundColor: Colors[theme].primary + "20" },
-            ]}
-          >
-            <Text style={{ fontSize: 28 }}>👑</Text>
-          </View>
-          <Text
-            style={[
-              styles.title,
-              { color: Colors[theme].text },
-            ]}
-          >
-            Habibee Premium
+        {/* Page Title */}
+        <View style={styles.pageTitleContainer}>
+          <Text style={[styles.pageTitleText, { color: Colors[theme].text }]}>
+            Get more from Habibee
           </Text>
           <Text
             style={[
-              styles.subtitle,
+              styles.pageSubtitleText,
               { color: Colors[theme].text_secondary },
             ]}
           >
-            Unlock the full experience
+            Choose the plan right for you
           </Text>
         </View>
 
-        {/* Benefits */}
+        {/* Main Premium Container Card */}
         <View
           style={[
-            styles.benefitsCard,
+            styles.mainCard,
             {
               backgroundColor: Colors[theme].surface,
               borderColor: Colors[theme].border,
             },
           ]}
         >
-          {BENEFITS.map((benefit, index) => (
-            <View key={index} style={styles.benefitRow}>
-              <View
-                style={[
-                  styles.checkIcon,
-                  { backgroundColor: Colors[theme].primary + "18" },
-                ]}
-              >
-                <Feather
-                  name={benefit.icon}
-                  size={16}
-                  color={Colors[theme].primary}
-                />
+          {/* Card Header */}
+          <Text style={[styles.cardTitleText, { color: Colors[theme].text }]}>
+            Pro
+          </Text>
+          <Text
+            style={[
+              styles.cardSubtitleText,
+              { color: Colors[theme].text_secondary },
+            ]}
+          >
+            For ultimate habit building
+          </Text>
+
+          {/* Side-by-Side Plans Selector */}
+          <View style={styles.plansSelectorRow}>
+            {/* Monthly Plan */}
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setSelectedPlan("monthly");
+              }}
+              style={[
+                styles.planCard,
+                {
+                  backgroundColor:
+                    selectedPlan === "monthly"
+                      ? Colors[theme].primary + "12"
+                      : "transparent",
+                  borderColor:
+                    selectedPlan === "monthly"
+                      ? Colors[theme].primary
+                      : Colors[theme].border,
+                },
+              ]}
+            >
+              <View style={styles.planCardTop}>
+                <View
+                  style={[
+                    styles.radioCircle,
+                    {
+                      borderColor:
+                        selectedPlan === "monthly"
+                          ? Colors[theme].primary
+                          : Colors[theme].text_secondary,
+                    },
+                  ]}
+                >
+                  {selectedPlan === "monthly" && (
+                    <View
+                      style={[
+                        styles.radioDot,
+                        { backgroundColor: Colors[theme].primary },
+                      ]}
+                    />
+                  )}
+                </View>
               </View>
+
+              <View style={styles.planCardBottom}>
+                <Text
+                  style={[styles.planPriceText, { color: Colors[theme].text }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {monthlyPrice}
+                </Text>
+                <Text
+                  style={[
+                    styles.planPeriodText,
+                    { color: Colors[theme].text_secondary },
+                  ]}
+                >
+                  Billed monthly
+                </Text>
+              </View>
+            </Pressable>
+
+            {/* Lifetime Plan */}
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setSelectedPlan("lifetime");
+              }}
+              style={[
+                styles.planCard,
+                {
+                  backgroundColor:
+                    selectedPlan === "lifetime"
+                      ? Colors[theme].primary + "12"
+                      : "transparent",
+                  borderColor:
+                    selectedPlan === "lifetime"
+                      ? Colors[theme].primary
+                      : Colors[theme].border,
+                },
+              ]}
+            >
+              <View style={styles.planCardTop}>
+                <View
+                  style={[
+                    styles.radioCircle,
+                    {
+                      borderColor:
+                        selectedPlan === "lifetime"
+                          ? Colors[theme].primary
+                          : Colors[theme].text_secondary,
+                    },
+                  ]}
+                >
+                  {selectedPlan === "lifetime" && (
+                    <View
+                      style={[
+                        styles.radioDot,
+                        { backgroundColor: Colors[theme].primary },
+                      ]}
+                    />
+                  )}
+                </View>
+
+                <View
+                  style={[
+                    styles.badgeContainer,
+                    { backgroundColor: Colors[theme].primary + "22" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.badgeText, { color: Colors[theme].primary }]}
+                  >
+                    Best value
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.planCardBottom}>
+                <Text
+                  style={[styles.planPriceText, { color: Colors[theme].text }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {lifetimePrice}
+                </Text>
+                <Text
+                  style={[
+                    styles.planPeriodText,
+                    { color: Colors[theme].text_secondary },
+                  ]}
+                >
+                  Pay once forever
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Big Premium CTA Button */}
+          <Pressable
+            onPress={handlePurchase}
+            disabled={purchasing}
+            style={[
+              styles.ctaButton,
+              {
+                backgroundColor: Colors[theme].primary,
+              },
+            ]}
+          >
+            {purchasing ? (
+              <ActivityIndicator color={"#fff"} />
+            ) : (
+              <Text style={[styles.ctaText, { color: "#ffffff" }]}>
+                {selectedPlan === "lifetime"
+                  ? "Get Lifetime plan"
+                  : "Get Pro plan"}
+              </Text>
+            )}
+          </Pressable>
+
+          {/* Subtle Separator Divider */}
+          <View
+            style={[styles.divider, { backgroundColor: Colors[theme].border }]}
+          />
+
+          {/* Benefits Section */}
+          <View style={styles.benefitsContainer}>
+            <Text
+              style={[
+                styles.benefitsHeader,
+                { color: Colors[theme].text_secondary },
+              ]}
+            >
+              Everything in Free, plus:
+            </Text>
+
+            {BENEFITS.map((benefit, index) => (
+              <View key={index} style={styles.benefitRow}>
+                <Feather
+                  name="check"
+                  size={16}
+                  color={Colors[theme].text}
+                  style={styles.checkIcon}
+                />
+                <Text
+                  style={[styles.benefitText, { color: Colors[theme].text }]}
+                >
+                  {benefit.text}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Restore Purchases Button */}
+          <Pressable
+            onPress={handleRestore}
+            disabled={restoring}
+            style={styles.restoreContainer}
+          >
+            {restoring ? (
+              <ActivityIndicator
+                size="small"
+                color={Colors[theme].text_secondary}
+              />
+            ) : (
               <Text
                 style={[
-                  styles.benefitText,
-                  { color: Colors[theme].text },
+                  styles.restoreText,
+                  { color: Colors[theme].text_secondary },
                 ]}
               >
-                {benefit.text}
+                Restore purchases
               </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Pricing Cards */}
-        <Text
-          style={[
-            styles.sectionLabel,
-            { color: Colors[theme].text_secondary },
-          ]}
-        >
-          Choose your plan
-        </Text>
-        <View style={styles.plansRow}>
-          {/* Monthly */}
-          <Pressable
-            onPress={() => {
-              haptics.impact();
-              setSelectedPlan("monthly");
-            }}
-            style={[
-              styles.planCard,
-              {
-                backgroundColor:
-                  selectedPlan === "monthly"
-                    ? Colors[theme].primary + "12"
-                    : Colors[theme].surface,
-                borderColor:
-                  selectedPlan === "monthly"
-                    ? Colors[theme].primary
-                    : Colors[theme].border,
-              },
-            ]}
-          >
-            {selectedPlan === "monthly" && (
-              <View
-                style={[
-                  styles.selectedDot,
-                  { backgroundColor: Colors[theme].primary },
-                ]}
-              />
             )}
-            <Text
-              style={[styles.planName, { color: Colors[theme].text }]}
-            >
-              Monthly
-            </Text>
-            <Text
-              style={[styles.planPrice, { color: Colors[theme].text }]}
-            >
-              {monthlyPrice}
-            </Text>
-            <Text
-              style={[
-                styles.planSubtitle,
-                { color: Colors[theme].text_secondary },
-              ]}
-            >
-              per month
-            </Text>
-          </Pressable>
-
-          {/* Lifetime */}
-          <Pressable
-            onPress={() => {
-              haptics.impact();
-              setSelectedPlan("lifetime");
-            }}
-            style={[
-              styles.planCard,
-              {
-                backgroundColor:
-                  selectedPlan === "lifetime"
-                    ? Colors[theme].primary + "12"
-                    : Colors[theme].surface,
-                borderColor:
-                  selectedPlan === "lifetime"
-                    ? Colors[theme].primary
-                    : Colors[theme].border,
-              },
-            ]}
-          >
-            {selectedPlan === "lifetime" && (
-              <View
-                style={[
-                  styles.selectedDot,
-                  { backgroundColor: Colors[theme].primary },
-                ]}
-              />
-            )}
-            <View
-              style={[
-                styles.bestValueBadge,
-                { backgroundColor: Colors[theme].primary },
-              ]}
-            >
-              <Text style={styles.bestValueText}>Best Value</Text>
-            </View>
-            <Text
-              style={[styles.planName, { color: Colors[theme].text }]}
-            >
-              Lifetime
-            </Text>
-            <Text
-              style={[styles.planPrice, { color: Colors[theme].text }]}
-            >
-              {lifetimePrice}
-            </Text>
-            <Text
-              style={[
-                styles.planSubtitle,
-                { color: Colors[theme].text_secondary },
-              ]}
-            >
-              one-time purchase
-            </Text>
           </Pressable>
         </View>
-
-        {/* Subscribe Button */}
-        <Pressable
-          onPress={handlePurchase}
-          disabled={purchasing}
-          style={[
-            styles.subscribeButton,
-            {
-              backgroundColor: Colors[theme].primary,
-              opacity: purchasing ? 0.7 : 1,
-            },
-          ]}
-        >
-          {purchasing ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.subscribeText}>
-              {selectedPlan === "lifetime"
-                ? "Get Lifetime Access"
-                : "Subscribe Now"}
-            </Text>
-          )}
-        </Pressable>
-
-        {/* Restore Purchases */}
-        <Pressable
-          onPress={handleRestore}
-          disabled={restoring}
-          style={styles.restoreButton}
-        >
-          {restoring ? (
-            <ActivityIndicator
-              size="small"
-              color={Colors[theme].text_secondary}
-            />
-          ) : (
-            <Text
-              style={[
-                styles.restoreText,
-                { color: Colors[theme].text_secondary },
-              ]}
-            >
-              Restore Purchases
-            </Text>
-          )}
-        </Pressable>
       </BottomSheetScrollView>
     </BottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
+  pageTitleContainer: {
     alignItems: "center",
+    marginVertical: 20,
+  },
+  pageTitleText: {
+    fontFamily: "NunitoExtraBold",
+    fontSize: 25,
+    textAlign: "center",
+  },
+  pageSubtitleText: {
+    fontFamily: "NunitoMedium",
+    fontSize: 16,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  mainCard: {
+    borderWidth: 1.5,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 10,
+  },
+  cardTitleText: {
+    fontFamily: "NunitoBold",
+    fontSize: 22,
+    marginBottom: 2,
+  },
+  cardSubtitleText: {
+    fontFamily: "NunitoRegular",
+    fontSize: 14,
     marginBottom: 20,
   },
-  crownBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  title: {
-    fontFamily: "NunitoExtraBold",
-    fontSize: 24,
-  },
-  subtitle: {
-    fontFamily: "NunitoMedium",
-    fontSize: 14,
-    marginTop: 4,
-  },
-  benefitsCard: {
-    borderWidth: 2,
-    borderRadius: 15,
-    padding: 16,
-    marginBottom: 24,
-    gap: 14,
-  },
-  benefitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  checkIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  benefitText: {
-    fontFamily: "NunitoMedium",
-    fontSize: 15,
-    flex: 1,
-  },
-  sectionLabel: {
-    fontFamily: "NunitoBold",
-    fontSize: 14,
-    marginBottom: 10,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  plansRow: {
+  plansSelectorRow: {
     flexDirection: "row",
     gap: 12,
     marginBottom: 20,
@@ -423,61 +434,97 @@ const styles = StyleSheet.create({
   planCard: {
     flex: 1,
     borderWidth: 2,
-    borderRadius: 15,
-    padding: 16,
+    borderRadius: 16,
+    padding: 14,
+    height: 126,
+    justifyContent: "space-between",
+  },
+  planCardTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    position: "relative",
-    overflow: "hidden",
   },
-  selectedDot: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  radioCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  bestValueBadge: {
-    paddingHorizontal: 10,
+  radioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  badgeContainer: {
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 20,
-    marginBottom: 8,
+    borderRadius: 8,
   },
-  bestValueText: {
+  badgeText: {
     fontFamily: "NunitoBold",
-    fontSize: 10,
-    color: "#fff",
+    fontSize: 8,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
-  planName: {
-    fontFamily: "NunitoBold",
-    fontSize: 16,
-    marginBottom: 4,
+  planCardBottom: {
+    marginTop: 10,
   },
-  planPrice: {
+  planPriceText: {
     fontFamily: "NunitoExtraBold",
-    fontSize: 22,
+    fontSize: 20,
   },
-  planSubtitle: {
+  planPeriodText: {
     fontFamily: "NunitoRegular",
     fontSize: 12,
     marginTop: 2,
   },
-  subscribeButton: {
-    paddingVertical: 16,
-    borderRadius: 14,
+  ctaButton: {
+    paddingVertical: 10,
+    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  subscribeText: {
+  ctaText: {
     fontFamily: "NunitoBold",
-    fontSize: 17,
-    color: "#fff",
+    fontSize: 16,
   },
-  restoreButton: {
+  divider: {
+    height: 1,
+    width: "100%",
+    marginBottom: 20,
+  },
+  benefitsContainer: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  benefitsHeader: {
+    fontFamily: "NunitoBold",
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  benefitRow: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    gap: 10,
+  },
+  checkIcon: {
+    marginRight: 2,
+  },
+  benefitText: {
+    fontFamily: "NunitoMedium",
+    fontSize: 14,
+  },
+  restoreContainer: {
+    alignItems: "center",
+    paddingVertical: 12,
   },
   restoreText: {
     fontFamily: "NunitoMedium",

@@ -52,7 +52,9 @@ export default function Account() {
   return (
     <View style={{ flex: 1 }}>
       <OfflineBanner isOnline={isOnline} />
-      <ThemedView style={[styles.container, { paddingTop: isOnline ? insets.top : 10 }]}>
+      <ThemedView
+        style={[styles.container, { paddingTop: isOnline ? insets.top : 10 }]}
+      >
         <View style={{ paddingBottom: 20 }}>
           <ThemedText style={styles.title}>Account</ThemedText>
         </View>
@@ -224,45 +226,62 @@ export default function Account() {
               </View>
             </View>
           ) : (
-            <Pressable
-              onPress={() => {
-                haptics.impact();
-                setOpenUpgradeModal(true);
-              }}
+            <View
               style={{
                 marginTop: 14,
-                backgroundColor: Colors[theme].primary,
+                backgroundColor: Colors[theme].surface,
+                borderColor: Colors[theme].border,
+                borderWidth: 3,
                 borderRadius: 15,
-                paddingVertical: 14,
-                paddingHorizontal: 16,
+                padding: 12,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 12,
+                justifyContent: "space-between",
+                gap: 10,
               }}
             >
-              <Text style={{ fontSize: 22 }}>👑</Text>
-              <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  flex: 1,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: Colors[theme].text,
+                    fontSize: 16,
+                  }}
+                >
+                  Get more from habibee
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setOpenUpgradeModal(true);
+                }}
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                }}
+              >
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
                     color: "#fff",
-                    fontSize: 16,
+                    fontSize: 14,
                   }}
                 >
-                  Upgrade to Premium
+                  Upgrade
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoMedium",
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: 12,
-                  }}
-                >
-                  Unlock all features & go ad-free
-                </Text>
-              </View>
-              <Feather name="chevron-right" size={20} color="#fff" />
-            </Pressable>
+              </Pressable>
+            </View>
           )}
 
           <View style={{ marginTop: 30 }}>
