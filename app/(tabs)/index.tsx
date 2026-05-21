@@ -5,6 +5,7 @@ import {
   ScrollView as RNScrollView,
   Dimensions,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 
@@ -77,9 +78,34 @@ const Home = () => {
   const { signedIn } = useUser();
   const today = new Date().toLocaleDateString("en-CA");
 
+  const getLocalDateStringForIndex = (sunStr: string, index: number) => {
+    const [year, month, day] = sunStr.split("-").map(Number);
+    const targetDate = new Date(year, month - 1, day + index);
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const d = String(targetDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
   const habitData = useQuery(api.habits.get_user_habits);
   const archivedHabits = useQuery(api.habits.get_archived_habits);
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
+
+  const sundayStr = getFirstDayOfTheWeek();
+  const getSaturdayStr = (sunStr: string) => {
+    const [year, month, day] = sunStr.split("-").map(Number);
+    const sat = new Date(year, month - 1, day + 6);
+    const y = sat.getFullYear();
+    const m = String(sat.getMonth() + 1).padStart(2, "0");
+    const d = String(sat.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+  const saturdayStr = getSaturdayStr(sundayStr);
+
+  const weeklyCompletions = useQuery(api.habits.get_weekly_habit_completions, {
+    start_date: sundayStr,
+    end_date: saturdayStr,
+  });
 
   const pathname = usePathname();
   const router = useRouter();
@@ -244,7 +270,12 @@ const Home = () => {
   };
 
   const loading =
-    appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
+    appLoading ||
+    authLoading ||
+    !habitData ||
+    !signedIn ||
+    !weekly_stats ||
+    !weeklyCompletions;
 
   const totalHabits = habitData?.length || 0;
   const completedHabits =
@@ -365,11 +396,37 @@ const Home = () => {
             marginTop: 10,
             flexDirection: "row",
             justifyContent: "space-between",
-            gap: 10,
+            gap: 7,
           }}
         >
           {weekDays.map((weekday, i) => {
-            return <StreakDay key={i} day={weekday} />;
+            const dateStr = getLocalDateStringForIndex(sundayStr, i);
+            const todayIndex = new Date().getDay();
+            const isActive = i === todayIndex;
+
+            let completedCount = 0;
+            if (dateStr === today) {
+              const completedSet = new Set<string>();
+              if (weeklyCompletions?.[dateStr]) {
+                weeklyCompletions[dateStr].forEach((id) =>
+                  completedSet.add(id),
+                );
+              }
+              offlineCompletedIds.forEach((id) => completedSet.add(id));
+              completedCount = completedSet.size;
+            } else {
+              completedCount = weeklyCompletions?.[dateStr]?.length || 0;
+            }
+
+            return (
+              <StreakDay
+                key={i}
+                day={weekday}
+                completedCount={completedCount}
+                totalCount={totalHabits}
+                isActive={isActive}
+              />
+            );
           })}
         </View>
       </ThemedView>
@@ -396,7 +453,7 @@ const Home = () => {
               borderWidth: 3,
               borderColor: Colors[theme].border,
               width: "100%",
-              marginTop: 10,
+              // marginTop: 10,
               borderRadius: 15,
               paddingHorizontal: 15,
               paddingVertical: 15,
@@ -647,7 +704,7 @@ const Home = () => {
                     color: Colors[theme].text,
                   }}
                 >
-                  Try Habibee AI for free! 🚀
+                  Checkout Habibee AI 🚀
                 </Text>
                 <Text
                   style={{
@@ -1146,41 +1203,152 @@ const Home = () => {
   );
 };
 
-const StreakDay: React.FC<{ day: string }> = ({ day }) => {
-  const { theme } = useTheme();
-  const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
-  const sunday = getFirstDayOfTheWeek();
-  const week_done = weekly_stats
-    ?.filter((stat) => stat.date >= sunday)
-    .map((stat) => stat.week_day);
+const ProgressCircle: React.FC<{
+  progress: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  backgroundColor: string;
+}> = ({ progress, size = 20, strokeWidth = 2.5, color, backgroundColor }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
 
   return (
     <View
       style={{
+        width: size,
+        height: size,
+        marginTop: 15,
+        justifyContent: "center",
         alignItems: "center",
+      }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="none"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+    </View>
+  );
+};
+
+const StreakDay: React.FC<{
+  day: string;
+  completedCount: number;
+  totalCount: number;
+  isActive: boolean;
+}> = ({ day, completedCount, totalCount, isActive }) => {
+  const { theme } = useTheme();
+
+  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+
+  const renderIcon = () => {
+    if (isActive) {
+      if (progress === 1 && totalCount > 0) {
+        return (
+          <Image
+            source={require("../../assets/icons/check-fill.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      } else if (progress > 0) {
+        return (
+          <ProgressCircle
+            progress={progress}
+            size={20}
+            strokeWidth={2.5}
+            color={Colors[theme].primary}
+            backgroundColor={Colors[theme].primary + "90"}
+          />
+        );
+      } else {
+        return (
+          <Image
+            source={require("../../assets/icons/check-outline.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      }
+    } else {
+      if (completedCount >= 1) {
+        return (
+          <Image
+            source={require("../../assets/icons/check-fill.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      } else {
+        return (
+          <Image
+            source={require("../../assets/icons/check-outline.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      }
+    }
+  };
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        backgroundColor: Colors[theme].surface,
+        paddingVertical: 10,
+        paddingHorizontal: 5,
+        borderWidth: isActive ? 2 : 1,
+        borderColor: isActive ? Colors[theme].primary : Colors[theme].border,
+        borderRadius: 10,
       }}
     >
       <ThemedText
         style={{
           color: Colors[theme].text_secondary,
           fontFamily: "NunitoBold",
+          fontSize: 12,
         }}
       >
         {day}
       </ThemedText>
-      <Image
-        source={
-          week_done?.includes(day)
-            ? require("../../assets/icons/check-fill.png")
-            : require("../../assets/icons/check-outline.png")
-        }
-        style={{
-          tintColor: Colors[theme].primary,
-          width: 25,
-          marginTop: 15,
-          height: 25,
-        }}
-      />
+      {renderIcon()}
     </View>
   );
 };
