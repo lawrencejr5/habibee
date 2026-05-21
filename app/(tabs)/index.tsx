@@ -37,6 +37,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 import AIChatModal from "@/components/home/AIChatModal";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
@@ -89,6 +90,8 @@ const Home = () => {
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
+  const [upgradeModalVisible, setUpgradeModalVisible] =
+    useState<boolean>(false);
   const [createHiveModalVisible, setCreateHiveModalVisible] =
     useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
@@ -201,10 +204,6 @@ const Home = () => {
     });
   };
 
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
-
   const scrollRef = useRef<RNScrollView | null>(null);
   const tasksSectionY = useRef<number>(0);
 
@@ -215,38 +214,6 @@ const Home = () => {
       animated: true,
     });
   };
-
-  // Check if we're on the index page
-  const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
-
-  // Typing animation effect
-  useEffect(() => {
-    if (!isOnIndexPage) return;
-
-    const currentMessage = motivationalMsgs?.[currentMessageIndex]?.text;
-    let currentIndex = 0;
-
-    if (isTyping && currentMessage) {
-      const typingInterval = setInterval(() => {
-        if (currentIndex <= currentMessage.length) {
-          setDisplayedText(currentMessage.slice(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsTyping(false);
-          // Wait 3 seconds before moving to next message
-          setTimeout(() => {
-            setCurrentMessageIndex(
-              (prevIndex) => (prevIndex + 1) % motivationalMsgs!.length,
-            );
-            setIsTyping(true);
-          }, 3000);
-        }
-      }, 50); // Typing speed
-
-      return () => clearInterval(typingInterval);
-    }
-  }, [currentMessageIndex, isTyping, motivationalMsgs]);
 
   const open = () => {
     setAddModalVisible(true);
@@ -275,8 +242,6 @@ const Home = () => {
     if (hour < 17) return "Afternoon";
     return "Evening";
   };
-
-  const greeting = getGreeting();
 
   const loading =
     appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
@@ -368,7 +333,9 @@ const Home = () => {
                   backgroundColor: Colors[theme].border,
                 }}
               />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              >
                 <Image
                   source={require("../../assets/icons/snowflake.png")}
                   style={{
@@ -421,79 +388,147 @@ const Home = () => {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero card */}
-        <View
-          style={{
-            backgroundColor: Colors[theme].surface,
-            borderWidth: 3,
-            borderColor: Colors[theme].border,
-            width: "100%",
-            marginTop: 10,
-            borderRadius: 15,
-            paddingHorizontal: 10,
-            paddingVertical: 15,
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 15,
-          }}
-        >
-          <Image
-            source={
-              theme === "light"
-                ? require("../../assets/images/icon-nobg-black.png")
-                : require("../../assets/images/icon-nobg-white.png")
-            }
-            style={{ width: 80, height: 80, marginTop: 10 }}
-          />
-          <View style={{ flex: 1 }}>
-            <ThemedText
+        {/* Hero / Upgrade card */}
+        {!isPremium ? (
+          <View
+            style={{
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 3,
+              borderColor: Colors[theme].border,
+              width: "100%",
+              marginTop: 10,
+              borderRadius: 15,
+              paddingHorizontal: 15,
+              paddingVertical: 15,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 15,
+            }}
+          >
+            <Image
+              source={require("../../assets/icons/premium.png")}
               style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 18,
-                textTransform: "capitalize",
+                width: 60,
+                height: 60,
+                tintColor: Colors[theme].primary,
+                transform: [{ rotate: "30deg" }],
               }}
-            >
-              Hello {signedIn.username}! 👋
-            </ThemedText>
-            <Text
-              style={{
-                fontFamily: "NunitoRegular",
-                fontSize: 13,
-                color: Colors[theme].text_secondary,
-                marginTop: 5,
-                minHeight: 40,
-              }}
-            >
-              {displayedText}
-              {isTyping &&
-                displayedText.length <
-                  motivationalMsgs![currentMessageIndex].text.length && (
-                  <Text style={{ color: Colors[theme].primary }}>|</Text>
-                )}
-            </Text>
-            <Pressable
-              onPress={open}
-              style={{
-                backgroundColor: Colors[theme].primary,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: 7,
-                marginTop: 20,
-                alignSelf: "flex-end",
-              }}
-            >
-              <Text
+            />
+            <View style={{ flex: 1 }}>
+              <ThemedText
                 style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 12,
-                  color: "#fff",
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 18,
                 }}
               >
-                Add Habit
+                Premium Habibee
+              </ThemedText>
+              <Text
+                style={{
+                  fontFamily: "NunitoRegular",
+                  fontSize: 13,
+                  color: Colors[theme].text_secondary,
+                  marginTop: 4,
+                  lineHeight: 18,
+                }}
+              >
+                Unlock Habibee AI and other juicy benefits by upgrading to
+                premium.
               </Text>
-            </Pressable>
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setUpgradeModalVisible(true);
+                }}
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingVertical: 8,
+                  paddingHorizontal: 15,
+                  borderRadius: 10,
+                  marginTop: 12,
+                  alignSelf: "flex-end",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 13,
+                    color: "#fff",
+                  }}
+                >
+                  Upgrade
+                </Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View
+            style={{
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 3,
+              borderColor: Colors[theme].border,
+              width: "100%",
+              marginTop: 10,
+              borderRadius: 15,
+              paddingHorizontal: 15,
+              paddingVertical: 15,
+              flexDirection: "row",
+              alignItems: "flex-start",
+              gap: 15,
+            }}
+          >
+            <Image
+              source={
+                theme === "light"
+                  ? require("../../assets/images/icon-nobg-black.png")
+                  : require("../../assets/images/icon-nobg-white.png")
+              }
+              style={{ width: 60, height: 60, marginTop: 5 }}
+            />
+            <View style={{ flex: 1 }}>
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 18,
+                  textTransform: "capitalize",
+                }}
+              >
+                Hello {signedIn.username}! 👋
+              </ThemedText>
+              <Text
+                style={{
+                  fontFamily: "NunitoRegular",
+                  fontSize: 13,
+                  color: Colors[theme].text_secondary,
+                  marginTop: 4,
+                }}
+              >
+                Let's make today productive and keep building your habits!
+              </Text>
+              <Pressable
+                onPress={open}
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingVertical: 8,
+                  paddingHorizontal: 15,
+                  borderRadius: 10,
+                  marginTop: 12,
+                  alignSelf: "flex-end",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 13,
+                    color: "#fff",
+                  }}
+                >
+                  Add Habit
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
 
         {/* Ad Carousel Container */}
         <View
@@ -1102,6 +1137,10 @@ const Home = () => {
       <StreakFreezeModal
         visible={streakFreezeModalVisible}
         setVisible={setStreakFreezeModalVisible}
+      />
+      <UpgradeModal
+        visible={upgradeModalVisible}
+        setVisible={setUpgradeModalVisible}
       />
     </View>
   );
