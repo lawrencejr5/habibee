@@ -230,6 +230,10 @@ export const add_streak_freeze = mutation({
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
+    if (!user.is_premium) {
+      throw new Error("Streak freezes are a premium feature");
+    }
+
     const currentFreezes = user.freezes || 0;
     if (currentFreezes < 5) {
       await ctx.db.patch(userId, { freezes: currentFreezes + 1 });

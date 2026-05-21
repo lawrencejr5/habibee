@@ -58,6 +58,7 @@ import { HabitType } from "@/constants/Types";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useSyncPendingStreaks } from "@/hooks/useSyncPendingStreaks";
 import OfflineBanner from "@/components/OfflineBanner";
+import { usePremium } from "@/context/PremiumContext";
 import {
   enqueuePendingStreak,
   setLocalLastCompleted,
@@ -68,6 +69,7 @@ const Home = () => {
   const { theme } = useTheme();
   const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
+  const { isPremium } = usePremium();
 
   const { isOnline } = useNetworkStatus();
 
@@ -357,31 +359,35 @@ const Home = () => {
               }}
             />
           </View>
-          <View
-            style={{
-              width: 1,
-              height: 15,
-              backgroundColor: Colors[theme].border,
-            }}
-          />
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Image
-              source={require("../../assets/icons/snowflake.png")}
-              style={{
-                width: 20,
-                height: 20,
-              }}
-            />
-            <Text
-              style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 16,
-                color: Colors[theme].blue,
-              }}
-            >
-              {signedIn.freezes ?? 0}
-            </Text>
-          </View>
+          {isPremium && (
+            <>
+              <View
+                style={{
+                  width: 1,
+                  height: 15,
+                  backgroundColor: Colors[theme].border,
+                }}
+              />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <Image
+                  source={require("../../assets/icons/snowflake.png")}
+                  style={{
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 16,
+                    color: Colors[theme].blue,
+                  }}
+                >
+                  {signedIn.freezes ?? 0}
+                </Text>
+              </View>
+            </>
+          )}
         </Pressable>
       </View>
 

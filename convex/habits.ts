@@ -504,7 +504,7 @@ export const check_streak_and_reset = mutation({
         oldest_date_str = user.last_streak_date!;
       }
 
-      let currentFreezes = user.freezes || 0;
+      let currentFreezes = user.is_premium ? (user.freezes || 0) : 0;
       let freezesUsed = 0;
       let resetDates: string[] = [];
 
