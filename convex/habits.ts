@@ -136,6 +136,22 @@ export const add_habit = mutation({
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
+    const userData = await ctx.db.get(user);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+        );
+      }
+    }
+
     const existing = await ctx.db
       .query("habits")
       .withIndex("by_user_habit", (q) => q.eq("user", user).eq("habit", habit))
@@ -385,6 +401,22 @@ export const restore_habit = mutation({
     const habit = await ctx.db.get(args.habit_id);
     if (!habit) throw new Error("Habit not found");
     if (habit.user !== user_id) throw new Error("Unauthorized");
+
+    const userData = await ctx.db.get(user_id);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user_id))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You already have 3 active habits. Please upgrade to Pro or archive another habit to restore this one."
+        );
+      }
+    }
 
     let newStreak = habit.current_streak || 0;
     const today = new Date().toLocaleDateString("en-CA");
@@ -681,6 +713,22 @@ export const create_habit = mutation({
   ) => {
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
+
+    const userData = await ctx.db.get(user);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+        );
+      }
+    }
 
     const existing = await ctx.db
       .query("habits")

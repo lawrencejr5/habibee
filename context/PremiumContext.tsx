@@ -172,6 +172,18 @@ export const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, [initialized, processCustomerInfo]);
 
+  // Automatically sync premium status to backend when frontend state updates and is out of sync with DB
+  useEffect(() => {
+    if (!signedIn) return;
+
+    const backendIsPremium = !!signedIn.is_premium;
+    const backendPlanType = (signedIn.sub_type as "monthly" | "lifetime" | undefined) || null;
+
+    if (isPremium !== backendIsPremium || planType !== backendPlanType) {
+      syncToConvex(isPremium, planType);
+    }
+  }, [isPremium, planType, signedIn, syncToConvex]);
+
   // Purchase Execution
   const purchasePackage = useCallback(
     async (type: "monthly" | "lifetime") => {

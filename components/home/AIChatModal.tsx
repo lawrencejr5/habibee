@@ -32,9 +32,11 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { habitIcons } from "@/data/habits";
+import { usePremium } from "@/context/PremiumContext";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 interface AIChatModalProps {
   visible: boolean;
@@ -74,6 +76,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<AiChatMsgType[]>([]);
   const [generating, setGenerating] = useState<boolean>(false);
+  const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
 
   const generate_habit = useAction(api.habits.generate_habit_ai);
 
@@ -256,17 +259,18 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   if (!visible) return null;
 
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      keyboardBehavior="interactive"
-      enableDynamicSizing={false}
-      enablePanDownToClose={true}
-      onClose={() => setVisible(false)}
-      backgroundStyle={{
-        backgroundColor: Colors[theme].background,
-      }}
+    <>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        keyboardBehavior="interactive"
+        enableDynamicSizing={false}
+        enablePanDownToClose={true}
+        onClose={() => setVisible(false)}
+        backgroundStyle={{
+          backgroundColor: Colors[theme].background,
+        }}
       handleIndicatorStyle={{
         width: 40,
         height: 4,
@@ -457,6 +461,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                       thoughtTime={msg.thoughtTime}
                       shouldAnimate={msg.shouldAnimate}
                       onAnimationComplete={() => markMessageAsAnimated(index)}
+                      onUpgrade={() => setUpgradeModalVisible(true)}
                     />
                   ),
                 )}
@@ -592,6 +597,11 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         </View>
       </BottomSheetView>
     </BottomSheet>
+    <UpgradeModal
+      visible={upgradeModalVisible}
+      setVisible={setUpgradeModalVisible}
+    />
+    </>
   );
 };
 
@@ -639,15 +649,21 @@ const parseText = (text: string) => {
   });
 };
 
-const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
+const HabitCard: FC<{ data: HabitData; onUpgrade: () => void }> = ({ data, onUpgrade }) => {
   const { theme } = useTheme();
   const createHabit = useMutation(api.habits.create_habit);
   const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
   const [saved, setSaved] = useState(false);
+  const { isPremium } = usePremium();
+  const habitsData = useQuery(api.habits.get_user_habits);
 
   const onSave = async () => {
     haptics.impact();
+    if (!isPremium && habitsData && habitsData.length >= 3) {
+      onUpgrade();
+      return;
+    }
     try {
       await createHabit({
         habit: data.habit,
@@ -848,7 +864,8 @@ const ModelChat: FC<{
   thoughtTime?: number;
   shouldAnimate?: boolean;
   onAnimationComplete?: () => void;
-}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete }) => {
+  onUpgrade: () => void;
+}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete, onUpgrade }) => {
   const { theme } = useTheme();
 
   // Combine all text parts for animation calculation
@@ -930,7 +947,7 @@ const ModelChat: FC<{
       <View style={{ paddingLeft: 32 }}>
         {parts.map((part, index) => {
           if (part.type === "habit") {
-            return <HabitCard key={index} data={part.content} />;
+            return <HabitCard key={index} data={part.content} onUpgrade={onUpgrade} />;
           }
 
           const partParsed = parseText(part.content);

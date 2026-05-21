@@ -39,6 +39,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useTheme } from "@/context/ThemeContext";
 import { useCustomAlert } from "@/context/AlertContext";
 import { HabitType } from "@/constants/Types";
+import { usePremium } from "@/context/PremiumContext";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 interface HabitDetailsModalProps {
   visible: boolean;
@@ -126,6 +128,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const [checkSubHabitModalVisible, setCheckSubHabitModalVisible] =
     useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const { isPremium } = usePremium();
+  const [upgradeModalVisible, setUpgradeModalVisible] = useState<boolean>(false);
 
   const subHabits = useQuery(api.sub_habits.get_sub_habits, {
     parent_habit_id: habit_id,
@@ -208,6 +212,10 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   const handleRestore = async () => {
     haptics.impact();
+    if (!isPremium && habitsData && habitsData.length >= 3) {
+      setUpgradeModalVisible(true);
+      return;
+    }
     setIsRecording(true);
     try {
       await restore_habit({ habit_id });
@@ -745,6 +753,10 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         setVisible={setCheckSubHabitModalVisible}
         habit_id={habit_id}
         themeColor={habit.theme ?? Colors[theme].primary}
+      />
+      <UpgradeModal
+        visible={upgradeModalVisible}
+        setVisible={setUpgradeModalVisible}
       />
     </>
   );
