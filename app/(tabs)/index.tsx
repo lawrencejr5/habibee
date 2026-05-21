@@ -308,7 +308,7 @@ const Home = () => {
             source={require("../../assets/images/name-logo-black.png")}
             style={{
               width: 140,
-              height: 32,
+              height: 40,
             }}
           />
         </View>

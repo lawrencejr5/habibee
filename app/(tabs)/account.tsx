@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import DeleteAccountModal from "@/components/account/DeleteAccountModal";
 import UpgradeModal from "@/components/account/UpgradeModal";
+import PremiumBenefitsModal from "@/components/account/PremiumBenefitsModal";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
@@ -46,6 +47,8 @@ export default function Account() {
   const [openDeleteAccountModal, setOpenDeleteAccountModal] =
     useState<boolean>(false);
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
+  const [openPremiumBenefitsModal, setOpenPremiumBenefitsModal] =
+    useState<boolean>(false);
 
   if (appLoading || authLoading || !signedIn) return <Loading />;
 
@@ -173,44 +176,66 @@ export default function Account() {
             <View
               style={{
                 marginTop: 14,
-                backgroundColor: Colors[theme].primary + "15",
-                borderColor: Colors[theme].primary + "40",
-                borderWidth: 2,
+                backgroundColor: Colors[theme].surface,
+                borderColor: Colors[theme].border,
+                borderWidth: 3,
                 borderRadius: 15,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
+                padding: 12,
                 flexDirection: "row",
-                alignItems: "center",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
                 gap: 10,
               }}
             >
-              <Text style={{ fontSize: 20 }}>👑</Text>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    color: Colors[theme].primary,
-                    fontSize: 15,
-                  }}
-                >
-                  Habibee Premium
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoMedium",
-                    color: Colors[theme].text_secondary,
-                    fontSize: 12,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {planType} plan active
-                </Text>
-              </View>
               <View
                 style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  flex: 1,
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/premium.png")}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      color: Colors[theme].text,
+                      fontSize: 16,
+                    }}
+                  >
+                    Habibee Premium
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoRegular",
+                      color: Colors[theme].text_secondary,
+                      fontSize: 12,
+                      marginTop: 2,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {planType} plan active
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setOpenPremiumBenefitsModal(true);
+                }}
+                style={{
                   backgroundColor: Colors[theme].primary,
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
                   borderRadius: 20,
                 }}
               >
@@ -218,12 +243,12 @@ export default function Account() {
                   style={{
                     fontFamily: "NunitoBold",
                     color: "#fff",
-                    fontSize: 12,
+                    fontSize: 14,
                   }}
                 >
-                  PRO
+                  Explore
                 </Text>
-              </View>
+              </Pressable>
             </View>
           ) : (
             <View
@@ -235,7 +260,7 @@ export default function Account() {
                 borderRadius: 15,
                 padding: 12,
                 flexDirection: "row",
-                alignItems: "center",
+                alignItems: "flex-start",
                 justifyContent: "space-between",
                 gap: 10,
               }}
@@ -243,20 +268,40 @@ export default function Account() {
               <View
                 style={{
                   flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
+                  alignItems: "flex-start",
+                  gap: 12,
                   flex: 1,
                 }}
               >
-                <Text
+                <Image
+                  source={require("../../assets/icons/premium.png")}
                   style={{
-                    fontFamily: "NunitoBold",
-                    color: Colors[theme].text,
-                    fontSize: 16,
+                    width: 32,
+                    height: 32,
+                    tintColor: Colors[theme].primary,
                   }}
-                >
-                  Get more from habibee
-                </Text>
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      color: Colors[theme].text,
+                      fontSize: 16,
+                    }}
+                  >
+                    Habibee premium
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoRegular",
+                      color: Colors[theme].text_secondary,
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Get more from habibee
+                  </Text>
+                </View>
               </View>
 
               <Pressable
@@ -643,6 +688,10 @@ export default function Account() {
       <UpgradeModal
         visible={openUpgradeModal}
         setVisible={setOpenUpgradeModal}
+      />
+      <PremiumBenefitsModal
+        visible={openPremiumBenefitsModal}
+        setVisible={setOpenPremiumBenefitsModal}
       />
     </View>
   );
