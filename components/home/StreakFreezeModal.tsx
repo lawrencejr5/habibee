@@ -2,36 +2,26 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
-  useEffect,
   useMemo,
   useRef,
   useState,
   useCallback,
 } from "react";
-import { ActivityIndicator, Pressable, Text, View, Image } from "react-native";
+import { Pressable, Text, View, Image } from "react-native";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import {
-  RewardedAd,
-  RewardedAdEventType,
-  TestIds,
-} from "react-native-google-mobile-ads";
 
 import { Text as ThemedText } from "../Themed";
 import Colors from "@/constants/Colors";
-import { Feather } from "@expo/vector-icons";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
-import { useCustomAlert } from "@/context/AlertContext";
 
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { usePremium } from "@/context/PremiumContext";
 import UpgradeModal from "@/components/account/UpgradeModal";
-
-const adUnitId = __DEV__ ? TestIds.REWARDED : TestIds.REWARDED;
 
 interface StreakFreezeModalProps {
   visible: boolean;
@@ -43,7 +33,6 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
   setVisible,
 }) => {
   const haptics = useHapitcs();
-  const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
   const { isPremium } = usePremium();
   const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
@@ -52,76 +41,13 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
   const snapPoints = useMemo(() => ["35%"], []);
 
   const user = useQuery(api.users.get_current_user);
-  const addStreakFreeze = useMutation(api.users.add_streak_freeze);
 
   const today = new Date().toLocaleDateString("en-CA");
   const isStreakDone = user?.last_streak_date === today;
 
-  const [loaded, setLoaded] = useState(false);
-  const [adLoading, setAdLoading] = useState(false);
-  const rewarded = useRef(
-    RewardedAd.createForAdRequest(adUnitId, {
-      requestNonPersonalizedAdsOnly: true,
-    }),
-  ).current;
-
-  useEffect(() => {
-    const unsubscribeLoaded = rewarded.addAdEventListener(
-      RewardedAdEventType.LOADED,
-      () => {
-        setLoaded(true);
-        setAdLoading(false);
-      },
-    );
-
-    const unsubscribeEarned = rewarded.addAdEventListener(
-      RewardedAdEventType.EARNED_REWARD,
-      async (reward) => {
-        haptics.impact("soft");
-        try {
-          await addStreakFreeze();
-          showCustomAlert("Streak freeze added!", "success");
-        } catch (e) {
-          showCustomAlert("Failed to add freeze", "danger");
-        }
-        // Load the next ad
-        setLoaded(false);
-        rewarded.load();
-      },
-    );
-
-    rewarded.load();
-    setAdLoading(true);
-
-    return () => {
-      unsubscribeLoaded();
-      unsubscribeEarned();
-    };
-  }, [rewarded]);
-
   const currentFreezes = user?.freezes || 0;
-  const maxFreezes = 5;
+  const maxFreezes = 2;
   const hasMaxFreezes = currentFreezes >= maxFreezes;
-
-  const handleWatchAd = () => {
-    haptics.impact();
-    if (hasMaxFreezes) {
-      showCustomAlert(
-        "You have reached the maximum number of freezes.",
-        "warning",
-      );
-      return;
-    }
-    if (loaded) {
-      rewarded.show();
-    } else {
-      showCustomAlert("Ad is still loading. Please wait a moment.", "warning");
-      if (!adLoading) {
-        rewarded.load();
-        setAdLoading(true);
-      }
-    }
-  };
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -254,42 +180,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
               </View>
             </View>
 
-            {isPremium ? (
-              <Pressable
-                onPress={handleWatchAd}
-                disabled={hasMaxFreezes || (!loaded && adLoading)}
-                style={{
-                  backgroundColor: hasMaxFreezes
-                    ? Colors[theme].border
-                    : Colors[theme].blue,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 8,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                {!loaded && adLoading && !hasMaxFreezes ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    {!hasMaxFreezes && (
-                      <Feather name="play" size={12} color="#fff" />
-                    )}
-                    <Text
-                      style={{
-                        fontFamily: "NunitoBold",
-                        fontSize: 13,
-                        color: "#fff",
-                      }}
-                    >
-                      {hasMaxFreezes ? "Max" : "Watch Ad"}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            ) : (
+            {!isPremium && (
               <Pressable
                 onPress={() => {
                   haptics.impact();

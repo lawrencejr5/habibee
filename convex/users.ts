@@ -1,6 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { internalQuery } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -235,7 +234,7 @@ export const add_streak_freeze = mutation({
     }
 
     const currentFreezes = user.freezes || 0;
-    if (currentFreezes < 5) {
+    if (currentFreezes < 2) {
       await ctx.db.patch(userId, { freezes: currentFreezes + 1 });
     }
   },
@@ -253,11 +252,31 @@ export const update_premium_status = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("User not authenticated");
 
-    await ctx.db.patch(userId, {
+    const patch: any = {
       is_premium: args.is_premium,
       sub_type: args.sub_type,
       date_of_sub: args.date_of_sub,
-    });
+    };
+
+    if (args.is_premium) {
+      patch.freezes = 2;
+    }
+
+    await ctx.db.patch(userId, patch);
+  },
+});
+
+export const reset_premium_freezes_cron = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const premiumUsers = await ctx.db
+      .query("users")
+      .withIndex("by_premium", (q) => q.eq("is_premium", true))
+      .collect();
+
+    for (const user of premiumUsers) {
+      await ctx.db.patch(user._id, { freezes: 2 });
+    }
   },
 });
 
