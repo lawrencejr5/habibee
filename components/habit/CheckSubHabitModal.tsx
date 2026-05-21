@@ -9,7 +9,9 @@ import {
   View,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
@@ -25,6 +27,8 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { formatTime12h } from "@/components/habit/AddSubHabitModal";
+import { usePremium } from "@/context/PremiumContext";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 interface CheckSubHabitModalProps {
   visible: boolean;
@@ -43,10 +47,15 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
+  const { isPremium } = usePremium();
+
+  const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
 
   const habits = useQuery(api.habits.get_user_habits);
   const archivedHabits = useQuery(api.habits.get_archived_habits);
-  const habit = habits?.find((h) => h._id === habit_id) || archivedHabits?.find((h) => h._id === habit_id);
+  const habit =
+    habits?.find((h) => h._id === habit_id) ||
+    archivedHabits?.find((h) => h._id === habit_id);
   const today = new Date().toLocaleDateString("en-CA");
   const isParentDone = habit?.lastCompleted === today || habit?.archived;
 
@@ -100,6 +109,10 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
     existingTime?: string,
   ) => {
     haptics.impact();
+    if (!isPremium) {
+      setUpgradeModalVisible(true);
+      return;
+    }
     setPickerTarget(target);
 
     const d = new Date();
@@ -258,519 +271,377 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
 
   return (
     <Modal transparent visible={visible} animationType="slide">
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <Pressable style={StyleSheet.absoluteFill} onPress={close} />
-        <ThemedView
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View
           style={{
             flex: 1,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            paddingTop: 30,
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + 30,
-            marginTop: 100,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
           }}
         >
-          {/* Header */}
-          <View
+          <Pressable style={StyleSheet.absoluteFill} onPress={close} />
+          <ThemedView
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 20,
+              flex: 1,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingTop: 30,
+              paddingHorizontal: 20,
+              paddingBottom: insets.bottom + 30,
+              marginTop: 100,
             }}
           >
-            <Text
+            {/* Header */}
+            <View
               style={{
-                color: Colors[theme].text,
-                fontFamily: "NunitoExtraBold",
-                fontSize: 24,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 20,
               }}
             >
-              Sub-Habits
-            </Text>
-            <Pressable
-              style={{
-                backgroundColor: Colors[theme].surface,
-                padding: 8,
-                borderRadius: 50,
-                borderWidth: 1,
-                borderColor: Colors[theme].border,
-              }}
-              onPress={close}
-            >
-              <Feather name="x" color={Colors[theme].text} size={22} />
-            </Pressable>
-          </View>
-
-          {/* Progress bar */}
-          {subHabits && subHabits.length > 0 && (
-            <View style={{ marginBottom: 20 }}>
               <Text
                 style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 14,
-                  color: Colors[theme].text_secondary,
-                  marginBottom: 5,
+                  color: Colors[theme].text,
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 24,
                 }}
               >
-                Progress
+                Sub-Habits
               </Text>
-              <View
+              <Pressable
                 style={{
-                  height: 8,
-                  backgroundColor: Colors[theme].border,
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <View
-                  style={{
-                    height: "100%",
-                    width: `${(subHabits.filter((s) => s.completed).length / subHabits.length) * 100}%`,
-                    backgroundColor: themeColor,
-                  }}
-                />
-              </View>
-              <Text
-                style={{
-                  fontFamily: "NunitoMedium",
-                  fontSize: 12,
-                  color: Colors[theme].text_secondary,
-                  marginTop: 5,
-                  textAlign: "right",
-                }}
-              >
-                {subHabits.filter((s) => s.completed).length}/{subHabits.length}{" "}
-                completed
-              </Text>
-            </View>
-          )}
-
-          {/* Add new sub-habit row */}
-          {!isParentDone && (
-            <View style={{ marginBottom: 10 }}>
-            <View style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}>
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
                   backgroundColor: Colors[theme].surface,
+                  padding: 8,
+                  borderRadius: 50,
                   borderWidth: 1,
                   borderColor: Colors[theme].border,
-                  borderRadius: 10,
-                  paddingHorizontal: 15,
-                  paddingVertical: 5,
                 }}
+                onPress={close}
               >
-                <Feather
-                  name="plus"
-                  size={20}
-                  color={Colors[theme].text_secondary}
-                  style={{ marginRight: 10 }}
-                />
-                <TextInput
-                  placeholder="Add new sub-habit"
-                  placeholderTextColor={Colors[theme].text_secondary}
-                  style={{
-                    flex: 1,
-                    fontFamily: "NunitoMedium",
-                    color: Colors[theme].text,
-                    fontSize: 16,
-                  }}
-                  value={newSubHabitName}
-                  onChangeText={setNewSubHabitName}
-                  onSubmitEditing={handleAdd}
-                  editable={!adding}
-                  onFocus={() => setIsAddFocused(true)}
-                  onBlur={() => setIsAddFocused(false)}
-                />
-              </View>
-              <Pressable
-                onPress={handleAdd}
-                disabled={adding}
-                style={{
-                  backgroundColor: themeColor,
-                  width: 50,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  opacity: adding ? 0.5 : 1,
-                }}
-              >
-                {adding ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Feather name="plus" size={24} color="#fff" />
-                )}
+                <Feather name="x" color={Colors[theme].text} size={22} />
               </Pressable>
             </View>
 
-            {/* Reminder pill for new sub-habit */}
-            {newSubHabitName.trim().length > 0 && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingLeft: 2,
-                }}
-              >
-                <Pressable
-                  onPress={() => openTimePicker("new", newReminderTime)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: newReminderTime
-                      ? themeColor + "15"
-                      : Colors[theme].surface,
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    borderColor: newReminderTime
-                      ? themeColor + "40"
-                      : Colors[theme].border,
-                    gap: 6,
-                  }}
-                >
-                  <Feather
-                    name="clock"
-                    size={13}
-                    color={
-                      newReminderTime
-                        ? themeColor
-                        : Colors[theme].text_secondary
-                    }
-                  />
-                  <Text
-                    style={{
-                      fontFamily: "NunitoMedium",
-                      fontSize: 13,
-                      color: newReminderTime
-                        ? themeColor
-                        : Colors[theme].text_secondary,
-                    }}
-                  >
-                    {newReminderTime
-                      ? formatTime12h(newReminderTime)
-                      : "Set reminder"}
-                  </Text>
-                </Pressable>
-                {newReminderTime && (
-                  <Pressable
-                    onPress={() => setNewReminderTime(undefined)}
-                    style={{ marginLeft: 8, padding: 4 }}
-                  >
-                    <Feather
-                      name="x"
-                      size={15}
-                      color={Colors[theme].text_secondary}
-                    />
-                  </Pressable>
-                )}
-              </View>
-            )}
-            </View>
-          )}
-
-          {/* iOS Time Picker */}
-          {showTimePicker && Platform.OS === "ios" && (
-            <View
-              style={{
-                backgroundColor: Colors[theme].surface,
-                borderRadius: 15,
-                padding: 15,
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: Colors[theme].border,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
+            {/* Progress bar */}
+            {subHabits && subHabits.length > 0 && (
+              <View style={{ marginBottom: 20 }}>
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
                     fontSize: 14,
-                    color: Colors[theme].text,
+                    color: Colors[theme].text_secondary,
+                    marginBottom: 5,
                   }}
                 >
-                  Set Reminder Time
+                  Progress
                 </Text>
-                <Pressable
-                  onPress={() => {
-                    setShowTimePicker(false);
-                    setPickerTarget(null);
-                  }}
+                <View
                   style={{
-                    backgroundColor: themeColor,
-                    paddingHorizontal: 16,
-                    paddingVertical: 6,
-                    borderRadius: 20,
+                    height: 8,
+                    backgroundColor: Colors[theme].border,
+                    borderRadius: 4,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: "100%",
+                      width: `${(subHabits.filter((s) => s.completed).length / subHabits.length) * 100}%`,
+                      backgroundColor: themeColor,
+                    }}
+                  />
+                </View>
+                <Text
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 5,
+                    textAlign: "right",
+                  }}
+                >
+                  {subHabits.filter((s) => s.completed).length}/
+                  {subHabits.length} completed
+                </Text>
+              </View>
+            )}
+
+            {/* Add new sub-habit row */}
+            {!isParentDone && (
+              <View style={{ marginBottom: 10 }}>
+                <View
+                  style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}
+                >
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: Colors[theme].surface,
+                      borderWidth: 1,
+                      borderColor: Colors[theme].border,
+                      borderRadius: 10,
+                      paddingHorizontal: 15,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Feather
+                      name="plus"
+                      size={20}
+                      color={Colors[theme].text_secondary}
+                      style={{ marginRight: 10 }}
+                    />
+                    <TextInput
+                      placeholder="Add new sub-habit"
+                      placeholderTextColor={Colors[theme].text_secondary}
+                      style={{
+                        flex: 1,
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text,
+                        fontSize: 16,
+                      }}
+                      value={newSubHabitName}
+                      onChangeText={setNewSubHabitName}
+                      onSubmitEditing={handleAdd}
+                      editable={!adding}
+                      onFocus={() => setIsAddFocused(true)}
+                      onBlur={() => setIsAddFocused(false)}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={handleAdd}
+                    disabled={adding}
+                    style={{
+                      backgroundColor: themeColor,
+                      width: 50,
+                      borderRadius: 10,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      opacity: adding ? 0.5 : 1,
+                    }}
+                  >
+                    {adding ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Feather name="plus" size={24} color="#fff" />
+                    )}
+                  </Pressable>
+                </View>
+
+                {/* Reminder pill for new sub-habit */}
+                {newSubHabitName.trim().length > 0 && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingLeft: 2,
+                    }}
+                  >
+                    <View style={{ position: "relative" }}>
+                      <Pressable
+                        onPress={() => openTimePicker("new", newReminderTime)}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          backgroundColor: newReminderTime
+                            ? themeColor + "15"
+                            : Colors[theme].surface,
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 20,
+                          borderWidth: 1,
+                          borderColor: newReminderTime
+                            ? themeColor + "40"
+                            : Colors[theme].border,
+                          gap: 6,
+                        }}
+                      >
+                        <Feather
+                          name="clock"
+                          size={13}
+                          color={
+                            newReminderTime
+                              ? themeColor
+                              : Colors[theme].text_secondary
+                          }
+                        />
+                        <Text
+                          style={{
+                            fontFamily: "NunitoMedium",
+                            fontSize: 13,
+                            color: newReminderTime
+                              ? themeColor
+                              : Colors[theme].text_secondary,
+                          }}
+                        >
+                          {newReminderTime
+                            ? formatTime12h(newReminderTime)
+                            : "Set reminder"}
+                        </Text>
+                      </Pressable>
+
+                      {!isPremium && (
+                        <Image
+                          source={require("../../assets/icons/premium.png")}
+                          style={{
+                            position: "absolute",
+                            top: -8,
+                            right: 0,
+                            width: 14,
+                            height: 14,
+                            tintColor: Colors[theme].text_secondary,
+                            transform: [{ rotate: "20deg" }],
+                          }}
+                        />
+                      )}
+                    </View>
+                    {newReminderTime && (
+                      <Pressable
+                        onPress={() => setNewReminderTime(undefined)}
+                        style={{ marginLeft: 8, padding: 4 }}
+                      >
+                        <Feather
+                          name="x"
+                          size={15}
+                          color={Colors[theme].text_secondary}
+                        />
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* iOS Time Picker */}
+            {showTimePicker && Platform.OS === "ios" && (
+              <View
+                style={{
+                  backgroundColor: Colors[theme].surface,
+                  borderRadius: 15,
+                  padding: 15,
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: Colors[theme].border,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 8,
                   }}
                 >
                   <Text
                     style={{
                       fontFamily: "NunitoBold",
-                      fontSize: 13,
-                      color: "#fff",
+                      fontSize: 14,
+                      color: Colors[theme].text,
                     }}
                   >
-                    Done
+                    Set Reminder Time
                   </Text>
-                </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setShowTimePicker(false);
+                      setPickerTarget(null);
+                    }}
+                    style={{
+                      backgroundColor: themeColor,
+                      paddingHorizontal: 16,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 13,
+                        color: "#fff",
+                      }}
+                    >
+                      Done
+                    </Text>
+                  </Pressable>
+                </View>
+                <DateTimePicker
+                  value={pickerDate}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleTimeChange}
+                  themeVariant={theme === "dark" ? "dark" : "light"}
+                />
               </View>
+            )}
+
+            {/* Android Time Picker */}
+            {showTimePicker && Platform.OS === "android" && (
               <DateTimePicker
                 value={pickerDate}
                 mode="time"
-                display="spinner"
+                display="default"
                 onChange={handleTimeChange}
-                themeVariant={theme === "dark" ? "dark" : "light"}
               />
-            </View>
-          )}
+            )}
 
-          {/* Android Time Picker */}
-          {showTimePicker && Platform.OS === "android" && (
-            <DateTimePicker
-              value={pickerDate}
-              mode="time"
-              display="default"
-              onChange={handleTimeChange}
-            />
-          )}
-
-          <Container style={{ flex: 1 }} offset={{ closed: 0, opened: 150 }}>
-            <ScrollView
-              style={{ flex: 1 }}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 20 }}
-              keyboardShouldPersistTaps="handled"
-            >
-              {subHabits === undefined ? (
-                <View style={{ paddingVertical: 40, alignItems: "center" }}>
-                  <ActivityIndicator color={themeColor} size="large" />
-                </View>
-              ) : subHabits.length > 0 ? (
-                <View
-                  style={{
-                    backgroundColor: Colors[theme].surface,
-                    borderRadius: 15,
-                    borderWidth: 1,
-                    borderColor: Colors[theme].border,
-                    overflow: "hidden",
-                  }}
-                >
-                  {subHabits.map((item, index) => (
-                    <View
-                      key={item._id}
-                      style={{
-                        padding: 15,
-                        borderBottomWidth: index < subHabits.length - 1 ? 1 : 0,
-                        borderBottomColor: Colors[theme].border,
-                      }}
-                    >
-                      {editingId === item._id ? (
-                        // ── Edit name mode ──────────────────────────────────
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 10,
-                          }}
-                        >
-                          <TextInput
-                            value={editName}
-                            onChangeText={setEditName}
-                            autoFocus
-                            style={{
-                              flex: 1,
-                              fontFamily: "NunitoMedium",
-                              fontSize: 16,
-                              color: Colors[theme].text,
-                              borderBottomWidth: 1,
-                              borderBottomColor: themeColor,
-                              paddingBottom: 2,
-                            }}
-                          />
-                          <Pressable onPress={saveEdit} disabled={!!updatingId}>
-                            {updatingId === item._id ? (
-                              <ActivityIndicator
-                                size="small"
-                                color={themeColor}
-                              />
-                            ) : (
-                              <Feather
-                                name="check"
-                                size={20}
-                                color={themeColor}
-                              />
-                            )}
-                          </Pressable>
-                          <Pressable
-                            onPress={() => setEditingId(null)}
-                            disabled={!!updatingId}
-                          >
-                            <Feather
-                              name="x"
-                              size={20}
-                              color={Colors[theme].danger}
-                            />
-                          </Pressable>
-                        </View>
-                      ) : (
-                        // ── View mode ───────────────────────────────────────
-                        (() => {
-                          const isCompleted = habit?.archived ? true : item.completed;
-                          return (
-                          <>
-                            {/* Top row: checkbox + name + actions */}
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Pressable
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                flex: 1,
-                              }}
-                              onPress={() => handleToggle(item._id)}
-                              disabled={togglingId === item._id || isParentDone}
-                            >
-                              <View
-                                style={{
-                                  width: 24,
-                                  height: 24,
-                                  marginRight: 12,
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                }}
-                              >
-                                {togglingId === item._id ? (
-                                  <ActivityIndicator
-                                    size="small"
-                                    color={themeColor}
-                                  />
-                                ) : (
-                                  <Feather
-                                    name={
-                                      isCompleted ? "check-circle" : "circle"
-                                    }
-                                    size={24}
-                                    color={
-                                      isCompleted
-                                        ? isParentDone ? themeColor + "80" : themeColor
-                                        : Colors[theme].text_secondary
-                                    }
-                                  />
-                                )}
-                              </View>
-                              <Text
-                                style={{
-                                  fontFamily: "NunitoMedium",
-                                  fontSize: 16,
-                                  color: isCompleted
-                                    ? Colors[theme].text_secondary
-                                    : Colors[theme].text,
-                                  textDecorationLine: isCompleted
-                                    ? "line-through"
-                                    : "none",
-                                  flex: 1,
-                                }}
-                              >
-                                {item.name}
-                              </Text>
-                            </Pressable>
-
-                            {/* Edit & Delete buttons */}
-                            {!isParentDone && (
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  gap: 15,
-                                  marginLeft: 10,
-                                }}
-                              >
-                              <Pressable
-                                onPress={() =>
-                                  startEditing(item._id, item.name)
-                                }
-                              >
-                                <Feather
-                                  name="edit-2"
-                                  size={18}
-                                  color={Colors[theme].text_secondary}
-                                />
-                              </Pressable>
-                              <Pressable
-                                onPress={() => handleDelete(item._id)}
-                                disabled={deletingId === item._id}
-                              >
-                                {deletingId === item._id ? (
-                                  <ActivityIndicator
-                                    size="small"
-                                    color={Colors[theme].danger}
-                                  />
-                                ) : (
-                                  <Feather
-                                    name="trash-2"
-                                    size={18}
-                                    color={Colors[theme].danger}
-                                  />
-                                )}
-                              </Pressable>
-                            </View>
-                          )}
-                        </View>
-
-                          {/* Reminder row */}
+            <Container style={{ flex: 1 }} offset={{ closed: 0, opened: 150 }}>
+              <ScrollView
+                style={{ flex: 1 }}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                keyboardShouldPersistTaps="handled"
+              >
+                {subHabits === undefined ? (
+                  <View style={{ paddingVertical: 40, alignItems: "center" }}>
+                    <ActivityIndicator color={themeColor} size="large" />
+                  </View>
+                ) : subHabits.length > 0 ? (
+                  <View
+                    style={{
+                      backgroundColor: Colors[theme].surface,
+                      borderRadius: 15,
+                      borderWidth: 1,
+                      borderColor: Colors[theme].border,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {subHabits.map((item, index) => (
+                      <View
+                        key={item._id}
+                        style={{
+                          padding: 15,
+                          borderBottomWidth:
+                            index < subHabits.length - 1 ? 1 : 0,
+                          borderBottomColor: Colors[theme].border,
+                        }}
+                      >
+                        {editingId === item._id ? (
+                          // ── Edit name mode ──────────────────────────────────
                           <View
                             style={{
                               flexDirection: "row",
                               alignItems: "center",
-                              marginTop: 8,
-                              marginLeft: 36,
+                              gap: 10,
                             }}
                           >
-                            <Pressable
-                              onPress={() =>
-                                openTimePicker(
-                                  item._id,
-                                  item.reminder_time ?? undefined,
-                                )
-                              }
-                              disabled={updatingId === item._id || isParentDone}
+                            <TextInput
+                              value={editName}
+                              onChangeText={setEditName}
+                              autoFocus
                               style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                backgroundColor: item.reminder_time
-                                  ? themeColor + "15"
-                                  : Colors[theme].background,
-                                paddingVertical: 5,
-                                paddingHorizontal: 11,
-                                borderRadius: 20,
-                                borderWidth: 1,
-                                borderColor: item.reminder_time
-                                  ? themeColor + "40"
-                                  : Colors[theme].border,
-                                gap: 5,
-                                opacity: updatingId === item._id || isParentDone ? 0.5 : 1,
+                                flex: 1,
+                                fontFamily: "NunitoMedium",
+                                fontSize: 16,
+                                color: Colors[theme].text,
+                                borderBottomWidth: 1,
+                                borderBottomColor: themeColor,
+                                paddingBottom: 2,
                               }}
+                            />
+                            <Pressable
+                              onPress={saveEdit}
+                              disabled={!!updatingId}
                             >
                               {updatingId === item._id ? (
                                 <ActivityIndicator
@@ -779,103 +650,306 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                                 />
                               ) : (
                                 <Feather
-                                  name="clock"
-                                  size={12}
-                                  color={
-                                    item.reminder_time
-                                      ? themeColor
-                                      : Colors[theme].text_secondary
-                                  }
+                                  name="check"
+                                  size={20}
+                                  color={themeColor}
                                 />
                               )}
-                              <Text
-                                style={{
-                                  fontFamily: "NunitoMedium",
-                                  fontSize: 12,
-                                  color: item.reminder_time
-                                    ? themeColor
-                                    : Colors[theme].text_secondary,
-                                }}
-                              >
-                                {item.reminder_time
-                                  ? formatTime12h(item.reminder_time)
-                                  : "Set reminder"}
-                              </Text>
                             </Pressable>
-
-                            {item.reminder_time && !isParentDone && (
-                              <Pressable
-                                onPress={() => clearReminder(item._id)}
-                                disabled={updatingId === item._id}
-                                style={{ marginLeft: 8, padding: 3 }}
-                              >
-                                <Feather
-                                  name="x"
-                                  size={14}
-                                  color={Colors[theme].text_secondary}
-                                />
-                              </Pressable>
-                            )}
+                            <Pressable
+                              onPress={() => setEditingId(null)}
+                              disabled={!!updatingId}
+                            >
+                              <Feather
+                                name="x"
+                                size={20}
+                                color={Colors[theme].danger}
+                              />
+                            </Pressable>
                           </View>
-                        </>
-                        );
-                        })()
-                      )}
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginTop: 20,
-                    opacity: 0.5,
-                    marginBottom: 20,
-                  }}
-                >
-                  <Feather
-                    name="list"
-                    size={40}
-                    color={Colors[theme].text_secondary}
-                  />
-                  <Text
+                        ) : (
+                          // ── View mode ───────────────────────────────────────
+                          (() => {
+                            const isCompleted = habit?.archived
+                              ? true
+                              : item.completed;
+                            return (
+                              <>
+                                {/* Top row: checkbox + name + actions */}
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Pressable
+                                    style={{
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      flex: 1,
+                                    }}
+                                    onPress={() => handleToggle(item._id)}
+                                    disabled={
+                                      togglingId === item._id || isParentDone
+                                    }
+                                  >
+                                    <View
+                                      style={{
+                                        width: 24,
+                                        height: 24,
+                                        marginRight: 12,
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      {togglingId === item._id ? (
+                                        <ActivityIndicator
+                                          size="small"
+                                          color={themeColor}
+                                        />
+                                      ) : (
+                                        <Feather
+                                          name={
+                                            isCompleted
+                                              ? "check-circle"
+                                              : "circle"
+                                          }
+                                          size={24}
+                                          color={
+                                            isCompleted
+                                              ? isParentDone
+                                                ? themeColor + "80"
+                                                : themeColor
+                                              : Colors[theme].text_secondary
+                                          }
+                                        />
+                                      )}
+                                    </View>
+                                    <Text
+                                      style={{
+                                        fontFamily: "NunitoMedium",
+                                        fontSize: 16,
+                                        color: isCompleted
+                                          ? Colors[theme].text_secondary
+                                          : Colors[theme].text,
+                                        textDecorationLine: isCompleted
+                                          ? "line-through"
+                                          : "none",
+                                        flex: 1,
+                                      }}
+                                    >
+                                      {item.name}
+                                    </Text>
+                                  </Pressable>
+
+                                  {/* Edit & Delete buttons */}
+                                  {!isParentDone && (
+                                    <View
+                                      style={{
+                                        flexDirection: "row",
+                                        gap: 15,
+                                        marginLeft: 10,
+                                      }}
+                                    >
+                                      <Pressable
+                                        onPress={() =>
+                                          startEditing(item._id, item.name)
+                                        }
+                                      >
+                                        <Feather
+                                          name="edit-2"
+                                          size={18}
+                                          color={Colors[theme].text_secondary}
+                                        />
+                                      </Pressable>
+                                      <Pressable
+                                        onPress={() => handleDelete(item._id)}
+                                        disabled={deletingId === item._id}
+                                      >
+                                        {deletingId === item._id ? (
+                                          <ActivityIndicator
+                                            size="small"
+                                            color={Colors[theme].danger}
+                                          />
+                                        ) : (
+                                          <Feather
+                                            name="trash-2"
+                                            size={18}
+                                            color={Colors[theme].danger}
+                                          />
+                                        )}
+                                      </Pressable>
+                                    </View>
+                                  )}
+                                </View>
+
+                                {/* Reminder row */}
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    marginTop: 8,
+                                    marginLeft: 36,
+                                  }}
+                                >
+                                  <View style={{ position: "relative" }}>
+                                    <Pressable
+                                      onPress={() =>
+                                        openTimePicker(
+                                          item._id,
+                                          item.reminder_time ?? undefined,
+                                        )
+                                      }
+                                      disabled={
+                                        updatingId === item._id || isParentDone
+                                      }
+                                      style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        backgroundColor: item.reminder_time
+                                          ? themeColor + "15"
+                                          : Colors[theme].background,
+                                        paddingVertical: 5,
+                                        paddingHorizontal: 11,
+                                        borderRadius: 20,
+                                        borderWidth: 1,
+                                        borderColor: item.reminder_time
+                                          ? themeColor + "40"
+                                          : Colors[theme].border,
+                                        gap: 5,
+                                        opacity:
+                                          updatingId === item._id ||
+                                          isParentDone
+                                            ? 0.5
+                                            : 1,
+                                      }}
+                                    >
+                                      {updatingId === item._id ? (
+                                        <ActivityIndicator
+                                          size="small"
+                                          color={themeColor}
+                                        />
+                                      ) : (
+                                        <Feather
+                                          name="clock"
+                                          size={12}
+                                          color={
+                                            item.reminder_time
+                                              ? themeColor
+                                              : Colors[theme].text_secondary
+                                          }
+                                        />
+                                      )}
+                                      <Text
+                                        style={{
+                                          fontFamily: "NunitoMedium",
+                                          fontSize: 12,
+                                          color: item.reminder_time
+                                            ? themeColor
+                                            : Colors[theme].text_secondary,
+                                        }}
+                                      >
+                                        {item.reminder_time
+                                          ? formatTime12h(item.reminder_time)
+                                          : "Set reminder"}
+                                      </Text>
+                                    </Pressable>
+
+                                    {!isPremium && !isParentDone && (
+                                      <Image
+                                        source={require("../../assets/icons/premium.png")}
+                                        style={{
+                                          position: "absolute",
+                                          top: -8,
+                                          right: 0,
+                                          width: 14,
+                                          height: 14,
+                                          tintColor:
+                                            Colors[theme].text_secondary,
+                                          transform: [{ rotate: "20deg" }],
+                                        }}
+                                      />
+                                    )}
+                                  </View>
+
+                                  {item.reminder_time && !isParentDone && (
+                                    <Pressable
+                                      onPress={() => clearReminder(item._id)}
+                                      disabled={updatingId === item._id}
+                                      style={{ marginLeft: 8, padding: 3 }}
+                                    >
+                                      <Feather
+                                        name="x"
+                                        size={14}
+                                        color={Colors[theme].text_secondary}
+                                      />
+                                    </Pressable>
+                                  )}
+                                </View>
+                              </>
+                            );
+                          })()
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View
                     style={{
-                      fontFamily: "NunitoMedium",
-                      color: Colors[theme].text_secondary,
-                      marginTop: 10,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: 20,
+                      opacity: 0.5,
+                      marginBottom: 20,
                     }}
                   >
-                    No sub-habits found
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
+                    <Feather
+                      name="list"
+                      size={40}
+                      color={Colors[theme].text_secondary}
+                    />
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        color: Colors[theme].text_secondary,
+                        marginTop: 10,
+                      }}
+                    >
+                      No sub-habits found
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
 
-            <Pressable
-              onPress={close}
-              style={{
-                width: "100%",
-                backgroundColor: themeColor,
-                paddingVertical: 15,
-                borderRadius: 50,
-                marginTop: 10,
-              }}
-            >
-              <Text
+              <Pressable
+                onPress={close}
                 style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 16,
-                  color: "#eee",
-                  textAlign: "center",
+                  width: "100%",
+                  backgroundColor: themeColor,
+                  paddingVertical: 15,
+                  borderRadius: 50,
+                  marginTop: 10,
                 }}
               >
-                Close
-              </Text>
-            </Pressable>
-          </Container>
-        </ThemedView>
-      </View>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 16,
+                    color: "#eee",
+                    textAlign: "center",
+                  }}
+                >
+                  Close
+                </Text>
+              </Pressable>
+            </Container>
+            <UpgradeModal
+              visible={upgradeModalVisible}
+              setVisible={setUpgradeModalVisible}
+            />
+          </ThemedView>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 };

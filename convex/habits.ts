@@ -150,6 +150,12 @@ export const add_habit = mutation({
           "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
         );
       }
+
+      if (sub_habits?.some((sh) => sh.reminder_time)) {
+        throw new ConvexError(
+          "Sub-habit reminders are a premium feature. Please upgrade to Pro!"
+        );
+      }
     }
 
     const existing = await ctx.db

@@ -65,6 +65,13 @@ export const add_sub_habit = mutation({
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthenticated");
 
+    const userData = await ctx.db.get(user_id);
+    if (!userData) throw new Error("User not found");
+
+    if (args.reminder_time && !userData.is_premium) {
+      throw new ConvexError("Sub-habit reminders are a premium feature. Please upgrade to Pro!");
+    }
+
     // Verify the parent habit belongs to the user
     const parent_habit = await ctx.db.get(args.parent_habit_id);
     if (!parent_habit) throw new Error("Parent habit not found");
@@ -193,6 +200,13 @@ export const update_sub_habit = mutation({
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthenticated");
+
+    const userData = await ctx.db.get(user_id);
+    if (!userData) throw new Error("User not found");
+
+    if (args.reminder_time && !userData.is_premium) {
+      throw new ConvexError("Sub-habit reminders are a premium feature. Please upgrade to Pro!");
+    }
 
     const sub_habit = await ctx.db.get(args.sub_habit_id);
     if (!sub_habit) throw new Error("Sub-habit not found");
