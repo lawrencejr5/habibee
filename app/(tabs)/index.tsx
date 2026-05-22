@@ -1193,7 +1193,14 @@ const Home = () => {
           setArchiveModalVisible(true);
         }}
         onDelete={() => setDeleteModalVisible(true)}
+        isExpanded={contextMenuHabit ? expandedHabits.has(contextMenuHabit._id) : false}
+        onToggleExpand={() => {
+          if (contextMenuHabit) {
+            toggleExpansion(contextMenuHabit._id);
+          }
+        }}
       />
+
       {contextMenuHabit && editModalVisible && (
         <EditHabitModal
           visible={editModalVisible}
