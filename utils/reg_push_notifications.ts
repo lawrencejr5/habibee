@@ -15,10 +15,13 @@ Notifications.setNotificationHandler({
 export async function sendPushNotification(expoPushToken: string) {
   const message = {
     to: expoPushToken,
-    sound: "default",
+    sound: "habibee_alert.wav",
     title: "Original Title",
     body: "And here is the body!",
     data: { someData: "goes here" },
+    android: {
+      channelId: "habibee-alerts",
+    },
   };
 
   await fetch("https://exp.host/--/api/v2/push/send", {
@@ -44,6 +47,13 @@ export async function registerForPushNotificationsAsync() {
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF231F7C",
+    });
+    await Notifications.setNotificationChannelAsync("habibee-alerts", {
+      name: "Habibee Alerts",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+      sound: "habibee_alert",
     });
   }
 

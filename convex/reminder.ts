@@ -73,9 +73,12 @@ async function sendPush(pushTokens: string[], title: string, body: string) {
 
   const notifications = pushTokens.map((token) => ({
     to: token,
-    sound: "default",
+    sound: "habibee_alert.wav",
     title,
     body,
+    android: {
+      channelId: "habibee-alerts",
+    },
   }));
 
   // Expo recommends splitting into batches of 100

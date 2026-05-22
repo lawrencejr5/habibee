@@ -35,12 +35,13 @@ export async function scheduleSubHabitReminders(
         content: {
           title: `Time for: ${sh.name}`,
           body: `Don't forget "${sh.name}" for ${parentName}!`,
-          sound: "default",
+          sound: "habibee_alert.wav",
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
+          channelId: "habibee-alerts",
         },
       });
     } catch (error) {
@@ -96,12 +97,13 @@ export async function scheduleHabitReminders(
         content: {
           title: `Time for: ${h.habit}`,
           body: `Keep the streak going! It's time for "${h.habit}".`,
-          sound: "default",
+          sound: "habibee_alert.wav",
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
+          channelId: "habibee-alerts",
         },
       });
     } catch (error) {

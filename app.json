@@ -43,7 +43,10 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon-transparent.png"
+          "icon": "./assets/images/icon-transparent.png",
+          "sounds": [
+            "./assets/sounds/habibee_alert.wav"
+          ]
         }
       ],
       [
