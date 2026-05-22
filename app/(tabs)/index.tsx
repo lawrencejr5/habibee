@@ -347,7 +347,11 @@ const Home = () => {
       >
         <View style={styles.user_container}>
           <Image
-            source={require("../../assets/images/name-logo-black.png")}
+            source={
+              isPremium
+                ? require("../../assets/images/name-logo-premium.png")
+                : require("../../assets/images/name-logo.png")
+            }
             style={{
               width: 140,
               height: 40,
@@ -516,80 +520,6 @@ const Home = () => {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero / Upgrade card */}
-        {!isPremium && (
-          <View
-            style={{
-              backgroundColor: Colors[theme].surface,
-              borderWidth: 3,
-              borderColor: Colors[theme].border,
-              width: "100%",
-              borderRadius: 15,
-              paddingHorizontal: 15,
-              paddingVertical: 15,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 15,
-            }}
-          >
-            <Image
-              source={require("../../assets/icons/premium.png")}
-              style={{
-                width: 60,
-                height: 60,
-                tintColor: Colors[theme].primary,
-                transform: [{ rotate: "30deg" }],
-              }}
-            />
-            <View style={{ flex: 1 }}>
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 18,
-                }}
-              >
-                Premium Habibee
-              </ThemedText>
-              <Text
-                style={{
-                  fontFamily: "NunitoRegular",
-                  fontSize: 13,
-                  color: Colors[theme].text_secondary,
-                  marginTop: 4,
-                  lineHeight: 18,
-                }}
-              >
-                Unlock Habibee AI and other juicy benefits by upgrading to
-                premium.
-              </Text>
-              <Pressable
-                onPress={() => {
-                  haptics.impact();
-                  setUpgradeModalVisible(true);
-                }}
-                style={{
-                  backgroundColor: Colors[theme].primary,
-                  paddingVertical: 8,
-                  paddingHorizontal: 15,
-                  borderRadius: 10,
-                  marginTop: 12,
-                  alignSelf: "flex-end",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 13,
-                    color: "#fff",
-                  }}
-                >
-                  Upgrade
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
         {/* Daily Progress Indicator Card */}
         <View
           style={{
@@ -720,6 +650,95 @@ const Home = () => {
                 }}
               >
                 Try now
+              </Text>
+            </Pressable>
+          </Pressable>
+        )}
+
+        {/* Redesigned Premium Upgrade Card for Free Users */}
+        {!isPremium && (
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              setUpgradeModalVisible(true);
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 1.5,
+              borderColor: Colors[theme].border,
+              borderRadius: 15,
+              marginTop: 15,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                flex: 1,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: Colors[theme].primary + "20",
+                  borderRadius: 12,
+                  padding: 8,
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/premium.png")}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 12,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={2}
+                >
+                  Unlock Habibee AI and other juicy benefits
+                </Text>
+              </View>
+            </View>
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setUpgradeModalVisible(true);
+              }}
+              style={{
+                backgroundColor: Colors[theme].primary,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                shadowColor: Colors[theme].primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 12,
+                  color: "#fff",
+                }}
+              >
+                Upgrade
               </Text>
             </Pressable>
           </Pressable>
