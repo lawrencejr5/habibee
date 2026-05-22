@@ -10,6 +10,8 @@ import { useTheme } from "@/context/ThemeContext";
 import { HabitType } from "@/constants/Types";
 import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface HabitContextMenuProps {
   visible: boolean;
@@ -18,6 +20,8 @@ interface HabitContextMenuProps {
   onEdit: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 const HabitContextMenu: FC<HabitContextMenuProps> = ({
@@ -27,11 +31,24 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
   onEdit,
   onArchive,
   onDelete,
+  isExpanded = false,
+  onToggleExpand,
 }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["42%"], []);
+
+  const subHabits = useQuery(
+    api.sub_habits.get_sub_habits,
+    habit ? { parent_habit_id: habit._id } : "skip"
+  );
+
+  const snapPoints = useMemo(() => {
+    if (subHabits && subHabits.length > 0) {
+      return ["47%"];
+    }
+    return ["38%"];
+  }, [subHabits]);
 
   useEffect(() => {
     if (visible) {
@@ -51,14 +68,14 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
     />
   );
 
-  if (!visible || !habit) return null;
+  if (!habit) return null;
 
   const themeColor = habit.theme ?? Colors[theme].primary;
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={0}
+      index={visible ? 0 : -1}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
@@ -125,6 +142,94 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
             {habit.habit}
           </Text>
         </View>
+
+        {/* Clickable Sub-habits progress card if any exist */}
+        {subHabits && subHabits.length > 0 && (
+          <Pressable
+            onPress={() => {
+              haptics.impact("light");
+              onToggleExpand?.();
+              bottomSheetRef.current?.close();
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: Colors[theme].surface,
+              borderRadius: 16,
+              padding: 14,
+              borderWidth: 1.5,
+              borderColor: pressed ? themeColor : Colors[theme].border,
+              marginVertical: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+            })}
+          >
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 14,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  Sub-habits Progress
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 12,
+                    color: themeColor,
+                  }}
+                >
+                  {subHabits.filter((sh) => sh.completed).length}/{subHabits.length} Completed
+                </Text>
+              </View>
+
+              {/* Progress Bar */}
+              <View
+                style={{
+                  height: 6,
+                  backgroundColor: Colors[theme].border,
+                  borderRadius: 3,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    height: "100%",
+                    backgroundColor: themeColor,
+                    width: `${(subHabits.filter((sh) => sh.completed).length / subHabits.length) * 100}%`,
+                    borderRadius: 3,
+                  }}
+                />
+              </View>
+            </View>
+
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: themeColor + "15",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Feather
+                name={isExpanded ? "eye-off" : "eye"}
+                size={18}
+                color={themeColor}
+              />
+            </View>
+          </Pressable>
+        )}
 
         {/* Actions */}
         <View style={{ gap: 4 }}>
@@ -221,3 +326,5 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
 };
 
 export default HabitContextMenu;
+
+

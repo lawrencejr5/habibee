@@ -5,6 +5,7 @@ import {
   ScrollView as RNScrollView,
   Dimensions,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 
@@ -32,11 +33,12 @@ import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
 import { useUser } from "@/context/UserContext";
 
-import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 import AIChatModal from "@/components/home/AIChatModal";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
@@ -58,6 +60,7 @@ import { HabitType } from "@/constants/Types";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useSyncPendingStreaks } from "@/hooks/useSyncPendingStreaks";
 import OfflineBanner from "@/components/OfflineBanner";
+import { usePremium } from "@/context/PremiumContext";
 import {
   enqueuePendingStreak,
   setLocalLastCompleted,
@@ -68,15 +71,41 @@ const Home = () => {
   const { theme } = useTheme();
   const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
+  const { isPremium } = usePremium();
 
   const { isOnline } = useNetworkStatus();
 
   const { signedIn } = useUser();
   const today = new Date().toLocaleDateString("en-CA");
 
+  const getLocalDateStringForIndex = (sunStr: string, index: number) => {
+    const [year, month, day] = sunStr.split("-").map(Number);
+    const targetDate = new Date(year, month - 1, day + index);
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const d = String(targetDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
   const habitData = useQuery(api.habits.get_user_habits);
   const archivedHabits = useQuery(api.habits.get_archived_habits);
   const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
+
+  const sundayStr = getFirstDayOfTheWeek();
+  const getSaturdayStr = (sunStr: string) => {
+    const [year, month, day] = sunStr.split("-").map(Number);
+    const sat = new Date(year, month - 1, day + 6);
+    const y = sat.getFullYear();
+    const m = String(sat.getMonth() + 1).padStart(2, "0");
+    const d = String(sat.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+  const saturdayStr = getSaturdayStr(sundayStr);
+
+  const weeklyCompletions = useQuery(api.habits.get_weekly_habit_completions, {
+    start_date: sundayStr,
+    end_date: saturdayStr,
+  });
 
   const pathname = usePathname();
   const router = useRouter();
@@ -87,6 +116,8 @@ const Home = () => {
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
   const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
+  const [upgradeModalVisible, setUpgradeModalVisible] =
+    useState<boolean>(false);
   const [createHiveModalVisible, setCreateHiveModalVisible] =
     useState<boolean>(false);
   const [timerModalVisible, setTimerModalVisible] = useState<boolean>(false);
@@ -118,6 +149,7 @@ const Home = () => {
   });
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
+
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
   const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
   const [goalCompletedHabit, setGoalCompletedHabit] =
@@ -142,35 +174,11 @@ const Home = () => {
     undefined,
   );
 
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const adScrollViewRef = useRef<RNScrollView>(null);
-  const adData = ["hive", "ai"];
-
   // ── check_streak_and_reset: only run after sync queue is flushed ──────────
   useEffect(() => {
     if (!syncReady) return;
     check_streak_and_reset({ today });
   }, [syncReady]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentAdIndex((prev) => {
-        const nextIndex = (prev + 1) % adData.length;
-        return nextIndex;
-      });
-    }, 10000); // Swipe every 10 seconds
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (adScrollViewRef.current) {
-      const adWidth = Dimensions.get("window").width - 40;
-      adScrollViewRef.current.scrollTo({
-        x: currentAdIndex * adWidth,
-        animated: true,
-      });
-    }
-  }, [currentAdIndex]);
 
   // Schedule local notifications for sub-habit reminders
   useEffect(() => {
@@ -199,10 +207,6 @@ const Home = () => {
     });
   };
 
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
-
   const scrollRef = useRef<RNScrollView | null>(null);
   const tasksSectionY = useRef<number>(0);
 
@@ -213,38 +217,6 @@ const Home = () => {
       animated: true,
     });
   };
-
-  // Check if we're on the index page
-  const isOnIndexPage = pathname === "/" || pathname === "/(tabs)";
-
-  // Typing animation effect
-  useEffect(() => {
-    if (!isOnIndexPage) return;
-
-    const currentMessage = motivationalMsgs?.[currentMessageIndex]?.text;
-    let currentIndex = 0;
-
-    if (isTyping && currentMessage) {
-      const typingInterval = setInterval(() => {
-        if (currentIndex <= currentMessage.length) {
-          setDisplayedText(currentMessage.slice(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsTyping(false);
-          // Wait 3 seconds before moving to next message
-          setTimeout(() => {
-            setCurrentMessageIndex(
-              (prevIndex) => (prevIndex + 1) % motivationalMsgs!.length,
-            );
-            setIsTyping(true);
-          }, 3000);
-        }
-      }, 50); // Typing speed
-
-      return () => clearInterval(typingInterval);
-    }
-  }, [currentMessageIndex, isTyping, motivationalMsgs]);
 
   const open = () => {
     setAddModalVisible(true);
@@ -262,6 +234,7 @@ const Home = () => {
     deleteModalVisible ||
     reminderModalVisible ||
     createHiveModalVisible ||
+    upgradeModalVisible ||
     streakFreezeModalVisible ||
     !!goalCompletedHabit;
 
@@ -274,10 +247,13 @@ const Home = () => {
     return "Evening";
   };
 
-  const greeting = getGreeting();
-
   const loading =
-    appLoading || authLoading || !habitData || !signedIn || !weekly_stats;
+    appLoading ||
+    authLoading ||
+    !habitData ||
+    !signedIn ||
+    !weekly_stats ||
+    !weeklyCompletions;
 
   const totalHabits = habitData?.length || 0;
   const completedHabits =
@@ -285,6 +261,70 @@ const Home = () => {
       (h) => h.lastCompleted === today || offlineCompletedIds.has(h._id),
     ).length || 0;
   const allHabitsDone = totalHabits > 0 && completedHabits === totalHabits;
+
+  // Derived state: Today's progress calculation (high-resolution sub-habit inclusive)
+  const getTodayProgressMetrics = () => {
+    let completedCount = 0;
+    let totalCountForDay = 0;
+
+    if (!habitData)
+      return { completedCount: 0, totalCountForDay: 0, percentage: 0 };
+
+    const completedSet = new Set<string>();
+    if (weeklyCompletions?.[today]) {
+      weeklyCompletions[today].forEach((id) => completedSet.add(id));
+    }
+    offlineCompletedIds.forEach((id) => completedSet.add(id));
+
+    for (const h of habitData) {
+      const subs = subHabitsData
+        ? subHabitsData.filter((sh) => sh.parent_habit === h._id)
+        : [];
+      if (subs.length > 0) {
+        totalCountForDay += subs.length;
+        const parentCompleted = completedSet.has(h._id);
+        if (parentCompleted) {
+          completedCount += subs.length;
+        } else {
+          completedCount += subs.filter((sh) => sh.completed).length;
+        }
+      } else {
+        totalCountForDay += 1;
+        if (completedSet.has(h._id)) {
+          completedCount += 1;
+        }
+      }
+    }
+    const percentage =
+      totalCountForDay > 0
+        ? Math.round((completedCount / totalCountForDay) * 100)
+        : 0;
+    return { completedCount, totalCountForDay, percentage };
+  };
+
+  const { percentage: todayProgressPercentage } = getTodayProgressMetrics();
+
+  const getProgressMessage = (pct: number) => {
+    if (pct === 0) {
+      return "Let's take the first step today! Your habits are waiting.";
+    }
+    if (pct <= 20) {
+      return "You've kicked off the day! Every small action is a victory.";
+    }
+    if (pct <= 40) {
+      return "Off to a great start! You are building real momentum.";
+    }
+    if (pct <= 60) {
+      return "Making steady progress! You're past the halfway mark.";
+    }
+    if (pct <= 80) {
+      return "Strong effort today! You are crushing your daily goals.";
+    }
+    if (pct < 100) {
+      return "So close to perfection! Just one final habit to wrap up the day!";
+    }
+    return "Incredible! You smashed all your habits today! 🌟";
+  };
 
   if (loading) return <Loading />;
 
@@ -307,10 +347,14 @@ const Home = () => {
       >
         <View style={styles.user_container}>
           <Image
-            source={require("../../assets/images/name-logo-black.png")}
+            source={
+              isPremium
+                ? require("../../assets/images/name-logo-premium.png")
+                : require("../../assets/images/name-logo.png")
+            }
             style={{
               width: 140,
-              height: 32,
+              height: 40,
             }}
           />
         </View>
@@ -324,7 +368,6 @@ const Home = () => {
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            marginTop: 10,
             backgroundColor: Colors[theme].surface,
             paddingHorizontal: 12,
             paddingVertical: 6,
@@ -358,31 +401,37 @@ const Home = () => {
               }}
             />
           </View>
-          <View
-            style={{
-              width: 1,
-              height: 15,
-              backgroundColor: Colors[theme].border,
-            }}
-          />
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Image
-              source={require("../../assets/icons/snowflake.png")}
-              style={{
-                width: 20,
-                height: 20,
-              }}
-            />
-            <Text
-              style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 16,
-                color: Colors[theme].blue,
-              }}
-            >
-              {signedIn.freezes ?? 0}
-            </Text>
-          </View>
+          {isPremium && (
+            <>
+              <View
+                style={{
+                  width: 1,
+                  height: 15,
+                  backgroundColor: Colors[theme].border,
+                }}
+              />
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              >
+                <Image
+                  source={require("../../assets/icons/snowflake.png")}
+                  style={{
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 16,
+                    color: Colors[theme].blue,
+                  }}
+                >
+                  {signedIn.freezes ?? 0}
+                </Text>
+              </View>
+            </>
+          )}
         </Pressable>
       </View>
 
@@ -393,11 +442,66 @@ const Home = () => {
             marginTop: 10,
             flexDirection: "row",
             justifyContent: "space-between",
-            gap: 10,
+            gap: 7,
           }}
         >
           {weekDays.map((weekday, i) => {
-            return <StreakDay key={i} day={weekday} />;
+            const dateStr = getLocalDateStringForIndex(sundayStr, i);
+            const todayIndex = new Date().getDay();
+            const isActive = i === todayIndex;
+
+            let completedCount = 0;
+            let totalCountForDay = totalHabits;
+            if (dateStr === today) {
+              const completedSet = new Set<string>();
+              if (weeklyCompletions?.[dateStr]) {
+                weeklyCompletions[dateStr].forEach((id) =>
+                  completedSet.add(id),
+                );
+              }
+              offlineCompletedIds.forEach((id) => completedSet.add(id));
+
+              if (habitData) {
+                let calcTotal = 0;
+                let calcCompleted = 0;
+                for (const h of habitData) {
+                  const subs = subHabitsData
+                    ? subHabitsData.filter((sh) => sh.parent_habit === h._id)
+                    : [];
+                  if (subs.length > 0) {
+                    calcTotal += subs.length;
+                    const parentCompleted = completedSet.has(h._id);
+                    if (parentCompleted) {
+                      calcCompleted += subs.length;
+                    } else {
+                      calcCompleted += subs.filter((sh) => sh.completed).length;
+                    }
+                  } else {
+                    calcTotal += 1;
+                    if (completedSet.has(h._id)) {
+                      calcCompleted += 1;
+                    }
+                  }
+                }
+                completedCount = calcCompleted;
+                totalCountForDay = calcTotal;
+              } else {
+                completedCount = completedSet.size;
+                totalCountForDay = totalHabits;
+              }
+            } else {
+              completedCount = weeklyCompletions?.[dateStr]?.length || 0;
+            }
+
+            return (
+              <StreakDay
+                key={i}
+                day={weekday}
+                completedCount={completedCount}
+                totalCount={totalCountForDay}
+                isActive={isActive}
+              />
+            );
           })}
         </View>
       </ThemedView>
@@ -416,248 +520,229 @@ const Home = () => {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero card */}
+        {/* Daily Progress Indicator Card */}
         <View
           style={{
             backgroundColor: Colors[theme].surface,
-            borderWidth: 3,
+            borderWidth: 1.5,
             borderColor: Colors[theme].border,
-            width: "100%",
-            marginTop: 10,
             borderRadius: 15,
-            paddingHorizontal: 10,
-            paddingVertical: 15,
+            marginTop: 15,
+            padding: 16,
             flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 15,
+            alignItems: "center",
+            gap: 16,
           }}
         >
-          <Image
-            source={
-              theme === "light"
-                ? require("../../assets/images/icon-nobg-black.png")
-                : require("../../assets/images/icon-nobg-white.png")
-            }
-            style={{ width: 80, height: 80, marginTop: 10 }}
+          <DailyProgressCircle
+            progress={todayProgressPercentage / 100}
+            percentage={todayProgressPercentage}
+            size={75}
+            strokeWidth={7}
+            color={Colors[theme].primary}
+            backgroundColor={Colors[theme].border}
           />
           <View style={{ flex: 1 }}>
-            <ThemedText
+            <Text
               style={{
                 fontFamily: "NunitoExtraBold",
-                fontSize: 18,
-                textTransform: "capitalize",
+                fontSize: 15,
+                color: Colors[theme].text,
+                marginBottom: 4,
               }}
             >
-              Hello {signedIn.username}! 👋
-            </ThemedText>
+              Today's Progress
+            </Text>
             <Text
               style={{
                 fontFamily: "NunitoRegular",
                 fontSize: 13,
                 color: Colors[theme].text_secondary,
-                marginTop: 5,
-                minHeight: 40,
+                lineHeight: 18,
               }}
             >
-              {displayedText}
-              {isTyping &&
-                displayedText.length <
-                  motivationalMsgs![currentMessageIndex].text.length && (
-                  <Text style={{ color: Colors[theme].primary }}>|</Text>
-                )}
+              {getProgressMessage(todayProgressPercentage)}
             </Text>
-            <Pressable
-              onPress={open}
-              style={{
-                backgroundColor: Colors[theme].primary,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: 7,
-                marginTop: 20,
-                alignSelf: "flex-end",
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "NunitoBold",
-                  fontSize: 12,
-                  color: "#fff",
-                }}
-              >
-                Add Habit
-              </Text>
-            </Pressable>
           </View>
         </View>
 
-        {/* Ad Carousel Container */}
-        <View
-          style={{
-            borderWidth: 1.5,
-            borderColor: Colors[theme].primary,
-            borderRadius: 15,
-            marginTop: 15,
-            overflow: "hidden",
-          }}
-        >
-          <RNScrollView
-            ref={adScrollViewRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onMomentumScrollEnd={(e) => {
-              const contentOffsetX = e.nativeEvent.contentOffset.x;
-              const index = Math.round(
-                contentOffsetX / (Dimensions.get("window").width - 40),
-              );
-              setCurrentAdIndex(index);
+        {/* Redesigned Premium AI Promo Card */}
+        {isPremium && (
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              setAiChatModalVisible(true);
             }}
+            style={({ pressed }) => ({
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 1.5,
+              borderColor: Colors[theme].border,
+              borderRadius: 15,
+              marginTop: 15,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              opacity: pressed ? 0.9 : 1,
+            })}
           >
-            {/* Hive Ad Card */}
-            <Pressable
-              onPress={() => {
-                haptics.impact();
-                router.push("/(tabs)/hive");
-              }}
+            <View
               style={{
-                width: Dimensions.get("window").width - 40,
-                backgroundColor: Colors[theme].surface,
-                padding: 15,
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
+                flex: 1,
               }}
             >
               <View
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: Colors[theme].primary,
-                  justifyContent: "center",
-                  alignItems: "center",
+                  backgroundColor: Colors[theme].primary + "20",
+                  borderRadius: 12,
+                  padding: 8,
                 }}
               >
                 <Image
-                  source={require("../../assets/icons/hive.png")}
+                  source={require("../../assets/icons/ai-sparkles.png")}
                   style={{
-                    width: 24,
-                    height: 24,
-                    tintColor: "#fff",
+                    width: 20,
+                    height: 20,
+                    tintColor: Colors[theme].primary,
                   }}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  Join the Habibee Hive! 🐝
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoRegular",
+                    fontFamily: "NunitoBold",
                     fontSize: 12,
                     color: Colors[theme].text_secondary,
                     marginTop: 2,
                   }}
+                  numberOfLines={2}
                 >
-                  Build streaks and stay accountable with friends.
+                  Generate new habits and insights with habibee ai
                 </Text>
               </View>
-              <Image
-                source={require("../../assets/icons/chevron-down.png")}
-                style={{
-                  width: 16,
-                  height: 16,
-                  tintColor: Colors[theme].primary,
-                  transform: [{ rotate: "-90deg" }],
-                }}
-              />
-            </Pressable>
-
-            {/* Habibee AI Ad Card */}
+            </View>
             <Pressable
               onPress={() => {
                 haptics.impact();
                 setAiChatModalVisible(true);
               }}
               style={{
-                width: Dimensions.get("window").width - 40,
-                backgroundColor: Colors[theme].surface,
-                padding: 15,
+                backgroundColor: Colors[theme].primary,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                shadowColor: Colors[theme].primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 12,
+                  color: "#fff",
+                }}
+              >
+                Try now
+              </Text>
+            </Pressable>
+          </Pressable>
+        )}
+
+        {/* Redesigned Premium Upgrade Card for Free Users */}
+        {!isPremium && (
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              setUpgradeModalVisible(true);
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 1.5,
+              borderColor: Colors[theme].border,
+              borderRadius: 15,
+              marginTop: 15,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <View
+              style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
+                flex: 1,
               }}
             >
-              <Image
-                source={require("../../assets/images/ai-icon.png")}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-              />
+              <View
+                style={{
+                  backgroundColor: Colors[theme].primary + "20",
+                  borderRadius: 12,
+                  padding: 8,
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/premium.png")}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  Try Habibee AI for free! 🚀
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoRegular",
+                    fontFamily: "NunitoBold",
                     fontSize: 12,
                     color: Colors[theme].text_secondary,
                     marginTop: 2,
                   }}
+                  numberOfLines={2}
                 >
-                  Get personalized habit recommendations and support.
+                  Unlock Habibee AI and other juicy benefits
                 </Text>
               </View>
-              <Image
-                source={require("../../assets/icons/chevron-down.png")}
+            </View>
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                setUpgradeModalVisible(true);
+              }}
+              style={{
+                backgroundColor: Colors[theme].primary,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                shadowColor: Colors[theme].primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Text
                 style={{
-                  width: 16,
-                  height: 16,
-                  tintColor: Colors[theme].primary,
-                  transform: [{ rotate: "-90deg" }],
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 12,
+                  color: "#fff",
                 }}
-              />
+              >
+                Upgrade
+              </Text>
             </Pressable>
-          </RNScrollView>
-
-          {/* Pagination Dots */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              paddingBottom: 10,
-              backgroundColor: Colors[theme].surface,
-            }}
-          >
-            {adData.map((_, i) => (
-              <View
-                key={i}
-                style={{
-                  width: currentAdIndex === i ? 20 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor:
-                    currentAdIndex === i
-                      ? Colors[theme].text_secondary
-                      : Colors[theme].text_secondary,
-                  marginHorizontal: 3,
-                }}
-              />
-            ))}
-          </View>
-        </View>
+          </Pressable>
+        )}
 
         {/* Tasks Header */}
         <View
@@ -1064,7 +1149,16 @@ const Home = () => {
           setArchiveModalVisible(true);
         }}
         onDelete={() => setDeleteModalVisible(true)}
+        isExpanded={
+          contextMenuHabit ? expandedHabits.has(contextMenuHabit._id) : false
+        }
+        onToggleExpand={() => {
+          if (contextMenuHabit) {
+            toggleExpansion(contextMenuHabit._id);
+          }
+        }}
       />
+
       {contextMenuHabit && editModalVisible && (
         <EditHabitModal
           visible={editModalVisible}
@@ -1098,45 +1192,232 @@ const Home = () => {
         visible={streakFreezeModalVisible}
         setVisible={setStreakFreezeModalVisible}
       />
+      <UpgradeModal
+        visible={upgradeModalVisible}
+        setVisible={setUpgradeModalVisible}
+      />
     </View>
   );
 };
 
-const StreakDay: React.FC<{ day: string }> = ({ day }) => {
-  const { theme } = useTheme();
-  const weekly_stats = useQuery(api.weekly_stats.get_user_weekly_stats);
-  const sunday = getFirstDayOfTheWeek();
-  const week_done = weekly_stats
-    ?.filter((stat) => stat.date >= sunday)
-    .map((stat) => stat.week_day);
+const ProgressCircle: React.FC<{
+  progress: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  backgroundColor: string;
+}> = ({ progress, size = 20, strokeWidth = 2.5, color, backgroundColor }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
 
   return (
     <View
       style={{
+        width: size,
+        height: size,
+        marginTop: 15,
+        justifyContent: "center",
         alignItems: "center",
+      }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="none"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+    </View>
+  );
+};
+
+const DailyProgressCircle: React.FC<{
+  progress: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  backgroundColor: string;
+  percentage: number;
+}> = ({
+  progress,
+  size = 70,
+  strokeWidth = 8,
+  color,
+  backgroundColor,
+  percentage,
+}) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
+      }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="none"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View
+        style={{
+          position: "absolute",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "NunitoExtraBold",
+            fontSize: 16,
+            color: color,
+          }}
+        >
+          {percentage}%
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const StreakDay: React.FC<{
+  day: string;
+  completedCount: number;
+  totalCount: number;
+  isActive: boolean;
+}> = ({ day, completedCount, totalCount, isActive }) => {
+  const { theme } = useTheme();
+
+  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+
+  const renderIcon = () => {
+    if (isActive) {
+      if (progress === 1 && totalCount > 0) {
+        return (
+          <Image
+            source={require("../../assets/icons/check-fill.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      } else if (progress > 0) {
+        return (
+          <ProgressCircle
+            progress={progress}
+            size={20}
+            strokeWidth={2.5}
+            color={Colors[theme].primary}
+            backgroundColor={Colors[theme].primary + "90"}
+          />
+        );
+      } else {
+        return (
+          <Image
+            source={require("../../assets/icons/check-outline.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      }
+    } else {
+      if (completedCount >= 1) {
+        return (
+          <Image
+            source={require("../../assets/icons/check-fill.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      } else {
+        return (
+          <Image
+            source={require("../../assets/icons/check-outline.png")}
+            style={{
+              tintColor: Colors[theme].primary,
+              width: 20,
+              marginTop: 15,
+              height: 20,
+            }}
+          />
+        );
+      }
+    }
+  };
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        backgroundColor: Colors[theme].surface,
+        paddingVertical: 10,
+        paddingHorizontal: 5,
+        borderWidth: isActive ? 2 : 1,
+        borderColor: isActive ? Colors[theme].primary : Colors[theme].border,
+        borderRadius: 10,
       }}
     >
       <ThemedText
         style={{
           color: Colors[theme].text_secondary,
           fontFamily: "NunitoBold",
+          fontSize: 12,
         }}
       >
         {day}
       </ThemedText>
-      <Image
-        source={
-          week_done?.includes(day)
-            ? require("../../assets/icons/check-fill.png")
-            : require("../../assets/icons/check-outline.png")
-        }
-        style={{
-          tintColor: Colors[theme].primary,
-          width: 25,
-          marginTop: 15,
-          height: 25,
-        }}
-      />
+      {renderIcon()}
     </View>
   );
 };
@@ -1168,6 +1449,6 @@ const styles = StyleSheet.create({
   streak_card: {
     width: "100%",
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 5,
   },
 });

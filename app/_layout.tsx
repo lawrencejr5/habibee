@@ -28,6 +28,7 @@ import HapticsProvider from "@/context/HapticsContext";
 import LoadingProvider, { useLoadingContext } from "@/context/LoadingContext";
 import MotivationMsgProvider from "@/context/MotivationContext";
 import UserProvider, { useUser } from "@/context/UserContext";
+import PremiumProvider from "@/context/PremiumContext";
 import { CustomAlertProvider } from "@/context/AlertContext";
 import {
   PushNotificationProvider,
@@ -70,11 +71,13 @@ export default function RootLayout() {
             <CustomAlertProvider>
               <LoadingProvider>
                 <UserProvider>
-                  <PushNotificationProvider>
-                    <MotivationMsgProvider>
-                      <NavigationWithTheme loaded={loaded} />
-                    </MotivationMsgProvider>
-                  </PushNotificationProvider>
+                  <PremiumProvider>
+                    <PushNotificationProvider>
+                      <MotivationMsgProvider>
+                        <NavigationWithTheme loaded={loaded} />
+                      </MotivationMsgProvider>
+                    </PushNotificationProvider>
+                  </PremiumProvider>
                 </UserProvider>
               </LoadingProvider>
             </CustomAlertProvider>

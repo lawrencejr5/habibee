@@ -32,9 +32,11 @@ import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { useCustomAlert } from "@/context/AlertContext";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { habitIcons } from "@/data/habits";
+import { usePremium } from "@/context/PremiumContext";
+import UpgradeModal from "@/components/account/UpgradeModal";
 
 interface AIChatModalProps {
   visible: boolean;
@@ -70,10 +72,12 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   const haptics = useHapitcs();
   const { signedIn } = useUser();
   const { showCustomAlert } = useCustomAlert();
+  const { isPremium } = usePremium();
 
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<AiChatMsgType[]>([]);
   const [generating, setGenerating] = useState<boolean>(false);
+  const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
 
   const generate_habit = useAction(api.habits.generate_habit_ai);
 
@@ -91,6 +95,12 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   };
 
   const sendMessage = async (customInput?: string) => {
+    if (!isPremium) {
+      haptics.impact();
+      setUpgradeModalVisible(true);
+      return;
+    }
+
     const messageContent =
       typeof customInput === "string" ? customInput : input;
     if (!messageContent.trim()) return;
@@ -188,18 +198,6 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       label: "Analyze my progress",
       prompt: "Analyze my current habit streaks and progress.",
     },
-    {
-      id: 3,
-      icon: "fire", // MaterialCommunityIcons
-      label: "Get motivation",
-      prompt: "I'm feeling unmotivated, give me a pep talk.",
-    },
-    {
-      id: 4,
-      icon: "clock-outline", // MaterialCommunityIcons
-      label: "Optimize routine",
-      prompt: "How can I optimize my daily routine?",
-    },
   ];
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -256,17 +254,18 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
   if (!visible) return null;
 
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      keyboardBehavior="interactive"
-      enableDynamicSizing={false}
-      enablePanDownToClose={true}
-      onClose={() => setVisible(false)}
-      backgroundStyle={{
-        backgroundColor: Colors[theme].background,
-      }}
+    <>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        keyboardBehavior="interactive"
+        enableDynamicSizing={false}
+        enablePanDownToClose={true}
+        onClose={() => setVisible(false)}
+        backgroundStyle={{
+          backgroundColor: Colors[theme].background,
+        }}
       handleIndicatorStyle={{
         width: 40,
         height: 4,
@@ -387,57 +386,83 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 
                 <View
                   style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
+                    flexDirection: "column",
+                    width: "100%",
                     gap: 15,
-                    justifyContent: "center",
                   }}
                 >
                   {suggestions.map((item) => (
                     <Pressable
                       key={item.id}
                       onPress={() => {
-                        sendMessage(item.prompt);
+                        if (!isPremium) {
+                          haptics.impact();
+                          setUpgradeModalVisible(true);
+                        } else {
+                          sendMessage(item.prompt);
+                        }
                       }}
                       style={({ pressed }) => ({
-                        width: (width - 60) / 2, // 2 columns with padding calc
-                        aspectRatio: 1.1, // Slightly taller than square
+                        width: "100%",
+                        flexDirection: "row",
+                        alignItems: "center",
                         backgroundColor: Colors[theme].surface,
                         borderRadius: 20,
                         padding: 15,
-                        justifyContent: "space-between",
                         borderWidth: 1,
                         borderColor: pressed
                           ? accentColor
                           : Colors[theme].border,
                         transform: [{ scale: pressed ? 0.98 : 1 }],
+                        justifyContent: "space-between",
                       })}
                     >
                       <View
                         style={{
-                          width: 38,
-                          height: 38,
-                          borderRadius: 10,
-                          backgroundColor: accentColor + "15", // 15% opacity orange
-                          justifyContent: "center",
+                          flexDirection: "row",
                           alignItems: "center",
+                          gap: 15,
+                          flex: 1,
                         }}
                       >
-                        <MaterialCommunityIcons
-                          name={item.icon as any}
-                          size={22}
-                          color={accentColor}
-                        />
+                        <View
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            backgroundColor: accentColor + "15", // 15% opacity orange
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <MaterialCommunityIcons
+                            name={item.icon as any}
+                            size={22}
+                            color={accentColor}
+                          />
+                        </View>
+                        <ThemedText
+                          style={{
+                            fontFamily: "NunitoBold",
+                            fontSize: 16,
+                            color: Colors[theme].text,
+                          }}
+                        >
+                          {item.label}
+                        </ThemedText>
                       </View>
-                      <ThemedText
-                        style={{
-                          fontFamily: "NunitoBold",
-                          fontSize: 15,
-                          lineHeight: 20,
-                        }}
-                      >
-                        {item.label}
-                      </ThemedText>
+
+                      {!isPremium && (
+                        <Image
+                          source={require("../../assets/icons/premium.png")}
+                          style={{
+                            width: 20,
+                            height: 20,
+                            tintColor: "#FFD700",
+                            transform: [{ rotate: "30deg" }],
+                          }}
+                        />
+                      )}
                     </Pressable>
                   ))}
                 </View>
@@ -457,6 +482,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                       thoughtTime={msg.thoughtTime}
                       shouldAnimate={msg.shouldAnimate}
                       onAnimationComplete={() => markMessageAsAnimated(index)}
+                      onUpgrade={() => setUpgradeModalVisible(true)}
                     />
                   ),
                 )}
@@ -559,7 +585,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 />
 
                 <Pressable
-                  onPress={() => sendMessage()}
+                  onPress={() => {
+                    if (!isPremium) {
+                      haptics.impact();
+                      setUpgradeModalVisible(true);
+                    } else {
+                      sendMessage();
+                    }
+                  }}
                   disabled={generating}
                   style={{
                     backgroundColor: generating
@@ -575,6 +608,16 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 >
                   {generating ? (
                     <ActivityIndicator size="small" color="white" />
+                  ) : !isPremium ? (
+                    <Image
+                      source={require("../../assets/icons/premium.png")}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: "#FFD700",
+                        transform: [{ rotate: "30deg" }],
+                      }}
+                    />
                   ) : (
                     <Image
                       source={require("../../assets/icons/send.png")}
@@ -592,6 +635,11 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         </View>
       </BottomSheetView>
     </BottomSheet>
+    <UpgradeModal
+      visible={upgradeModalVisible}
+      setVisible={setUpgradeModalVisible}
+    />
+    </>
   );
 };
 
@@ -639,15 +687,21 @@ const parseText = (text: string) => {
   });
 };
 
-const HabitCard: FC<{ data: HabitData }> = ({ data }) => {
+const HabitCard: FC<{ data: HabitData; onUpgrade: () => void }> = ({ data, onUpgrade }) => {
   const { theme } = useTheme();
   const createHabit = useMutation(api.habits.create_habit);
   const { showCustomAlert } = useCustomAlert();
   const haptics = useHapitcs();
   const [saved, setSaved] = useState(false);
+  const { isPremium } = usePremium();
+  const habitsData = useQuery(api.habits.get_user_habits);
 
   const onSave = async () => {
     haptics.impact();
+    if (!isPremium && habitsData && habitsData.length >= 3) {
+      onUpgrade();
+      return;
+    }
     try {
       await createHabit({
         habit: data.habit,
@@ -848,7 +902,8 @@ const ModelChat: FC<{
   thoughtTime?: number;
   shouldAnimate?: boolean;
   onAnimationComplete?: () => void;
-}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete }) => {
+  onUpgrade: () => void;
+}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete, onUpgrade }) => {
   const { theme } = useTheme();
 
   // Combine all text parts for animation calculation
@@ -930,7 +985,7 @@ const ModelChat: FC<{
       <View style={{ paddingLeft: 32 }}>
         {parts.map((part, index) => {
           if (part.type === "habit") {
-            return <HabitCard key={index} data={part.content} />;
+            return <HabitCard key={index} data={part.content} onUpgrade={onUpgrade} />;
           }
 
           const partParsed = parseText(part.content);

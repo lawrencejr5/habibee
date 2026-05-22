@@ -15,6 +15,8 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import DeleteAccountModal from "@/components/account/DeleteAccountModal";
+import UpgradeModal from "@/components/account/UpgradeModal";
+import PremiumBenefitsModal from "@/components/account/PremiumBenefitsModal";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useHapitcs } from "@/context/HapticsContext";
@@ -25,6 +27,7 @@ import { useConvexAuth } from "convex/react";
 import Loading from "@/components/Loading";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import OfflineBanner from "@/components/OfflineBanner";
+import { usePremium } from "@/context/PremiumContext";
 
 export default function Account() {
   const insets = useSafeAreaInsets();
@@ -32,6 +35,7 @@ export default function Account() {
   const { theme, toggleTheme } = useTheme();
   const haptics = useHapitcs();
   const { isOnline } = useNetworkStatus();
+  const { isPremium, planType } = usePremium();
 
   const { appLoading } = useLoadingContext();
   const { signedIn } = useUser();
@@ -42,13 +46,18 @@ export default function Account() {
     useState<boolean>(false);
   const [openDeleteAccountModal, setOpenDeleteAccountModal] =
     useState<boolean>(false);
+  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
+  const [openPremiumBenefitsModal, setOpenPremiumBenefitsModal] =
+    useState<boolean>(false);
 
   if (appLoading || authLoading || !signedIn) return <Loading />;
 
   return (
     <View style={{ flex: 1 }}>
       <OfflineBanner isOnline={isOnline} />
-      <ThemedView style={[styles.container, { paddingTop: isOnline ? insets.top : 10 }]}>
+      <ThemedView
+        style={[styles.container, { paddingTop: isOnline ? insets.top : 10 }]}
+      >
         <View style={{ paddingBottom: 20 }}>
           <ThemedText style={styles.title}>Account</ThemedText>
         </View>
@@ -161,6 +170,164 @@ export default function Account() {
               </View>
             </View>
           </Pressable>
+
+          {/* Premium Upgrade Banner */}
+          {isPremium ? (
+            <View
+              style={{
+                marginTop: 14,
+                backgroundColor: Colors[theme].surface,
+                borderColor: Colors[theme].border,
+                borderWidth: 3,
+                borderRadius: 15,
+                padding: 12,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  flex: 1,
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/premium.png")}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      color: Colors[theme].text,
+                      fontSize: 16,
+                    }}
+                  >
+                    Habibee Premium
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoRegular",
+                      color: Colors[theme].text_secondary,
+                      fontSize: 12,
+                      marginTop: 2,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {planType} plan active
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setOpenPremiumBenefitsModal(true);
+                }}
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: "#fff",
+                    fontSize: 14,
+                  }}
+                >
+                  Explore
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={{
+                marginTop: 14,
+                backgroundColor: Colors[theme].surface,
+                borderColor: Colors[theme].border,
+                borderWidth: 3,
+                borderRadius: 15,
+                padding: 12,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  flex: 1,
+                }}
+              >
+                <Image
+                  source={require("../../assets/icons/premium.png")}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    tintColor: Colors[theme].primary,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      color: Colors[theme].text,
+                      fontSize: 16,
+                    }}
+                  >
+                    Habibee premium
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoRegular",
+                      color: Colors[theme].text_secondary,
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Get more from habibee
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setOpenUpgradeModal(true);
+                }}
+                style={{
+                  backgroundColor: Colors[theme].primary,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: "#fff",
+                    fontSize: 14,
+                  }}
+                >
+                  Upgrade
+                </Text>
+              </Pressable>
+            </View>
+          )}
 
           <View style={{ marginTop: 30 }}>
             {/* Personal */}
@@ -517,6 +684,14 @@ export default function Account() {
       <DeleteAccountModal
         visible={openDeleteAccountModal}
         setVisible={setOpenDeleteAccountModal}
+      />
+      <UpgradeModal
+        visible={openUpgradeModal}
+        setVisible={setOpenUpgradeModal}
+      />
+      <PremiumBenefitsModal
+        visible={openPremiumBenefitsModal}
+        setVisible={setOpenPremiumBenefitsModal}
       />
     </View>
   );

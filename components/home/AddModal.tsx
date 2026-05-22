@@ -25,11 +25,13 @@ import IconColorPicker, {
 } from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
 import { useHapitcs } from "@/context/HapticsContext";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "@/context/ThemeContext";
 import { useCustomAlert, CustomAlertPortal } from "@/context/AlertContext";
 import { Id } from "@/convex/_generated/dataModel";
+import { usePremium } from "@/context/PremiumContext";
+import UpgradeModal from "@/components/account/UpgradeModal";
 import AddSubHabitModal, { SubHabitEntry } from "../habit/AddSubHabitModal";
 const AddModal: React.FC<{
   visible: boolean;
@@ -39,6 +41,9 @@ const AddModal: React.FC<{
   const insets = useSafeAreaInsets();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
+  const { isPremium } = usePremium();
+  const habitsData = useQuery(api.habits.get_user_habits);
+  const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
 
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
 
@@ -81,6 +86,10 @@ const AddModal: React.FC<{
   };
 
   const handleSubmit = async () => {
+    if (!isPremium && habitsData && habitsData.length >= 3) {
+      setUpgradeModalVisible(true);
+      return;
+    }
     setBtnLoading(true);
     try {
       if (!habit || !goal) {
@@ -120,6 +129,15 @@ const AddModal: React.FC<{
       setBtnLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (visible && !isPremium && habitsData && habitsData.length >= 3) {
+      setVisible(false);
+      setTimeout(() => {
+        setUpgradeModalVisible(true);
+      }, 300);
+    }
+  }, [visible, isPremium, habitsData, setVisible]);
 
   useEffect(() => {
     const backAction = () => {
@@ -519,6 +537,10 @@ const AddModal: React.FC<{
         subHabits={subHabits}
         setSubHabits={setSubHabits}
         themeColor={selectedColor}
+      />
+      <UpgradeModal
+        visible={upgradeModalVisible}
+        setVisible={setUpgradeModalVisible}
       />
     </>
   );

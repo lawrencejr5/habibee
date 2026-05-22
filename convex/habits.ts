@@ -136,6 +136,28 @@ export const add_habit = mutation({
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
+    const userData = await ctx.db.get(user);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+        );
+      }
+
+      if (sub_habits?.some((sh) => sh.reminder_time)) {
+        throw new ConvexError(
+          "Sub-habit reminders are a premium feature. Please upgrade to Pro!"
+        );
+      }
+    }
+
     const existing = await ctx.db
       .query("habits")
       .withIndex("by_user_habit", (q) => q.eq("user", user).eq("habit", habit))
@@ -229,34 +251,60 @@ export const record_streak = mutation({
     const user = await ctx.db.get(user_id);
     if (!user) throw new Error("User not found");
 
-    let isFirstOfDay = false;
-    if (user.last_streak_date !== args.current_date) {
-      isFirstOfDay = true;
-      const newUserStreak = (user.streak ?? 0) + 1;
-      await ctx.db.patch(user_id, {
-        streak: newUserStreak,
-        last_streak_date: args.current_date,
-      });
+    const all_user_habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", user_id))
+      .collect();
+    const active_habits = all_user_habits.filter((h) => !h.archived);
 
-      const user_weekly_stat = await ctx.db
-        .query("weekly_stats")
-        .withIndex("by_user_weekday", (q) =>
-          q.eq("user", user_id).eq("week_day", args.week_day),
-        )
-        .unique();
-
-      if (user_weekly_stat) {
-        await ctx.db.patch(user_weekly_stat._id, {
-          date: args.current_date,
-        });
+    let completed_count = 0;
+    for (const h of active_habits) {
+      if (h._id === args.habit_id) {
+        completed_count++;
       } else {
-        await ctx.db.insert("weekly_stats", {
-          user: user_id,
-          week_day: args.week_day,
-          date: args.current_date,
-        });
+        const completed_today = await ctx.db
+          .query("habit_enteries")
+          .withIndex("by_habit_date", (q) =>
+            q.eq("habit", h._id).eq("date", args.current_date)
+          )
+          .first();
+        if (completed_today) {
+          completed_count++;
+        }
       }
     }
+
+    let isFirstOfDay = false;
+    if (completed_count >= 1) {
+      if (user.last_streak_date !== args.current_date) {
+        isFirstOfDay = true;
+        const newUserStreak = (user.streak ?? 0) + 1;
+        await ctx.db.patch(user_id, {
+          streak: newUserStreak,
+          last_streak_date: args.current_date,
+        });
+
+        const user_weekly_stat = await ctx.db
+          .query("weekly_stats")
+          .withIndex("by_user_weekday", (q) =>
+            q.eq("user", user_id).eq("week_day", args.week_day),
+          )
+          .unique();
+
+        if (user_weekly_stat) {
+          await ctx.db.patch(user_weekly_stat._id, {
+            date: args.current_date,
+          });
+        } else {
+          await ctx.db.insert("weekly_stats", {
+            user: user_id,
+            week_day: args.week_day,
+            date: args.current_date,
+          });
+        }
+      }
+    }
+
 
     // Evaluate Hive Streaks
     const user_hives = await ctx.db
@@ -386,6 +434,22 @@ export const restore_habit = mutation({
     if (!habit) throw new Error("Habit not found");
     if (habit.user !== user_id) throw new Error("Unauthorized");
 
+    const userData = await ctx.db.get(user_id);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user_id))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You already have 3 active habits. Please upgrade to Pro or archive another habit to restore this one."
+        );
+      }
+    }
+
     let newStreak = habit.current_streak || 0;
     const today = new Date().toLocaleDateString("en-CA");
     
@@ -472,7 +536,7 @@ export const check_streak_and_reset = mutation({
         oldest_date_str = user.last_streak_date!;
       }
 
-      let currentFreezes = user.freezes || 0;
+      let currentFreezes = user.is_premium ? (user.freezes || 0) : 0;
       let freezesUsed = 0;
       let resetDates: string[] = [];
 
@@ -682,6 +746,22 @@ export const create_habit = mutation({
     const user = await getAuthUserId(ctx);
     if (!user) throw new Error("User is not authenticated");
 
+    const userData = await ctx.db.get(user);
+    if (!userData) throw new Error("User not found");
+
+    if (!userData.is_premium) {
+      const user_habits = await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", user))
+        .collect();
+      const active_habits = user_habits.filter((h) => !h.archived);
+      if (active_habits.length >= 3) {
+        throw new ConvexError(
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+        );
+      }
+    }
+
     const existing = await ctx.db
       .query("habits")
       .withIndex("by_user_habit", (q) => q.eq("user", user).eq("habit", habit))
@@ -802,30 +882,55 @@ export const internal_record_habit_completion = internalMutation({
     const user = await ctx.db.get(args.user_id);
     if (!user) return;
 
-    if (user.last_streak_date !== args.current_date) {
-      const newUserStreak = (user.streak ?? 0) + 1;
-      await ctx.db.patch(args.user_id, {
-        streak: newUserStreak,
-        last_streak_date: args.current_date,
-      });
+    const all_user_habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("user", args.user_id))
+      .collect();
+    const active_habits = all_user_habits.filter((h) => !h.archived);
 
-      const user_weekly_stat = await ctx.db
-        .query("weekly_stats")
-        .withIndex("by_user_weekday", (q) =>
-          q.eq("user", args.user_id).eq("week_day", args.week_day),
-        )
-        .unique();
-
-      if (user_weekly_stat) {
-        await ctx.db.patch(user_weekly_stat._id, {
-          date: args.current_date,
-        });
+    let completed_count = 0;
+    for (const h of active_habits) {
+      if (h._id === args.habit_id) {
+        completed_count++;
       } else {
-        await ctx.db.insert("weekly_stats", {
-          user: args.user_id,
-          week_day: args.week_day,
-          date: args.current_date,
+        const completed_today = await ctx.db
+          .query("habit_enteries")
+          .withIndex("by_habit_date", (q) =>
+            q.eq("habit", h._id).eq("date", args.current_date)
+          )
+          .first();
+        if (completed_today) {
+          completed_count++;
+        }
+      }
+    }
+
+    if (completed_count >= 1) {
+      if (user.last_streak_date !== args.current_date) {
+        const newUserStreak = (user.streak ?? 0) + 1;
+        await ctx.db.patch(args.user_id, {
+          streak: newUserStreak,
+          last_streak_date: args.current_date,
         });
+
+        const user_weekly_stat = await ctx.db
+          .query("weekly_stats")
+          .withIndex("by_user_weekday", (q) =>
+            q.eq("user", args.user_id).eq("week_day", args.week_day),
+          )
+          .unique();
+
+        if (user_weekly_stat) {
+          await ctx.db.patch(user_weekly_stat._id, {
+            date: args.current_date,
+          });
+        } else {
+          await ctx.db.insert("weekly_stats", {
+            user: args.user_id,
+            week_day: args.week_day,
+            date: args.current_date,
+          });
+        }
       }
     }
 
@@ -963,3 +1068,34 @@ export const getUsersWithIncompleteHabitsToday = internalQuery({
     return incompleteUsers;
   },
 });
+
+export const get_weekly_habit_completions = query({
+  args: {
+    start_date: v.string(),
+    end_date: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user_id = await getAuthUserId(ctx);
+    if (!user_id) throw new Error("Unauthenticated");
+
+    const entries = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_user_date", (q) =>
+        q.eq("user", user_id).gte("date", args.start_date).lte("date", args.end_date)
+      )
+      .collect();
+
+    const completions: Record<string, string[]> = {};
+    for (const entry of entries) {
+      if (entry.status === "completed") {
+        if (!completions[entry.date]) {
+          completions[entry.date] = [];
+        }
+        completions[entry.date].push(entry.habit);
+      }
+    }
+    return completions;
+  },
+});
+
+
