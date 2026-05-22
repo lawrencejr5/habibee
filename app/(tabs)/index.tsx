@@ -33,7 +33,7 @@ import { useMotivationalContext } from "@/context/MotivationContext";
 import Loading from "@/components/Loading";
 import { useUser } from "@/context/UserContext";
 
-import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -149,6 +149,7 @@ const Home = () => {
   });
 
   const subHabitsData = useQuery(api.sub_habits.get_user_sub_habits);
+
   const [expandedHabits, setExpandedHabits] = useState<Set<string>>(new Set());
   const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
   const [goalCompletedHabit, setGoalCompletedHabit] =
@@ -173,35 +174,11 @@ const Home = () => {
     undefined,
   );
 
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const adScrollViewRef = useRef<RNScrollView>(null);
-  const adData = ["hive", "ai"];
-
   // ── check_streak_and_reset: only run after sync queue is flushed ──────────
   useEffect(() => {
     if (!syncReady) return;
     check_streak_and_reset({ today });
   }, [syncReady]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentAdIndex((prev) => {
-        const nextIndex = (prev + 1) % adData.length;
-        return nextIndex;
-      });
-    }, 10000); // Swipe every 10 seconds
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (adScrollViewRef.current) {
-      const adWidth = Dimensions.get("window").width - 40;
-      adScrollViewRef.current.scrollTo({
-        x: currentAdIndex * adWidth,
-        animated: true,
-      });
-    }
-  }, [currentAdIndex]);
 
   // Schedule local notifications for sub-habit reminders
   useEffect(() => {
@@ -284,6 +261,70 @@ const Home = () => {
       (h) => h.lastCompleted === today || offlineCompletedIds.has(h._id),
     ).length || 0;
   const allHabitsDone = totalHabits > 0 && completedHabits === totalHabits;
+
+  // Derived state: Today's progress calculation (high-resolution sub-habit inclusive)
+  const getTodayProgressMetrics = () => {
+    let completedCount = 0;
+    let totalCountForDay = 0;
+
+    if (!habitData)
+      return { completedCount: 0, totalCountForDay: 0, percentage: 0 };
+
+    const completedSet = new Set<string>();
+    if (weeklyCompletions?.[today]) {
+      weeklyCompletions[today].forEach((id) => completedSet.add(id));
+    }
+    offlineCompletedIds.forEach((id) => completedSet.add(id));
+
+    for (const h of habitData) {
+      const subs = subHabitsData
+        ? subHabitsData.filter((sh) => sh.parent_habit === h._id)
+        : [];
+      if (subs.length > 0) {
+        totalCountForDay += subs.length;
+        const parentCompleted = completedSet.has(h._id);
+        if (parentCompleted) {
+          completedCount += subs.length;
+        } else {
+          completedCount += subs.filter((sh) => sh.completed).length;
+        }
+      } else {
+        totalCountForDay += 1;
+        if (completedSet.has(h._id)) {
+          completedCount += 1;
+        }
+      }
+    }
+    const percentage =
+      totalCountForDay > 0
+        ? Math.round((completedCount / totalCountForDay) * 100)
+        : 0;
+    return { completedCount, totalCountForDay, percentage };
+  };
+
+  const { percentage: todayProgressPercentage } = getTodayProgressMetrics();
+
+  const getProgressMessage = (pct: number) => {
+    if (pct === 0) {
+      return "Let's take the first step today! Your habits are waiting.";
+    }
+    if (pct <= 20) {
+      return "You've kicked off the day! Every small action is a victory.";
+    }
+    if (pct <= 40) {
+      return "Off to a great start! You are building real momentum.";
+    }
+    if (pct <= 60) {
+      return "Making steady progress! You're past the halfway mark.";
+    }
+    if (pct <= 80) {
+      return "Strong effort today! You are crushing your daily goals.";
+    }
+    if (pct < 100) {
+      return "So close to perfection! Just one final habit to wrap up the day!";
+    }
+    return "Incredible! You smashed all your habits today! 🌟";
+  };
 
   if (loading) return <Loading />;
 
@@ -458,7 +499,6 @@ const Home = () => {
               />
             );
           })}
-
         </View>
       </ThemedView>
 
@@ -477,14 +517,13 @@ const Home = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero / Upgrade card */}
-        {!isPremium ? (
+        {!isPremium && (
           <View
             style={{
               backgroundColor: Colors[theme].surface,
               borderWidth: 3,
               borderColor: Colors[theme].border,
               width: "100%",
-              // marginTop: 10,
               borderRadius: 15,
               paddingHorizontal: 15,
               paddingVertical: 15,
@@ -549,244 +588,142 @@ const Home = () => {
               </Pressable>
             </View>
           </View>
-        ) : (
-          <View
-            style={{
-              backgroundColor: Colors[theme].surface,
-              borderWidth: 3,
-              borderColor: Colors[theme].border,
-              width: "100%",
-              marginTop: 10,
-              borderRadius: 15,
-              paddingHorizontal: 15,
-              paddingVertical: 15,
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 15,
-            }}
-          >
-            <Image
-              source={require("../../assets/images/icon-transparent.png")}
-              style={{
-                width: 60,
-                height: 60,
-                marginTop: 5,
-                tintColor: Colors[theme].primary,
-              }}
-            />
-            <View style={{ flex: 1 }}>
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 18,
-                  textTransform: "capitalize",
-                }}
-              >
-                Hello {signedIn.username}! 👋
-              </ThemedText>
-              <Text
-                style={{
-                  fontFamily: "NunitoRegular",
-                  fontSize: 13,
-                  color: Colors[theme].text_secondary,
-                  marginTop: 4,
-                }}
-              >
-                Let's make today productive and keep building your habits!
-              </Text>
-              <Pressable
-                onPress={open}
-                style={{
-                  backgroundColor: Colors[theme].primary,
-                  paddingVertical: 8,
-                  paddingHorizontal: 15,
-                  borderRadius: 10,
-                  marginTop: 12,
-                  alignSelf: "flex-end",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 13,
-                    color: "#fff",
-                  }}
-                >
-                  Add Habit
-                </Text>
-              </Pressable>
-            </View>
-          </View>
         )}
 
-        {/* Ad Carousel Container */}
+        {/* Daily Progress Indicator Card */}
         <View
           style={{
+            backgroundColor: Colors[theme].surface,
             borderWidth: 1.5,
-            borderColor: Colors[theme].primary,
+            borderColor: Colors[theme].border,
             borderRadius: 15,
             marginTop: 15,
-            overflow: "hidden",
+            padding: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 16,
           }}
         >
-          <RNScrollView
-            ref={adScrollViewRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onMomentumScrollEnd={(e) => {
-              const contentOffsetX = e.nativeEvent.contentOffset.x;
-              const index = Math.round(
-                contentOffsetX / (Dimensions.get("window").width - 40),
-              );
-              setCurrentAdIndex(index);
-            }}
-          >
-            {/* Hive Ad Card */}
-            <Pressable
-              onPress={() => {
-                haptics.impact();
-                router.push("/(tabs)/hive");
-              }}
+          <DailyProgressCircle
+            progress={todayProgressPercentage / 100}
+            percentage={todayProgressPercentage}
+            size={75}
+            strokeWidth={7}
+            color={Colors[theme].primary}
+            backgroundColor={Colors[theme].border}
+          />
+          <View style={{ flex: 1 }}>
+            <Text
               style={{
-                width: Dimensions.get("window").width - 40,
-                backgroundColor: Colors[theme].surface,
-                padding: 15,
+                fontFamily: "NunitoExtraBold",
+                fontSize: 15,
+                color: Colors[theme].text,
+                marginBottom: 4,
+              }}
+            >
+              Today's Progress
+            </Text>
+            <Text
+              style={{
+                fontFamily: "NunitoRegular",
+                fontSize: 13,
+                color: Colors[theme].text_secondary,
+                lineHeight: 18,
+              }}
+            >
+              {getProgressMessage(todayProgressPercentage)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Redesigned Premium AI Promo Card */}
+        {isPremium && (
+          <Pressable
+            onPress={() => {
+              haptics.impact();
+              setAiChatModalVisible(true);
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: Colors[theme].surface,
+              borderWidth: 1.5,
+              borderColor: Colors[theme].border,
+              borderRadius: 15,
+              marginTop: 15,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <View
+              style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
+                flex: 1,
               }}
             >
               <View
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: Colors[theme].primary,
-                  justifyContent: "center",
-                  alignItems: "center",
+                  backgroundColor: Colors[theme].primary + "20",
+                  borderRadius: 12,
+                  padding: 8,
                 }}
               >
                 <Image
-                  source={require("../../assets/icons/hive.png")}
+                  source={require("../../assets/icons/ai-sparkles.png")}
                   style={{
-                    width: 24,
-                    height: 24,
-                    tintColor: "#fff",
+                    width: 20,
+                    height: 20,
+                    tintColor: Colors[theme].primary,
                   }}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  Join the Habibee Hive! 🐝
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoRegular",
+                    fontFamily: "NunitoBold",
                     fontSize: 12,
                     color: Colors[theme].text_secondary,
                     marginTop: 2,
                   }}
+                  numberOfLines={2}
                 >
-                  Build streaks and stay accountable with friends.
+                  Generate new habits and insights with habibee ai
                 </Text>
               </View>
-              <Image
-                source={require("../../assets/icons/chevron-down.png")}
-                style={{
-                  width: 16,
-                  height: 16,
-                  tintColor: Colors[theme].primary,
-                  transform: [{ rotate: "-90deg" }],
-                }}
-              />
-            </Pressable>
-
-            {/* Habibee AI Ad Card */}
+            </View>
             <Pressable
               onPress={() => {
                 haptics.impact();
                 setAiChatModalVisible(true);
               }}
               style={{
-                width: Dimensions.get("window").width - 40,
-                backgroundColor: Colors[theme].surface,
-                padding: 15,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
+                backgroundColor: Colors[theme].primary,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                shadowColor: Colors[theme].primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 2,
               }}
             >
-              <Image
-                source={require("../../assets/images/ai-icon.png")}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  Checkout Habibee AI 🚀
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoRegular",
-                    fontSize: 12,
-                    color: Colors[theme].text_secondary,
-                    marginTop: 2,
-                  }}
-                >
-                  Get personalized habit recommendations and support.
-                </Text>
-              </View>
-              <Image
-                source={require("../../assets/icons/chevron-down.png")}
+              <Text
                 style={{
-                  width: 16,
-                  height: 16,
-                  tintColor: Colors[theme].primary,
-                  transform: [{ rotate: "-90deg" }],
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 12,
+                  color: "#fff",
                 }}
-              />
+              >
+                Try now
+              </Text>
             </Pressable>
-          </RNScrollView>
-
-          {/* Pagination Dots */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              paddingBottom: 10,
-              backgroundColor: Colors[theme].surface,
-            }}
-          >
-            {adData.map((_, i) => (
-              <View
-                key={i}
-                style={{
-                  width: currentAdIndex === i ? 20 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor:
-                    currentAdIndex === i
-                      ? Colors[theme].text_secondary
-                      : Colors[theme].text_secondary,
-                  marginHorizontal: 3,
-                }}
-              />
-            ))}
-          </View>
-        </View>
+          </Pressable>
+        )}
 
         {/* Tasks Header */}
         <View
@@ -1193,7 +1130,9 @@ const Home = () => {
           setArchiveModalVisible(true);
         }}
         onDelete={() => setDeleteModalVisible(true)}
-        isExpanded={contextMenuHabit ? expandedHabits.has(contextMenuHabit._id) : false}
+        isExpanded={
+          contextMenuHabit ? expandedHabits.has(contextMenuHabit._id) : false
+        }
         onToggleExpand={() => {
           if (contextMenuHabit) {
             toggleExpansion(contextMenuHabit._id);
@@ -1285,6 +1224,78 @@ const ProgressCircle: React.FC<{
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
+    </View>
+  );
+};
+
+const DailyProgressCircle: React.FC<{
+  progress: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  backgroundColor: string;
+  percentage: number;
+}> = ({
+  progress,
+  size = 70,
+  strokeWidth = 8,
+  color,
+  backgroundColor,
+  percentage,
+}) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
+      }}
+    >
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="none"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View
+        style={{
+          position: "absolute",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "NunitoExtraBold",
+            fontSize: 16,
+            color: color,
+          }}
+        >
+          {percentage}%
+        </Text>
+      </View>
     </View>
   );
 };
@@ -1419,6 +1430,6 @@ const styles = StyleSheet.create({
   streak_card: {
     width: "100%",
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 5,
   },
 });
