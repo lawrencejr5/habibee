@@ -257,6 +257,7 @@ const Home = () => {
     deleteModalVisible ||
     reminderModalVisible ||
     createHiveModalVisible ||
+    upgradeModalVisible ||
     streakFreezeModalVisible ||
     !!goalCompletedHabit;
 
@@ -405,6 +406,7 @@ const Home = () => {
             const isActive = i === todayIndex;
 
             let completedCount = 0;
+            let totalCountForDay = totalHabits;
             if (dateStr === today) {
               const completedSet = new Set<string>();
               if (weeklyCompletions?.[dateStr]) {
@@ -413,7 +415,35 @@ const Home = () => {
                 );
               }
               offlineCompletedIds.forEach((id) => completedSet.add(id));
-              completedCount = completedSet.size;
+
+              if (habitData) {
+                let calcTotal = 0;
+                let calcCompleted = 0;
+                for (const h of habitData) {
+                  const subs = subHabitsData
+                    ? subHabitsData.filter((sh) => sh.parent_habit === h._id)
+                    : [];
+                  if (subs.length > 0) {
+                    calcTotal += subs.length;
+                    const parentCompleted = completedSet.has(h._id);
+                    if (parentCompleted) {
+                      calcCompleted += subs.length;
+                    } else {
+                      calcCompleted += subs.filter((sh) => sh.completed).length;
+                    }
+                  } else {
+                    calcTotal += 1;
+                    if (completedSet.has(h._id)) {
+                      calcCompleted += 1;
+                    }
+                  }
+                }
+                completedCount = calcCompleted;
+                totalCountForDay = calcTotal;
+              } else {
+                completedCount = completedSet.size;
+                totalCountForDay = totalHabits;
+              }
             } else {
               completedCount = weeklyCompletions?.[dateStr]?.length || 0;
             }
@@ -423,11 +453,12 @@ const Home = () => {
                 key={i}
                 day={weekday}
                 completedCount={completedCount}
-                totalCount={totalHabits}
+                totalCount={totalCountForDay}
                 isActive={isActive}
               />
             );
           })}
+
         </View>
       </ThemedView>
 
@@ -535,12 +566,13 @@ const Home = () => {
             }}
           >
             <Image
-              source={
-                theme === "light"
-                  ? require("../../assets/images/icon-nobg-black.png")
-                  : require("../../assets/images/icon-nobg-white.png")
-              }
-              style={{ width: 60, height: 60, marginTop: 5 }}
+              source={require("../../assets/images/icon-transparent.png")}
+              style={{
+                width: 60,
+                height: 60,
+                marginTop: 5,
+                tintColor: Colors[theme].primary,
+              }}
             />
             <View style={{ flex: 1 }}>
               <ThemedText

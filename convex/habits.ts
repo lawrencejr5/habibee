@@ -275,7 +275,7 @@ export const record_streak = mutation({
     }
 
     let isFirstOfDay = false;
-    if (completed_count === active_habits.length && active_habits.length > 0) {
+    if (completed_count >= 1) {
       if (user.last_streak_date !== args.current_date) {
         isFirstOfDay = true;
         const newUserStreak = (user.streak ?? 0) + 1;
@@ -905,7 +905,7 @@ export const internal_record_habit_completion = internalMutation({
       }
     }
 
-    if (completed_count === active_habits.length && active_habits.length > 0) {
+    if (completed_count >= 1) {
       if (user.last_streak_date !== args.current_date) {
         const newUserStreak = (user.streak ?? 0) + 1;
         await ctx.db.patch(args.user_id, {
