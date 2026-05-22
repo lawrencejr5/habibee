@@ -152,8 +152,10 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // Handle Splash Screen hiding
   useEffect(() => {
+    // Hide the native splash screen immediately so our CustomSplash is shown
+    SplashScreen.hideAsync().catch(() => {});
+
     const timer = setTimeout(() => {
-      SplashScreen.hideAsync();
       setShowSplash(false);
     }, 2000);
     return () => clearTimeout(timer);
