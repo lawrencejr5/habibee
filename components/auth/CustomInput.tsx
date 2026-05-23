@@ -1,9 +1,8 @@
-import { TextInput, View } from "react-native";
-import React, { Dispatch, FC, SetStateAction } from "react";
+import { TextInput, View, Pressable, Image } from "react-native";
+import React, { Dispatch, FC, SetStateAction, useState } from "react";
+import { Feather } from "@expo/vector-icons";
 
 import Colors from "@/constants/Colors";
-import { useColorScheme } from "../useColorScheme";
-import { Image } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
 interface CustomInputProps {
@@ -23,6 +22,8 @@ const CustomInput: FC<CustomInputProps> = ({
   password = false,
 }) => {
   const { theme } = useTheme();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
   return (
     <View style={{ marginBottom: 10 }}>
       <View
@@ -35,6 +36,7 @@ const CustomInput: FC<CustomInputProps> = ({
           flexDirection: "row",
           alignItems: "center",
           gap: 7,
+          height: 45, // Add a consistent height so eye icon is perfectly centered
         }}
       >
         <Image
@@ -47,16 +49,34 @@ const CustomInput: FC<CustomInputProps> = ({
         />
         <TextInput
           placeholder={placeHolder}
-          secureTextEntry={password}
+          secureTextEntry={password && !showPassword}
           autoCapitalize="none"
           value={value}
+          placeholderTextColor={Colors[theme].text_secondary}
           onChangeText={setValue}
           style={{
             fontFamily: "NunitoMedium",
             color: Colors[theme].text,
-            width: "100%",
+            flex: 1,
+            height: "100%",
           }}
         />
+        {password && (
+          <Pressable
+            onPress={() => setShowPassword((prev) => !prev)}
+            style={{
+              padding: 5,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Feather
+              name={showPassword ? "eye" : "eye-off"}
+              size={18}
+              color={Colors[theme].text_secondary}
+            />
+          </Pressable>
+        )}
       </View>
     </View>
   );

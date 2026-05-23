@@ -150,10 +150,7 @@ const SignUpPage = () => {
 
   const handleAppleSignin = async () => {
     if (Platform.OS !== "ios") {
-      showCustomAlert(
-        "Sign in with Apple is only available on iOS devices.",
-        "warning",
-      );
+      showCustomAlert("Sign in with Apple failed", "warning");
       return;
     }
 
@@ -233,7 +230,7 @@ const SignUpPage = () => {
       </View>
 
       <KeyboardStickyView
-        style={{ paddingHorizontal: 10 }}
+        style={{ paddingHorizontal: 10, width: "100%" }}
         offset={{ opened: 200, closed: insets.bottom }}
       >
         <View
@@ -251,7 +248,7 @@ const SignUpPage = () => {
           <View
             style={{
               flexDirection: "row",
-              gap: 12,
+              gap: 20,
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -261,17 +258,14 @@ const SignUpPage = () => {
               onPress={handleGoogleSignin}
               disabled={googleLoading || appleLoading || btnLoading}
               style={{
-                flex: 1,
+                width: 50,
+                height: 50,
                 backgroundColor: "#fff",
                 borderWidth: theme === "dark" ? 3 : 2,
                 borderColor: Colors[theme].border,
-                paddingHorizontal: 12,
-                paddingVertical: 9,
-                borderRadius: 7,
-                flexDirection: "row",
+                borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 8,
                 opacity: googleLoading ? 0.6 : 1,
               }}
             >
@@ -280,39 +274,34 @@ const SignUpPage = () => {
               ) : (
                 <Image
                   source={require("@/assets/icons/google.png")}
-                  style={{ height: 18, width: 18 }}
+                  style={{ height: 20, width: 20 }}
                 />
               )}
-              <Text
-                style={{
-                  color: "#1f2428",
-                  fontFamily: "NunitoBold",
-                  fontSize: 14,
-                }}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {googleLoading ? "Signing..." : "Continue with Google"}
-              </Text>
             </Pressable>
+
+            {/* Vertical Separator Line */}
+            <View
+              style={{
+                width: 2,
+                height: 24,
+                backgroundColor: Colors[theme].border,
+              }}
+            />
 
             {/* Apple button */}
             <Pressable
               onPress={handleAppleSignin}
               disabled={googleLoading || appleLoading || btnLoading}
               style={{
-                flex: 1,
+                width: 50,
+                height: 50,
                 backgroundColor: theme === "dark" ? "#fff" : "#1f2428",
                 borderWidth: theme === "dark" ? 3 : 2,
                 borderColor:
                   theme === "dark" ? Colors[theme].border : "#1f2428",
-                paddingHorizontal: 12,
-                paddingVertical: 9,
-                borderRadius: 7,
-                flexDirection: "row",
+                borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 8,
                 opacity: appleLoading ? 0.6 : 1,
               }}
             >
@@ -324,21 +313,10 @@ const SignUpPage = () => {
               ) : (
                 <FontAwesome6
                   name="apple"
-                  size={18}
+                  size={24}
                   color={theme === "dark" ? "#1f2428" : "#fff"}
                 />
               )}
-              <Text
-                style={{
-                  color: theme === "dark" ? "#1f2428" : "#fff",
-                  fontFamily: "NunitoBold",
-                  fontSize: 14,
-                }}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {appleLoading ? "Signing..." : "Continue with Apple"}
-              </Text>
             </Pressable>
           </View>
           {/* ---- OR ---- */}
