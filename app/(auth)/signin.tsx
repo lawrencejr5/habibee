@@ -1,5 +1,13 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  View,
+  Platform,
+} from "react-native";
 import React, { useState } from "react";
+import { FontAwesome6 } from "@expo/vector-icons";
+import * as AppleAuthentication from "expo-apple-authentication";
 
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import * as WebBrowser from "expo-web-browser";
@@ -34,6 +42,7 @@ const SigninPage = () => {
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [appleLoading, setAppleLoading] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     setBtnLoading(true);
@@ -141,6 +150,47 @@ const SigninPage = () => {
     }
   };
 
+  const handleAppleSignin = async () => {
+    if (Platform.OS !== "ios") {
+      showCustomAlert("Sign in with Apple failed", "warning");
+      return;
+    }
+
+    setAppleLoading(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        throw new Error("Missing identity token from Apple authentication.");
+      }
+
+      await signIn("apple", {
+        token: credential.identityToken,
+        firstName: credential.fullName?.givenName ?? "",
+        lastName: credential.fullName?.familyName ?? "",
+      });
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await storePushToken({ token });
+      }
+
+      showCustomAlert("Signed in successfully", "success");
+    } catch (error: any) {
+      console.log("Apple sign-in error:", error);
+      if (error?.code !== "ERR_REQUEST_CANCELED") {
+        showCustomAlert("Apple Sign-in failed. Please try again.", "danger");
+      }
+    } finally {
+      setAppleLoading(false);
+    }
+  };
+
   return (
     <View
       style={{
@@ -174,6 +224,7 @@ const SigninPage = () => {
           style={{
             color: Colors[theme].text_secondary,
             fontFamily: "NunitoMedium",
+            marginLeft: 6,
           }}
         >
           Welcome back, we're happy to have u back
@@ -194,42 +245,100 @@ const SigninPage = () => {
             paddingVertical: 20,
           }}
         >
-          {/* Continue with google */}
-          <Pressable
-            onPress={handleGoogleSignin}
-            disabled={googleLoading || btnLoading}
+          {/* Social Sign-in Buttons */}
+          <View
             style={{
-              backgroundColor: "#fff",
-              borderWidth: theme === "dark" ? 3 : 2,
-              borderColor: Colors[theme].border,
-              paddingHorizontal: 20,
-              paddingVertical: 7,
-              borderRadius: 7,
-              alignSelf: "center",
               flexDirection: "row",
+              gap: 12,
               justifyContent: "center",
               alignItems: "center",
-              gap: 10,
-              opacity: googleLoading ? 0.6 : 1,
             }}
           >
-            {googleLoading ? (
-              <ActivityIndicator size="small" color="#1f2428" />
-            ) : (
-              <Image
-                source={require("@/assets/icons/google.png")}
-                style={{ height: 20, width: 20 }}
-              />
-            )}
-            <Text
+            {/* Google button */}
+            <Pressable
+              onPress={handleGoogleSignin}
+              disabled={googleLoading || appleLoading || btnLoading}
               style={{
-                color: "#1f2428",
-                fontFamily: "NunitoBold",
+                flex: 1,
+                backgroundColor: "#fff",
+                borderWidth: theme === "dark" ? 3 : 2,
+                borderColor: Colors[theme].border,
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                borderRadius: 7,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 8,
+                opacity: googleLoading ? 0.6 : 1,
               }}
             >
-              {googleLoading ? "Signing in..." : "Continue with google"}
-            </Text>
-          </Pressable>
+              {googleLoading ? (
+                <ActivityIndicator size="small" color="#1f2428" />
+              ) : (
+                <Image
+                  source={require("@/assets/icons/google.png")}
+                  style={{ height: 18, width: 18 }}
+                />
+              )}
+              <Text
+                style={{
+                  color: "#1f2428",
+                  fontFamily: "NunitoBold",
+                  fontSize: 14,
+                }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {googleLoading ? "Signing..." : "Google"}
+              </Text>
+            </Pressable>
+
+            {/* Apple button */}
+            <Pressable
+              onPress={handleAppleSignin}
+              disabled={googleLoading || appleLoading || btnLoading}
+              style={{
+                flex: 1,
+                backgroundColor: theme === "dark" ? "#fff" : "#1f2428",
+                borderWidth: theme === "dark" ? 3 : 2,
+                borderColor:
+                  theme === "dark" ? Colors[theme].border : "#1f2428",
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                borderRadius: 7,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 8,
+                opacity: appleLoading ? 0.6 : 1,
+              }}
+            >
+              {appleLoading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={theme === "dark" ? "#1f2428" : "#fff"}
+                />
+              ) : (
+                <FontAwesome6
+                  name="apple"
+                  size={18}
+                  color={theme === "dark" ? "#1f2428" : "#fff"}
+                />
+              )}
+              <Text
+                style={{
+                  color: theme === "dark" ? "#1f2428" : "#fff",
+                  fontFamily: "NunitoBold",
+                  fontSize: 14,
+                }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {appleLoading ? "Signing..." : "Apple"}
+              </Text>
+            </Pressable>
+          </View>
           {/* ---- OR ---- */}
           <View
             style={{

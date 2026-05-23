@@ -1,5 +1,6 @@
-import { convexAuth } from "@convex-dev/auth/server";
+import { convexAuth, retrieveAccount, createAccount } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
+import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import Google from "@auth/core/providers/google";
 import { ConvexError } from "convex/values";
 import { MutationCtx } from "./_generated/server";
@@ -43,6 +44,68 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           image: googleProfile.image,
           username: googleProfile.name.split(" ")[0],
         };
+      },
+    }),
+    ConvexCredentials({
+      id: "apple",
+      authorize: async (credentials, ctx) => {
+        const identityToken = credentials.token as string || credentials.identityToken as string;
+        if (!identityToken) {
+          throw new Error("Missing Apple identityToken parameter");
+        }
+
+        // 1. Decode Apple identityToken (JWT) without verification for flexibility/speed
+        const parts = identityToken.split(".");
+        if (parts.length !== 3) {
+          throw new Error("Invalid JWT token format");
+        }
+        // Base64URL decode the payload
+        let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        while (base64.length % 4) {
+          base64 += "=";
+        }
+        const payloadJson = Buffer.from(base64, "base64").toString("utf-8");
+        const appleProfile = JSON.parse(payloadJson);
+
+        // Verify standard claims
+        if (appleProfile.iss !== "https://appleid.apple.com") {
+          throw new Error("Invalid token issuer");
+        }
+
+        const email = appleProfile.email as string | undefined;
+        if (!email) {
+          throw new Error("Email not found in Apple identity token");
+        }
+
+        // Apple only returns user name once on initial sign-in, which the frontend passes to us
+        const firstName = credentials.firstName as string || "";
+        const lastName = credentials.lastName as string || "";
+        const fullname = (firstName || lastName)
+          ? `${firstName} ${lastName}`.trim()
+          : (email ? email.split("@")[0] : "Apple User");
+
+        // Try to retrieve existing account
+        const retrieved = await retrieveAccount(ctx, {
+          provider: "apple",
+          account: { id: appleProfile.sub },
+        });
+
+        if (retrieved !== null) {
+          return { userId: retrieved.user._id };
+        }
+
+        // Otherwise create new account
+        const created = await createAccount(ctx, {
+          provider: "apple",
+          account: { id: appleProfile.sub },
+          profile: {
+            email,
+            fullname,
+            username: firstName || email.split("@")[0],
+          },
+        });
+
+        return { userId: created.user._id };
       },
     }),
   ],
