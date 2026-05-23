@@ -292,7 +292,7 @@ const SignUpPage = () => {
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {googleLoading ? "Signing..." : "Google"}
+                {googleLoading ? "Signing..." : "Continue with Google"}
               </Text>
             </Pressable>
 
@@ -337,7 +337,7 @@ const SignUpPage = () => {
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {appleLoading ? "Signing..." : "Apple"}
+                {appleLoading ? "Signing..." : "Continue with Apple"}
               </Text>
             </Pressable>
           </View>
