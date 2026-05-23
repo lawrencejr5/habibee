@@ -1043,12 +1043,13 @@ const Home = () => {
                   borderColor: Colors[theme].border,
                   borderWidth: 3,
                   borderRadius: 20,
-                  height: 250,
+                  minHeight: 280,
                   width: "100%",
                   justifyContent: "center",
                   alignItems: "center",
                   marginTop: 20,
                   paddingHorizontal: 20,
+                  paddingVertical: 25,
                 }}
               >
                 <Image
@@ -1082,6 +1083,37 @@ const Home = () => {
                   Let's get started with a new habit and bring out the best
                   verion of you.
                 </Text>
+
+                <Pressable
+                  onPress={open}
+                  style={({ pressed }) => ({
+                    backgroundColor: Colors[theme].primary,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    paddingVertical: 5,
+                    paddingHorizontal: 22,
+                    borderRadius: 25,
+                    marginTop: 20,
+                    opacity: pressed ? 0.9 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                    shadowColor: Colors[theme].primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 6,
+                    elevation: 3,
+                  })}
+                >
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 14,
+                    }}
+                  >
+                    Add your first habit
+                  </Text>
+                </Pressable>
               </View>
             )}
           </View>

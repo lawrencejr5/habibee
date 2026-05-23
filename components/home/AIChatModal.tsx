@@ -630,6 +630,17 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                   )}
                 </Pressable>
               </View>
+              <Text
+                style={{
+                  color: Colors[theme].text_secondary,
+                  fontFamily: "NunitoRegular",
+                  fontSize: 10,
+                  textAlign: "center",
+                  marginTop: 6,
+                }}
+              >
+                Habibee AI can make mistakes. Verify important information.
+              </Text>
             </View>
           </KeyboardStickyView>
         </View>

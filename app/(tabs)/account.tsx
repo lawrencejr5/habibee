@@ -12,6 +12,7 @@ import ToggleButton from "@/components/ToggleButton";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AccountInfoModal from "@/components/account/AccountInfoModal";
 import DeleteAccountModal from "@/components/account/DeleteAccountModal";
@@ -603,7 +604,7 @@ export default function Account() {
                 <Pressable
                   onPress={() => {
                     haptics.impact();
-                    router.push("/account/about");
+                    WebBrowser.openBrowserAsync("https://habibee.lawjun.ng");
                   }}
                   style={[styles.row]}
                 >
@@ -619,7 +620,7 @@ export default function Account() {
                     About Habibee
                   </ThemedText>
                   <Feather
-                    name="chevron-right"
+                    name="arrow-up-right"
                     size={18}
                     color={Colors[theme].text_secondary}
                   />
@@ -627,7 +628,7 @@ export default function Account() {
                 <Pressable
                   onPress={() => {
                     haptics.impact();
-                    router.push("/account/terms");
+                    WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms");
                   }}
                   style={[styles.row]}
                 >
@@ -643,7 +644,7 @@ export default function Account() {
                     Terms & Conditions
                   </ThemedText>
                   <Feather
-                    name="chevron-right"
+                    name="arrow-up-right"
                     size={18}
                     color={Colors[theme].text_secondary}
                   />
@@ -651,7 +652,7 @@ export default function Account() {
                 <Pressable
                   onPress={() => {
                     haptics.impact();
-                    router.push("/account/privacy");
+                    WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy");
                   }}
                   style={[styles.row]}
                 >
@@ -667,7 +668,7 @@ export default function Account() {
                     Privacy Policy
                   </ThemedText>
                   <Feather
-                    name="chevron-right"
+                    name="arrow-up-right"
                     size={18}
                     color={Colors[theme].text_secondary}
                   />
