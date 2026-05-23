@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useRef } from "react";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -1091,10 +1091,10 @@ const Home = () => {
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 8,
-                    paddingVertical: 5,
+                    paddingVertical: 10,
                     paddingHorizontal: 22,
                     borderRadius: 25,
-                    marginTop: 20,
+                    marginTop: 25,
                     opacity: pressed ? 0.9 : 1,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                     shadowColor: Colors[theme].primary,
@@ -1104,6 +1104,11 @@ const Home = () => {
                     elevation: 3,
                   })}
                 >
+                  <FontAwesome6
+                    color={Colors[theme].text}
+                    size={14}
+                    name="plus"
+                  />
                   <Text
                     style={{
                       color: "#fff",

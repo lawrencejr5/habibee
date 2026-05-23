@@ -398,6 +398,7 @@ const CheckSubHabitModal: React.FC<CheckSubHabitModalProps> = ({
                       style={{
                         flex: 1,
                         fontFamily: "NunitoMedium",
+                        paddingVertical: 10,
                         color: Colors[theme].text,
                         fontSize: 16,
                       }}

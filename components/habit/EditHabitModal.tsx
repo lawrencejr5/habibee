@@ -60,13 +60,17 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
 
   const [habitName, setHabitName] = useState(habit.habit);
   const [duration, setDuration] = useState<string>(
-    habit.duration ? String(habit.duration) : ""
+    habit.duration ? String(habit.duration) : "",
   );
   const [goal, setGoal] = useState<string>(String(habit.goal));
   const [strict, setStrict] = useState<boolean>(habit.strict);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<string>(habit.icon ?? "default");
-  const [selectedColor, setSelectedColor] = useState<string>(habit.theme ?? "#999");
+  const [selectedIcon, setSelectedIcon] = useState<string>(
+    habit.icon ?? "default",
+  );
+  const [selectedColor, setSelectedColor] = useState<string>(
+    habit.theme ?? "#999",
+  );
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
@@ -109,14 +113,14 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
   useEffect(() => {
     const backAction = () => {
       if (visible) {
-        bottomSheetRef.current?.close()
+        bottomSheetRef.current?.close();
       }
       return false;
     };
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -263,6 +267,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                   style={{
                     width: "90%",
                     fontFamily: "NunitoMedium",
+                    paddingVertical: 10,
                     color: Colors[theme].text_secondary,
                   }}
                   placeholder="Habit"
@@ -327,6 +332,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                     style={{
                       flex: 1,
                       fontFamily: "NunitoMedium",
+                      paddingVertical: 10,
                       color: Colors[theme].text_secondary,
                     }}
                     placeholder="30 mins"
@@ -367,6 +373,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                     style={{
                       flex: 1,
                       fontFamily: "NunitoMedium",
+                      paddingVertical: 10,
                       color: Colors[theme].text_secondary,
                     }}
                     value={goal}

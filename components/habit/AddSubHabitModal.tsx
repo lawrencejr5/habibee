@@ -246,6 +246,7 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
                       style={{
                         flex: 1,
                         fontFamily: "NunitoMedium",
+                        paddingVertical: 10,
                         color: Colors[theme].text,
                       }}
                       placeholder="e.g. Drink glass of water"

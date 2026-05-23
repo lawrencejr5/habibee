@@ -286,6 +286,7 @@ const AddModal: React.FC<{
                     <TextInput
                       style={{
                         width: "90%",
+                        paddingVertical: 10,
                         fontFamily: "NunitoMedium",
                         color: Colors[theme].text,
                       }}
@@ -338,6 +339,7 @@ const AddModal: React.FC<{
                         style={{
                           flex: 1,
                           fontFamily: "NunitoMedium",
+                          paddingVertical: 10,
                           color: Colors[theme].text,
                         }}
                         placeholder="30"
@@ -387,6 +389,7 @@ const AddModal: React.FC<{
                         style={{
                           flex: 1,
                           fontFamily: "NunitoMedium",
+                          paddingVertical: 10,
                           color: Colors[theme].text,
                         }}
                         placeholder="365"

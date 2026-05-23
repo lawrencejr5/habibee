@@ -191,6 +191,7 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
                   flex: 1,
                   fontFamily: "NunitoMedium",
                   fontSize: 15,
+                  paddingVertical: 10,
                   color: Colors[theme].text,
                 }}
               />
@@ -306,7 +307,11 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
                   borderRadius: 50,
                 }}
               >
-                <Feather name={isCopied ? "check" : "copy"} size={16} color="#fff" />
+                <Feather
+                  name={isCopied ? "check" : "copy"}
+                  size={16}
+                  color="#fff"
+                />
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
