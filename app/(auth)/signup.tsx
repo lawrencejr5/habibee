@@ -434,7 +434,7 @@ const SignUpPage = () => {
                 <Text
                   style={{
                     color: "#fff",
-                    textAlign: "center", // This is optional since the Pressable is centering it
+                    textAlign: "center",
                     fontFamily: "NunitoBold",
                   }}
                 >
@@ -474,7 +474,7 @@ const SignUpPage = () => {
         {/* Terms and Privacy Policy */}
         <View
           style={{
-            marginTop: 15,
+            marginTop: 30,
             alignItems: "center",
             justifyContent: "center",
             paddingHorizontal: 10,
@@ -484,22 +484,32 @@ const SignUpPage = () => {
             style={{
               color: Colors[theme].text_secondary,
               fontFamily: "NunitoRegular",
-              fontSize: 11,
+              fontSize: 12,
               textAlign: "center",
               lineHeight: 16,
             }}
           >
             By signing up, you agree to our{" "}
             <Text
-              onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms")}
-              style={{ textDecorationLine: "underline", fontFamily: "NunitoBold" }}
+              onPress={() =>
+                WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms")
+              }
+              style={{
+                textDecorationLine: "underline",
+                fontFamily: "NunitoBold",
+              }}
             >
               Terms
             </Text>{" "}
             and{" "}
             <Text
-              onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy")}
-              style={{ textDecorationLine: "underline", fontFamily: "NunitoBold" }}
+              onPress={() =>
+                WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy")
+              }
+              style={{
+                textDecorationLine: "underline",
+                fontFamily: "NunitoBold",
+              }}
             >
               Privacy Policy
             </Text>
