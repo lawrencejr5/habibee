@@ -468,6 +468,41 @@ const SignUpPage = () => {
                 Signin
               </Link>
             </View>
+
+            {/* Terms and Privacy Policy */}
+            <View
+              style={{
+                marginTop: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 10,
+              }}
+            >
+              <Text
+                style={{
+                  color: Colors[theme].text_secondary,
+                  fontFamily: "NunitoRegular",
+                  fontSize: 11,
+                  textAlign: "center",
+                  lineHeight: 16,
+                }}
+              >
+                By signing up, you agree to our{" "}
+                <Text
+                  onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms")}
+                  style={{ color: Colors[theme].accent1, fontFamily: "NunitoBold" }}
+                >
+                  Terms
+                </Text>{" "}
+                and{" "}
+                <Text
+                  onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy")}
+                  style={{ color: Colors[theme].accent1, fontFamily: "NunitoBold" }}
+                >
+                  Privacy Policy
+                </Text>
+              </Text>
+            </View>
           </View>
         </View>
       </KeyboardStickyView>
