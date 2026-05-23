@@ -460,42 +460,42 @@ const SigninPage = () => {
                 Signup
               </Link>
             </View>
-
-            {/* Terms and Privacy Policy */}
-            <View
-              style={{
-                marginTop: 20,
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoRegular",
-                  fontSize: 11,
-                  textAlign: "center",
-                  lineHeight: 16,
-                }}
-              >
-                By continuing, you agree to our{" "}
-                <Text
-                  onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms")}
-                  style={{ color: Colors[theme].accent1, fontFamily: "NunitoBold" }}
-                >
-                  Terms
-                </Text>{" "}
-                and{" "}
-                <Text
-                  onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy")}
-                  style={{ color: Colors[theme].accent1, fontFamily: "NunitoBold" }}
-                >
-                  Privacy Policy
-                </Text>
-              </Text>
-            </View>
           </View>
+        </View>
+
+        {/* Terms and Privacy Policy */}
+        <View
+          style={{
+            marginTop: 15,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 10,
+          }}
+        >
+          <Text
+            style={{
+              color: Colors[theme].text_secondary,
+              fontFamily: "NunitoRegular",
+              fontSize: 11,
+              textAlign: "center",
+              lineHeight: 16,
+            }}
+          >
+            By continuing, you agree to our{" "}
+            <Text
+              onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms")}
+              style={{ textDecorationLine: "underline", fontFamily: "NunitoBold" }}
+            >
+              Terms
+            </Text>{" "}
+            and{" "}
+            <Text
+              onPress={() => WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy")}
+              style={{ textDecorationLine: "underline", fontFamily: "NunitoBold" }}
+            >
+              Privacy Policy
+            </Text>
+          </Text>
         </View>
       </KeyboardStickyView>
     </View>
