@@ -12,7 +12,12 @@ import {
   Pressable,
   Text,
   View,
+  Animated,
 } from "react-native";
+
+import Svg, { Circle } from "react-native-svg";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -64,6 +69,63 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const [localIsRunning, setLocalIsRunning] = useState(false);
   const [localStartTime, setLocalStartTime] = useState<number | null>(null);
   const [localElapsed, setLocalElapsed] = useState(0);
+
+  // Animated values for smooth progress and pulsing scale animations
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Handle smooth timer progress animation
+  useEffect(() => {
+    const totalSeconds = (habit?.duration ?? 0) * 60;
+    if (totalSeconds <= 0) {
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+      return;
+    }
+
+    const targetProgress = Math.min(displaySeconds / totalSeconds, 1);
+
+    Animated.timing(progressAnim, {
+      toValue: targetProgress,
+      duration: isRunning ? 1000 : 300,
+      useNativeDriver: false,
+    }).start();
+  }, [displaySeconds, habit?.duration, isRunning]);
+
+  // Handle subtle pulsing scale animation while running
+  useEffect(() => {
+    let animation: Animated.CompositeAnimation | null = null;
+    if (localIsRunning) {
+      animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.03,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+    } else {
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    return () => {
+      if (animation) animation.stop();
+    };
+  }, [localIsRunning]);
 
   // Initialize and auto-start timer locally on fresh open
   useEffect(() => {
@@ -322,38 +384,78 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             alignItems: "center",
           }}
         >
-          <View
+          <Animated.View
             style={{
               width: 280,
               height: 280,
-              borderRadius: 140,
-              backgroundColor: Colors[theme].surface,
-              borderWidth: 8,
-              borderColor: habit.theme ?? Colors[theme].primary,
               justifyContent: "center",
               alignItems: "center",
+              transform: [{ scale: pulseAnim }],
             }}
           >
-            <Text
+            {/* SVG Circle Progress */}
+            <View style={{ position: "absolute", width: 280, height: 280 }}>
+              <Svg width={280} height={280} viewBox="0 0 280 280">
+                {/* Background Track Circle */}
+                <Circle
+                  cx={140}
+                  cy={140}
+                  r={132}
+                  stroke={Colors[theme].border}
+                  strokeWidth={10}
+                  fill="none"
+                />
+                {/* Foreground Animated Progress Circle */}
+                <AnimatedCircle
+                  cx={140}
+                  cy={140}
+                  r={132}
+                  stroke={habit.theme ?? Colors[theme].primary}
+                  strokeWidth={10}
+                  strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
+                  strokeDashoffset={progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [2 * Math.PI * 132, 0],
+                  })}
+                  strokeLinecap="round"
+                  fill="none"
+                  transform="rotate(-90 140 140)"
+                />
+              </Svg>
+            </View>
+
+            {/* Inner Content (Time & Status) */}
+            <View
               style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 64,
-                color: Colors[theme].text,
+                width: 260,
+                height: 260,
+                borderRadius: 130,
+                backgroundColor: Colors[theme].surface,
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              {formatTime(displaySeconds)}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "NunitoMedium",
-                fontSize: 16,
-                color: Colors[theme].text_secondary,
-                marginTop: 10,
-              }}
-            >
-              {isRunning ? "In Progress..." : "Paused"}
-            </Text>
-          </View>
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 64,
+                  color: Colors[theme].text,
+                }}
+              >
+                {formatTime(displaySeconds)}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "NunitoMedium",
+                  fontSize: 16,
+                  color: Colors[theme].text_secondary,
+                  marginTop: 10,
+                }}
+              >
+                {isRunning ? "In Progress..." : "Paused"}
+              </Text>
+            </View>
+          </Animated.View>
         </View>
 
         {/* Control Buttons */}
