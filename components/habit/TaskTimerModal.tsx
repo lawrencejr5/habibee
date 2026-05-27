@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -60,13 +61,45 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
+  // Local state to make the timer UI feel instantaneous, snappy, and responsive
+  const [localIsRunning, setLocalIsRunning] = useState(false);
+  const [localStartTime, setLocalStartTime] = useState<number | null>(null);
+  const [localElapsed, setLocalElapsed] = useState(0);
+
+  // Initialize and auto-start timer locally on fresh open
+  useEffect(() => {
+    if (visible && habit) {
+      const isTimerActive = !!habit.timer_start_time;
+      const start = habit.timer_start_time;
+      const elapsed = habit.timer_elapsed || 0;
+
+      // Handle auto-start on fresh open:
+      if (!isTimerActive && elapsed === 0) {
+        const now = Date.now();
+        setLocalIsRunning(true);
+        setLocalStartTime(now);
+        setLocalElapsed(0);
+
+        // Update database in the background
+        update_timer({
+          habit_id: habit._id,
+          timer_elapsed: 0,
+          timer_start_time: now,
+        }).catch((err) => console.error("Auto-start failed", err));
+      } else {
+        setLocalIsRunning(isTimerActive);
+        setLocalStartTime(start!);
+        setLocalElapsed(elapsed);
+      }
+    }
+  }, [visible, habit?._id]);
+
   const calculateTotalSeconds = () => {
     if (!habit) return 0;
-    const elapsed = habit.timer_elapsed || 0;
-    const currentSession = habit.timer_start_time
-      ? Math.floor((Date.now() - habit.timer_start_time) / 1000)
+    const currentSession = localStartTime
+      ? Math.floor((Date.now() - localStartTime) / 1000)
       : 0;
-    const total = elapsed + currentSession;
+    const total = localElapsed + currentSession;
     const maxSeconds = (habit?.duration ?? 0) * 60;
 
     // If no duration set (or 0), act as stopwatch (no limit)
@@ -75,27 +108,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     return Math.min(total, maxSeconds);
   };
 
-  // Auto-start timer on fresh open
-  useEffect(() => {
-    if (
-      visible &&
-      habit &&
-      !habit.timer_start_time &&
-      (habit.timer_elapsed || 0) === 0
-    ) {
-      update_timer({
-        habit_id: habit._id,
-        timer_elapsed: 0,
-        timer_start_time: Date.now(),
-      }).catch((err) => console.error("Auto-start failed", err));
-    }
-  }, [visible]);
-
   const [displaySeconds, setDisplaySeconds] = useState(0);
 
   const snapPoints = useMemo(() => ["90%"], []);
 
-  const isRunning = !!habit?.timer_start_time;
+  const isRunning = localIsRunning;
 
   // Update display timer locally when running
   useEffect(() => {
@@ -105,13 +122,13 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     setDisplaySeconds(calculateTotalSeconds());
 
     let interval: any;
-    if (isRunning) {
+    if (localIsRunning) {
       interval = setInterval(() => {
         setDisplaySeconds(calculateTotalSeconds());
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, visible, habit?.timer_start_time, habit?.timer_elapsed]);
+  }, [localIsRunning, localStartTime, localElapsed, visible]);
 
   useEffect(() => {
     if (visible) {
@@ -144,19 +161,27 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     const currentTotal = calculateTotalSeconds();
 
     try {
-      if (isRunning) {
-        // Pause: save accumulated time, clear start time
+      if (localIsRunning) {
+        // Pause: save accumulated time, clear start time locally first
+        setLocalIsRunning(false);
+        setLocalStartTime(null);
+        setLocalElapsed(currentTotal);
+
         await update_timer({
           habit_id: habit._id,
           timer_elapsed: currentTotal,
           timer_start_time: null,
         });
       } else {
-        // Resume/Start: save current timestamp
+        // Resume/Start: update locally first
+        const now = Date.now();
+        setLocalIsRunning(true);
+        setLocalStartTime(now);
+
         await update_timer({
           habit_id: habit._id,
           timer_elapsed: currentTotal,
-          timer_start_time: Date.now(),
+          timer_start_time: now,
         });
       }
     } catch (err) {
@@ -193,7 +218,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         week_day,
       });
 
-      // Reset timer on finish
+      // Reset timer locally and on database
+      setLocalIsRunning(false);
+      setLocalStartTime(null);
+      setLocalElapsed(0);
+
       await update_timer({
         habit_id: habit._id,
         timer_elapsed: 0,
@@ -201,8 +230,14 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       });
 
       showCustomAlert("Streak increased for this habit", "success");
-      
-      if (res?.newStreak && res?.goal && res.newStreak >= res.goal && onGoalCompleted && habit) {
+
+      if (
+        res?.newStreak &&
+        res?.goal &&
+        res.newStreak >= res.goal &&
+        onGoalCompleted &&
+        habit
+      ) {
         onGoalCompleted(habit);
       } else if (res?.isFirstOfDay && onFirstStreakOfDay) {
         onFirstStreakOfDay();
@@ -280,47 +315,70 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           </Text>
         </View>
 
-        {/* Timer Display */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+          {/* Timer Display */}
           <View
             style={{
-              width: 280,
-              height: 280,
-              borderRadius: 140,
-              backgroundColor: Colors[theme].surface,
-              borderWidth: 8,
-              borderColor: habit.theme ?? Colors[theme].primary,
+              flex: 1,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Text
+            <View
               style={{
-                fontFamily: "NunitoExtraBold",
-                fontSize: 64,
-                color: Colors[theme].text,
+                width: 280,
+                height: 280,
+                justifyContent: "center",
+                alignItems: "center",
+                position: "relative",
               }}
             >
-              {formatTime(displaySeconds)}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "NunitoMedium",
-                fontSize: 16,
-                color: Colors[theme].text_secondary,
-                marginTop: 10,
-              }}
-            >
-              {isRunning ? "In Progress..." : "Paused"}
-            </Text>
+              {/* SVG Progress Circle */}
+              <Svg width={280} height={280} style={{ position: "absolute" }}>
+                <Circle
+                  cx={140}
+                  cy={140}
+                  r={132}
+                  stroke={Colors[theme].border}
+                  strokeWidth={12}
+                  fill={Colors[theme].surface}
+                />
+                <Circle
+                  cx={140}
+                  cy={140}
+                  r={132}
+                  stroke={habit.theme ?? Colors[theme].primary}
+                  strokeWidth={12}
+                  strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
+                  strokeDashoffset={2 * Math.PI * 132 * (1 - ((habit.duration ?? 0) * 60 > 0 ? Math.min(displaySeconds / ((habit.duration ?? 0) * 60), 1) : 1))}
+                  strokeLinecap="round"
+                  fill="none"
+                  transform="rotate(-90 140 140)"
+                />
+              </Svg>
+
+              <View style={{ justifyContent: "center", alignItems: "center" }}>
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 64,
+                    color: Colors[theme].text,
+                  }}
+                >
+                  {formatTime(displaySeconds)}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "NunitoMedium",
+                    fontSize: 16,
+                    color: Colors[theme].text_secondary,
+                    marginTop: 10,
+                  }}
+                >
+                  {isRunning ? "In Progress..." : "Paused"}
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
 
         {/* Control Buttons */}
         <View style={{ gap: 15 }}>
