@@ -349,8 +349,12 @@ const Home = () => {
           <Image
             source={
               isPremium
-                ? require("../../assets/images/name-logo-premium.png")
-                : require("../../assets/images/name-logo.png")
+                ? theme === "dark"
+                  ? require("../../assets/images/premium-home-logo-black.png")
+                  : require("../../assets/images/premium-home-logo-white.png")
+                : theme === "dark"
+                  ? require("../../assets/images/home-logo-black.png")
+                  : require("../../assets/images/home-logo-white.png")
             }
             style={{
               width: 140,
@@ -1104,11 +1108,7 @@ const Home = () => {
                     elevation: 3,
                   })}
                 >
-                  <FontAwesome6
-                    color={Colors[theme].text}
-                    size={14}
-                    name="plus"
-                  />
+                  <FontAwesome6 color={"#fff"} size={14} name="plus" />
                   <Text
                     style={{
                       color: "#fff",

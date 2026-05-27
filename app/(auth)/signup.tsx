@@ -295,10 +295,9 @@ const SignUpPage = () => {
               style={{
                 width: 50,
                 height: 50,
-                backgroundColor: theme === "dark" ? "#fff" : "#1f2428",
+                backgroundColor: "#fff",
                 borderWidth: theme === "dark" ? 3 : 2,
-                borderColor:
-                  theme === "dark" ? Colors[theme].border : "#1f2428",
+                borderColor: Colors[theme].border,
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
@@ -306,16 +305,9 @@ const SignUpPage = () => {
               }}
             >
               {appleLoading ? (
-                <ActivityIndicator
-                  size="small"
-                  color={theme === "dark" ? "#1f2428" : "#fff"}
-                />
+                <ActivityIndicator size="small" color={"#1f2428"} />
               ) : (
-                <FontAwesome6
-                  name="apple"
-                  size={24}
-                  color={theme === "dark" ? "#1f2428" : "#fff"}
-                />
+                <FontAwesome6 name="apple" size={24} color={"#1f2428"} />
               )}
             </Pressable>
           </View>

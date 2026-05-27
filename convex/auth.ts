@@ -64,7 +64,12 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         while (base64.length % 4) {
           base64 += "=";
         }
-        const payloadJson = Buffer.from(base64, "base64").toString("utf-8");
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const payloadJson = new TextDecoder().decode(bytes);
         const appleProfile = JSON.parse(payloadJson);
 
         // Verify standard claims
@@ -85,10 +90,17 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           : (email ? email.split("@")[0] : "Apple User");
 
         // Try to retrieve existing account
-        const retrieved = await retrieveAccount(ctx, {
-          provider: "apple",
-          account: { id: appleProfile.sub },
-        });
+        let retrieved = null;
+        try {
+          retrieved = await retrieveAccount(ctx, {
+            provider: "apple",
+            account: { id: appleProfile.sub },
+          });
+        } catch (e: any) {
+          if (e.message !== "InvalidAccountId") {
+            throw e;
+          }
+        }
 
         if (retrieved !== null) {
           return { userId: retrieved.user._id };
@@ -143,7 +155,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       return await ctx.db.insert("users", {
         email,
         fullname: (args.profile as any).fullname ?? (args.profile as any).name,
-        username: (args.profile as any).username ?? null,
+        username: (args.profile as any).username ?? email?.split("@")[0] ?? "user",
         profile_pic:
           (args.profile as any).profile_pic ?? (args.profile as any).image,
       });
