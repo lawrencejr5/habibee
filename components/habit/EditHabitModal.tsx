@@ -86,7 +86,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         habit: habitName,
         icon: selectedIcon,
         theme: selectedColor,
-        duration: duration ? Number(duration) : undefined,
+        duration: duration ? Number(duration) : null,
         goal: Number(goal),
         strict,
       });

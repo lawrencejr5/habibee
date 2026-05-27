@@ -90,7 +90,7 @@ export const get_user_habits = query({
       .withIndex("by_user", (q) => q.eq("user", user))
       .order("desc")
       .collect();
-      
+
     return user_habits.filter((h) => !h.archived);
   },
 });
@@ -106,7 +106,7 @@ export const get_archived_habits = query({
       .withIndex("by_user", (q) => q.eq("user", user))
       .order("desc")
       .collect();
-      
+
     return user_habits.filter((h) => h.archived === true);
   },
 });
@@ -147,13 +147,13 @@ export const add_habit = mutation({
       const active_habits = user_habits.filter((h) => !h.archived);
       if (active_habits.length >= 3) {
         throw new ConvexError(
-          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!",
         );
       }
 
       if (sub_habits?.some((sh) => sh.reminder_time)) {
         throw new ConvexError(
-          "Sub-habit reminders are a premium feature. Please upgrade to Pro!"
+          "Sub-habit reminders are a premium feature. Please upgrade to Pro!",
         );
       }
     }
@@ -265,7 +265,7 @@ export const record_streak = mutation({
         const completed_today = await ctx.db
           .query("habit_enteries")
           .withIndex("by_habit_date", (q) =>
-            q.eq("habit", h._id).eq("date", args.current_date)
+            q.eq("habit", h._id).eq("date", args.current_date),
           )
           .first();
         if (completed_today) {
@@ -305,7 +305,6 @@ export const record_streak = mutation({
       }
     }
 
-
     // Evaluate Hive Streaks
     const user_hives = await ctx.db
       .query("hive_members")
@@ -324,7 +323,7 @@ export const update_habit = mutation({
   args: {
     habit_id: v.id("habits"),
     habit: v.optional(v.string()),
-    duration: v.optional(v.number()),
+    duration: v.optional(v.union(v.number(), v.null())),
     goal: v.optional(v.number()),
     strict: v.optional(v.boolean()),
     icon: v.optional(v.string()),
@@ -355,11 +354,10 @@ export const update_habit = mutation({
 
     const fields_to_update: Record<string, any> = {};
     if (args.habit !== undefined) fields_to_update.habit = args.habit;
-    if (args.duration === undefined) fields_to_update.duration = undefined;
-    else
-      fields_to_update.duration = args.duration
-        ? Math.max(1, args.duration)
-        : undefined;
+    if (args.duration !== undefined) {
+      fields_to_update.duration =
+        args.duration === null ? undefined : Math.max(1, args.duration);
+    }
     if (args.goal !== undefined) fields_to_update.goal = Math.max(1, args.goal);
     if (args.strict !== undefined) fields_to_update.strict = args.strict;
     if (args.icon !== undefined) fields_to_update.icon = args.icon;
@@ -445,14 +443,14 @@ export const restore_habit = mutation({
       const active_habits = user_habits.filter((h) => !h.archived);
       if (active_habits.length >= 3) {
         throw new ConvexError(
-          "You already have 3 active habits. Please upgrade to Pro or archive another habit to restore this one."
+          "You already have 3 active habits. Please upgrade to Pro or archive another habit to restore this one.",
         );
       }
     }
 
     let newStreak = habit.current_streak || 0;
     const today = new Date().toLocaleDateString("en-CA");
-    
+
     if (habit.lastCompleted) {
       const diff = getDaysDifference(habit.lastCompleted, today);
       if (diff > 1) {
@@ -462,7 +460,10 @@ export const restore_habit = mutation({
       newStreak = 0;
     }
 
-    await ctx.db.patch(args.habit_id, { archived: false, current_streak: newStreak });
+    await ctx.db.patch(args.habit_id, {
+      archived: false,
+      current_streak: newStreak,
+    });
     return { msg: "Habit restored", habit: args.habit_id };
   },
 });
@@ -518,25 +519,31 @@ export const check_streak_and_reset = mutation({
     const yesterday = yesterdayDate.toISOString().split("T")[0];
 
     const activeHabits = habits.filter(
-      (h) => h.lastCompleted && h.current_streak > 0 && h.lastCompleted < yesterday
+      (h) =>
+        h.lastCompleted && h.current_streak > 0 && h.lastCompleted < yesterday,
     );
 
     let userNeedsFreeze = false;
-    if (user.last_streak_date && (user.streak ?? 0) > 0 && user.last_streak_date < yesterday) {
+    if (
+      user.last_streak_date &&
+      (user.streak ?? 0) > 0 &&
+      user.last_streak_date < yesterday
+    ) {
       userNeedsFreeze = true;
     }
 
     if (activeHabits.length > 0 || userNeedsFreeze) {
       let oldest_date_str = yesterday;
-      
+
       activeHabits.forEach((h) => {
-        if (h.lastCompleted! < oldest_date_str) oldest_date_str = h.lastCompleted!;
+        if (h.lastCompleted! < oldest_date_str)
+          oldest_date_str = h.lastCompleted!;
       });
       if (userNeedsFreeze && user.last_streak_date! < oldest_date_str) {
         oldest_date_str = user.last_streak_date!;
       }
 
-      let currentFreezes = user.is_premium ? (user.freezes || 0) : 0;
+      let currentFreezes = user.is_premium ? user.freezes || 0 : 0;
       let freezesUsed = 0;
       let resetDates: string[] = [];
 
@@ -547,8 +554,12 @@ export const check_streak_and_reset = mutation({
         const d_str = d_date.toISOString().split("T")[0];
 
         const anyMissing =
-          activeHabits.some((h) => h.lastCompleted! < d_str && !resetDates.includes(h._id)) ||
-          (userNeedsFreeze && user.last_streak_date! < d_str && !resetDates.includes("user"));
+          activeHabits.some(
+            (h) => h.lastCompleted! < d_str && !resetDates.includes(h._id),
+          ) ||
+          (userNeedsFreeze &&
+            user.last_streak_date! < d_str &&
+            !resetDates.includes("user"));
 
         if (anyMissing) {
           if (currentFreezes > 0) {
@@ -560,7 +571,11 @@ export const check_streak_and_reset = mutation({
                 resetDates.push(h._id);
               }
             });
-            if (userNeedsFreeze && user.last_streak_date! < d_str && !resetDates.includes("user")) {
+            if (
+              userNeedsFreeze &&
+              user.last_streak_date! < d_str &&
+              !resetDates.includes("user")
+            ) {
               resetDates.push("user");
             }
           }
@@ -757,7 +772,7 @@ export const create_habit = mutation({
       const active_habits = user_habits.filter((h) => !h.archived);
       if (active_habits.length >= 3) {
         throw new ConvexError(
-          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!"
+          "You have reached the maximum limit of 3 free habits. Please upgrade to Pro for unlimited habits!",
         );
       }
     }
@@ -896,7 +911,7 @@ export const internal_record_habit_completion = internalMutation({
         const completed_today = await ctx.db
           .query("habit_enteries")
           .withIndex("by_habit_date", (q) =>
-            q.eq("habit", h._id).eq("date", args.current_date)
+            q.eq("habit", h._id).eq("date", args.current_date),
           )
           .first();
         if (completed_today) {
@@ -1035,7 +1050,7 @@ export const getUsersWithIncompleteHabitsToday = internalQuery({
         .query("habits")
         .withIndex("by_user", (q) => q.eq("user", user._id))
         .collect();
-        
+
       const habits = all_habits.filter((h) => !h.archived);
 
       if (habits.length === 0) {
@@ -1081,7 +1096,10 @@ export const get_weekly_habit_completions = query({
     const entries = await ctx.db
       .query("habit_enteries")
       .withIndex("by_user_date", (q) =>
-        q.eq("user", user_id).gte("date", args.start_date).lte("date", args.end_date)
+        q
+          .eq("user", user_id)
+          .gte("date", args.start_date)
+          .lte("date", args.end_date),
       )
       .collect();
 
@@ -1097,5 +1115,3 @@ export const get_weekly_habit_completions = query({
     return completions;
   },
 });
-
-

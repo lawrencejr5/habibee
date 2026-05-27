@@ -266,390 +266,390 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         backgroundStyle={{
           backgroundColor: Colors[theme].background,
         }}
-      handleIndicatorStyle={{
-        width: 40,
-        height: 4,
-        backgroundColor: Colors[theme].border,
-        marginTop: 10,
-        opacity: 0.5,
-      }}
-    >
-      <BottomSheetView style={{ flex: 1, height: "100%" }}>
-        <View
-          style={{
-            flex: 1,
-            height: "100%",
-            backgroundColor: Colors[theme].background,
-          }}
-        >
-          {/* Header */}
+        handleIndicatorStyle={{
+          width: 40,
+          height: 4,
+          backgroundColor: Colors[theme].border,
+          marginTop: 10,
+          opacity: 0.5,
+        }}
+      >
+        <BottomSheetView style={{ flex: 1, height: "100%" }}>
           <View
             style={{
-              paddingHorizontal: 15,
-              paddingTop: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
+              flex: 1,
+              height: "100%",
+              backgroundColor: Colors[theme].background,
             }}
           >
-            <Pressable
-              onPress={() => {
-                haptics.impact();
-                setMessages([]);
-              }}
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <Image
-                source={require("../../assets/images/ai-icon.png")}
-                style={{
-                  width: 35,
-                  height: 35,
-                  borderRadius: 12, // Slightly squarer for modern look
-                }}
-              />
-              <ThemedText
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 18,
-                }}
-              >
-                Habibee AI
-              </ThemedText>
-            </Pressable>
-
-            <Pressable
+            {/* Header */}
+            <View
               style={{
-                paddingHorizontal: 8,
-                paddingBottom: 8,
-              }}
-              onPress={() => {
-                haptics.impact();
-                bottomSheetRef.current?.close();
+                paddingHorizontal: 15,
+                paddingTop: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Feather
-                name="chevron-down"
-                size={30}
-                color={Colors[theme].text}
-              />
-            </Pressable>
-          </View>
-          {/* Main Content */}
-          <ScrollView
-            ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              flexGrow: 1,
-              paddingBottom: messages.length > 0 ? 100 + keyboardHeight : 100, // Dynamic space for sticky input + keyboard
-            }}
-          >
-            {/* Content Display */}
-            {messages.length === 0 ? (
-              <View
+              <Pressable
+                onPress={() => {
+                  haptics.impact();
+                  setMessages([]);
+                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              >
+                <Image
+                  source={require("../../assets/images/ai-icon.png")}
+                  style={{
+                    width: 35,
+                    height: 35,
+                    borderRadius: 12, // Slightly squarer for modern look
+                  }}
+                />
+                <ThemedText
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 18,
+                  }}
+                >
+                  Habibee AI
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
                 style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingHorizontal: 20,
-                  marginTop: 40,
+                  paddingHorizontal: 8,
+                  paddingBottom: 8,
+                }}
+                onPress={() => {
+                  haptics.impact();
+                  bottomSheetRef.current?.close();
                 }}
               >
+                <Feather
+                  name="chevron-down"
+                  size={30}
+                  color={Colors[theme].text}
+                />
+              </Pressable>
+            </View>
+            {/* Main Content */}
+            <ScrollView
+              ref={scrollViewRef}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                flexGrow: 1,
+                paddingBottom: messages.length > 0 ? 100 + keyboardHeight : 100, // Dynamic space for sticky input + keyboard
+              }}
+            >
+              {/* Content Display */}
+              {messages.length === 0 ? (
                 <View
                   style={{
-                    marginBottom: 40,
-                    alignItems: "flex-start",
-                    width: "100%",
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 20,
+                    marginTop: 40,
                   }}
                 >
-                  <ThemedText
+                  <View
                     style={{
-                      fontFamily: "NunitoExtraBold",
-                      fontSize: 28,
-                      textAlign: "left",
-                      marginBottom: 5,
-                      textTransform: "capitalize",
+                      marginBottom: 40,
+                      alignItems: "flex-start",
+                      width: "100%",
                     }}
                   >
-                    Hey, {signedIn?.username}! 👋
-                  </ThemedText>
-                  <ThemedText
-                    style={{
-                      fontFamily: "NunitoRegular",
-                      fontSize: 16,
-                      color: Colors[theme].text_secondary,
-                      textAlign: "left",
-                    }}
-                  >
-                    How can I help you stay on track today?
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={{
-                    flexDirection: "column",
-                    width: "100%",
-                    gap: 15,
-                  }}
-                >
-                  {suggestions.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => {
-                        if (!isPremium) {
-                          haptics.impact();
-                          setUpgradeModalVisible(true);
-                        } else {
-                          sendMessage(item.prompt);
-                        }
+                    <ThemedText
+                      style={{
+                        fontFamily: "NunitoExtraBold",
+                        fontSize: 28,
+                        textAlign: "left",
+                        marginBottom: 5,
+                        textTransform: "capitalize",
                       }}
-                      style={({ pressed }) => ({
-                        width: "100%",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: Colors[theme].surface,
-                        borderRadius: 20,
+                    >
+                      Hey, {signedIn?.username}! 👋
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontFamily: "NunitoRegular",
+                        fontSize: 16,
+                        color: Colors[theme].text_secondary,
+                        textAlign: "left",
+                      }}
+                    >
+                      How can I help you stay on track today?
+                    </ThemedText>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "column",
+                      width: "100%",
+                      gap: 15,
+                    }}
+                  >
+                    {suggestions.map((item) => (
+                      <Pressable
+                        key={item.id}
+                        onPress={() => {
+                          if (!isPremium) {
+                            haptics.impact();
+                            setUpgradeModalVisible(true);
+                          } else {
+                            sendMessage(item.prompt);
+                          }
+                        }}
+                        style={({ pressed }) => ({
+                          width: "100%",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          backgroundColor: Colors[theme].surface,
+                          borderRadius: 20,
+                          padding: 15,
+                          borderWidth: 1,
+                          borderColor: pressed
+                            ? accentColor
+                            : Colors[theme].border,
+                          transform: [{ scale: pressed ? 0.98 : 1 }],
+                          justifyContent: "space-between",
+                        })}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 15,
+                            flex: 1,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: 10,
+                              backgroundColor: accentColor + "15", // 15% opacity orange
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <MaterialCommunityIcons
+                              name={item.icon as any}
+                              size={22}
+                              color={accentColor}
+                            />
+                          </View>
+                          <ThemedText
+                            style={{
+                              fontFamily: "NunitoBold",
+                              fontSize: 16,
+                              color: Colors[theme].text,
+                            }}
+                          >
+                            {item.label}
+                          </ThemedText>
+                        </View>
+
+                        {!isPremium && (
+                          <Image
+                            source={require("../../assets/icons/premium.png")}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              tintColor: "#FFD700",
+                              transform: [{ rotate: "30deg" }],
+                            }}
+                          />
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
+                  {messages.map((msg, index) =>
+                    msg.role === "user" ? (
+                      <UserChat
+                        key={index}
+                        text={msg.parts[0].content as string}
+                      />
+                    ) : (
+                      <ModelChat
+                        key={index}
+                        parts={msg.parts}
+                        thoughtTime={msg.thoughtTime}
+                        shouldAnimate={msg.shouldAnimate}
+                        onAnimationComplete={() => markMessageAsAnimated(index)}
+                        onUpgrade={() => setUpgradeModalVisible(true)}
+                      />
+                    ),
+                  )}
+
+                  {generating && (
+                    <View
+                      style={{
                         padding: 15,
-                        borderWidth: 1,
-                        borderColor: pressed
-                          ? accentColor
-                          : Colors[theme].border,
-                        transform: [{ scale: pressed ? 0.98 : 1 }],
-                        justifyContent: "space-between",
-                      })}
+                        borderRadius: 15,
+                        alignSelf: "flex-start",
+                      }}
                     >
                       <View
                         style={{
+                          marginBottom: 10,
                           flexDirection: "row",
                           alignItems: "center",
-                          gap: 15,
-                          flex: 1,
+                          gap: 10,
                         }}
                       >
                         <View
                           style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 10,
-                            backgroundColor: accentColor + "15", // 15% opacity orange
+                            position: "relative",
+                            width: 24,
+                            height: 24,
                             justifyContent: "center",
                             alignItems: "center",
                           }}
                         >
-                          <MaterialCommunityIcons
-                            name={item.icon as any}
-                            size={22}
+                          <ActivityIndicator
+                            size="large"
                             color={accentColor}
+                            style={{ position: "absolute" }}
+                          />
+                          <Image
+                            source={require("@/assets/images/ai-icon.png")}
+                            style={{ width: 20, height: 20, borderRadius: 10 }}
                           />
                         </View>
-                        <ThemedText
+                        <Text
                           style={{
+                            color: Colors[theme].text_secondary,
                             fontFamily: "NunitoBold",
-                            fontSize: 16,
-                            color: Colors[theme].text,
+                            fontSize: 12,
                           }}
                         >
-                          {item.label}
-                        </ThemedText>
+                          Thinking...
+                        </Text>
                       </View>
-
-                      {!isPremium && (
-                        <Image
-                          source={require("../../assets/icons/premium.png")}
-                          style={{
-                            width: 20,
-                            height: 20,
-                            tintColor: "#FFD700",
-                            transform: [{ rotate: "30deg" }],
-                          }}
-                        />
-                      )}
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            ) : (
-              <View style={{ paddingVertical: 20, paddingHorizontal: 15 }}>
-                {messages.map((msg, index) =>
-                  msg.role === "user" ? (
-                    <UserChat
-                      key={index}
-                      text={msg.parts[0].content as string}
-                    />
-                  ) : (
-                    <ModelChat
-                      key={index}
-                      parts={msg.parts}
-                      thoughtTime={msg.thoughtTime}
-                      shouldAnimate={msg.shouldAnimate}
-                      onAnimationComplete={() => markMessageAsAnimated(index)}
-                      onUpgrade={() => setUpgradeModalVisible(true)}
-                    />
-                  ),
-                )}
-
-                {generating && (
-                  <View
-                    style={{
-                      padding: 15,
-                      borderRadius: 15,
-                      alignSelf: "flex-start",
-                    }}
-                  >
-                    <View
-                      style={{
-                        marginBottom: 10,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <View
-                        style={{
-                          position: "relative",
-                          width: 24,
-                          height: 24,
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <ActivityIndicator
-                          size="large"
-                          color={accentColor}
-                          style={{ position: "absolute" }}
-                        />
-                        <Image
-                          source={require("@/assets/images/ai-icon.png")}
-                          style={{ width: 20, height: 20, borderRadius: 10 }}
-                        />
-                      </View>
-                      <Text
-                        style={{
-                          color: Colors[theme].text_secondary,
-                          fontFamily: "NunitoBold",
-                          fontSize: 12,
-                        }}
-                      >
-                        Thinking...
-                      </Text>
                     </View>
-                  </View>
-                )}
-              </View>
-            )}
-          </ScrollView>
+                  )}
+                </View>
+              )}
+            </ScrollView>
 
-          {/* Input Area - Fixed at bottom */}
-          <KeyboardStickyView
-            style={{
-              position: "absolute",
-              bottom: insets.bottom - 20,
-              width: "100%",
-              backgroundColor: Colors[theme].background,
-              paddingVertical: 10,
-            }}
-            offset={{ opened: 60, closed: 0 }} // Adjusted for bottom sheet
-          >
-            <View style={{ paddingHorizontal: 15, paddingBottom: 10 }}>
-              <View
-                style={{
-                  width: "100%",
-                  minHeight: 50,
-                  maxHeight: 150,
-                  padding: 5,
-                  paddingHorizontal: 15,
-                  backgroundColor: Colors[theme].surface,
-                  borderColor: Colors[theme].border,
-                  borderWidth: 1.5,
-                  borderRadius: 25,
-                  flexDirection: "row",
-                  alignItems: "flex-end", // Align items to bottom as it grows
-                  justifyContent: "space-between",
-                }}
-              >
-                <TextInput
+            {/* Input Area - Fixed at bottom */}
+            <KeyboardStickyView
+              style={{
+                position: "absolute",
+                bottom: insets.bottom - 20,
+                width: "100%",
+                backgroundColor: Colors[theme].background,
+                paddingVertical: 10,
+              }}
+              offset={{ opened: 60, closed: 0 }} // Adjusted for bottom sheet
+            >
+              <View style={{ paddingHorizontal: 15, paddingBottom: 10 }}>
+                <View
                   style={{
-                    flex: 1,
-                    backgroundColor: "transparent",
-                    fontFamily: "NunitoBold",
-                    color: Colors[theme].text,
-                    paddingVertical: 10,
-                    maxHeight: 130, // Limit internal growth
-                  }}
-                  placeholder="Ask Habibee anything..."
-                  placeholderTextColor={Colors[theme].text_secondary}
-                  value={input}
-                  onChangeText={setInput}
-                  multiline={true}
-                  blurOnSubmit={true}
-                  onSubmitEditing={() => sendMessage()}
-                />
-
-                <Pressable
-                  onPress={() => {
-                    if (!isPremium) {
-                      haptics.impact();
-                      setUpgradeModalVisible(true);
-                    } else {
-                      sendMessage();
-                    }
-                  }}
-                  disabled={generating}
-                  style={{
-                    backgroundColor: generating
-                      ? Colors[theme].border
-                      : accentColor,
-                    width: 35,
-                    height: 35,
-                    borderRadius: 18,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginLeft: 10,
+                    width: "100%",
+                    minHeight: 50,
+                    maxHeight: 150,
+                    padding: 5,
+                    paddingHorizontal: 15,
+                    backgroundColor: Colors[theme].surface,
+                    borderColor: Colors[theme].border,
+                    borderWidth: 1.5,
+                    borderRadius: 25,
+                    flexDirection: "row",
+                    alignItems: "flex-end", // Align items to bottom as it grows
+                    justifyContent: "space-between",
                   }}
                 >
-                  {generating ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : !isPremium ? (
-                    <Image
-                      source={require("../../assets/icons/premium.png")}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        tintColor: "#FFD700",
-                        transform: [{ rotate: "30deg" }],
-                      }}
-                    />
-                  ) : (
-                    <Image
-                      source={require("../../assets/icons/send.png")}
-                      style={{
-                        width: 16,
-                        height: 16,
-                        tintColor: "white",
-                      }}
-                    />
-                  )}
-                </Pressable>
+                  <TextInput
+                    style={{
+                      flex: 1,
+                      backgroundColor: "transparent",
+                      fontFamily: "NunitoBold",
+                      color: Colors[theme].text,
+                      paddingVertical: 10,
+                      maxHeight: 130, // Limit internal growth
+                    }}
+                    placeholder="Ask Habibee anything..."
+                    placeholderTextColor={Colors[theme].text_secondary}
+                    value={input}
+                    onChangeText={setInput}
+                    multiline={true}
+                    blurOnSubmit={true}
+                    onSubmitEditing={() => sendMessage()}
+                  />
+
+                  <Pressable
+                    onPress={() => {
+                      if (!isPremium) {
+                        haptics.impact();
+                        setUpgradeModalVisible(true);
+                      } else {
+                        sendMessage();
+                      }
+                    }}
+                    disabled={generating}
+                    style={{
+                      backgroundColor: generating
+                        ? Colors[theme].border
+                        : accentColor,
+                      width: 35,
+                      height: 35,
+                      borderRadius: 18,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginLeft: 10,
+                    }}
+                  >
+                    {generating ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : !isPremium ? (
+                      <Image
+                        source={require("../../assets/icons/premium.png")}
+                        style={{
+                          width: 20,
+                          height: 20,
+                          tintColor: "#FFD700",
+                          transform: [{ rotate: "30deg" }],
+                        }}
+                      />
+                    ) : (
+                      <Image
+                        source={require("../../assets/icons/send.png")}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          tintColor: "white",
+                        }}
+                      />
+                    )}
+                  </Pressable>
+                </View>
+                <Text
+                  style={{
+                    color: Colors[theme].text_secondary,
+                    fontFamily: "NunitoRegular",
+                    fontSize: 10,
+                    textAlign: "center",
+                    marginTop: 15,
+                  }}
+                >
+                  Habibee AI can make mistakes
+                </Text>
               </View>
-              <Text
-                style={{
-                  color: Colors[theme].text_secondary,
-                  fontFamily: "NunitoRegular",
-                  fontSize: 10,
-                  textAlign: "center",
-                  marginTop: 6,
-                }}
-              >
-                Habibee AI can make mistakes. Verify important information.
-              </Text>
-            </View>
-          </KeyboardStickyView>
-        </View>
-      </BottomSheetView>
-    </BottomSheet>
-    <UpgradeModal
-      visible={upgradeModalVisible}
-      setVisible={setUpgradeModalVisible}
-    />
+            </KeyboardStickyView>
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
+      <UpgradeModal
+        visible={upgradeModalVisible}
+        setVisible={setUpgradeModalVisible}
+      />
     </>
   );
 };
@@ -698,7 +698,10 @@ const parseText = (text: string) => {
   });
 };
 
-const HabitCard: FC<{ data: HabitData; onUpgrade: () => void }> = ({ data, onUpgrade }) => {
+const HabitCard: FC<{ data: HabitData; onUpgrade: () => void }> = ({
+  data,
+  onUpgrade,
+}) => {
   const { theme } = useTheme();
   const createHabit = useMutation(api.habits.create_habit);
   const { showCustomAlert } = useCustomAlert();
@@ -914,7 +917,13 @@ const ModelChat: FC<{
   shouldAnimate?: boolean;
   onAnimationComplete?: () => void;
   onUpgrade: () => void;
-}> = ({ parts, thoughtTime, shouldAnimate, onAnimationComplete, onUpgrade }) => {
+}> = ({
+  parts,
+  thoughtTime,
+  shouldAnimate,
+  onAnimationComplete,
+  onUpgrade,
+}) => {
   const { theme } = useTheme();
 
   // Combine all text parts for animation calculation
@@ -996,7 +1005,13 @@ const ModelChat: FC<{
       <View style={{ paddingLeft: 32 }}>
         {parts.map((part, index) => {
           if (part.type === "habit") {
-            return <HabitCard key={index} data={part.content} onUpgrade={onUpgrade} />;
+            return (
+              <HabitCard
+                key={index}
+                data={part.content}
+                onUpgrade={onUpgrade}
+              />
+            );
           }
 
           const partParsed = parseText(part.content);
