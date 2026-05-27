@@ -74,6 +74,55 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+
+  // Initialize and auto-start timer locally on fresh open
+  useEffect(() => {
+    if (visible && habit) {
+      const isTimerActive = !!habit.timer_start_time;
+      const start = habit.timer_start_time;
+      const elapsed = habit.timer_elapsed || 0;
+
+      // Handle auto-start on fresh open:
+      if (!isTimerActive && elapsed === 0) {
+        const now = Date.now();
+        setLocalIsRunning(true);
+        setLocalStartTime(now);
+        setLocalElapsed(0);
+
+        // Update database in the background
+        update_timer({
+          habit_id: habit._id,
+          timer_elapsed: 0,
+          timer_start_time: now,
+        }).catch((err) => console.error("Auto-start failed", err));
+      } else {
+        setLocalIsRunning(isTimerActive);
+        setLocalStartTime(start ?? null);
+        setLocalElapsed(elapsed);
+      }
+    }
+  }, [visible, habit?._id]);
+
+  const calculateTotalSeconds = () => {
+    if (!habit) return 0;
+    const currentSession = localStartTime
+      ? Math.floor((Date.now() - localStartTime) / 1000)
+      : 0;
+    const total = localElapsed + currentSession;
+    const maxSeconds = (habit?.duration ?? 0) * 60;
+
+    // If no duration set (or 0), act as stopwatch (no limit)
+    if (maxSeconds === 0) return total;
+
+    return Math.min(total, maxSeconds);
+  };
+
+  const [displaySeconds, setDisplaySeconds] = useState(0);
+
+  const snapPoints = useMemo(() => ["90%"], []);
+
+  const isRunning = localIsRunning;
+
   // Handle smooth timer progress animation
   useEffect(() => {
     const totalSeconds = (habit?.duration ?? 0) * 60;
@@ -111,7 +160,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             duration: 1500,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
       animation.start();
     } else {
@@ -126,54 +175,6 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       if (animation) animation.stop();
     };
   }, [localIsRunning]);
-
-  // Initialize and auto-start timer locally on fresh open
-  useEffect(() => {
-    if (visible && habit) {
-      const isTimerActive = !!habit.timer_start_time;
-      const start = habit.timer_start_time;
-      const elapsed = habit.timer_elapsed || 0;
-
-      // Handle auto-start on fresh open:
-      if (!isTimerActive && elapsed === 0) {
-        const now = Date.now();
-        setLocalIsRunning(true);
-        setLocalStartTime(now);
-        setLocalElapsed(0);
-
-        // Update database in the background
-        update_timer({
-          habit_id: habit._id,
-          timer_elapsed: 0,
-          timer_start_time: now,
-        }).catch((err) => console.error("Auto-start failed", err));
-      } else {
-        setLocalIsRunning(isTimerActive);
-        setLocalStartTime(start!);
-        setLocalElapsed(elapsed);
-      }
-    }
-  }, [visible, habit?._id]);
-
-  const calculateTotalSeconds = () => {
-    if (!habit) return 0;
-    const currentSession = localStartTime
-      ? Math.floor((Date.now() - localStartTime) / 1000)
-      : 0;
-    const total = localElapsed + currentSession;
-    const maxSeconds = (habit?.duration ?? 0) * 60;
-
-    // If no duration set (or 0), act as stopwatch (no limit)
-    if (maxSeconds === 0) return total;
-
-    return Math.min(total, maxSeconds);
-  };
-
-  const [displaySeconds, setDisplaySeconds] = useState(0);
-
-  const snapPoints = useMemo(() => ["90%"], []);
-
-  const isRunning = localIsRunning;
 
   // Update display timer locally when running
   useEffect(() => {
