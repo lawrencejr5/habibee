@@ -335,10 +335,18 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                       paddingVertical: 10,
                       color: Colors[theme].text_secondary,
                     }}
-                    placeholder="30 mins"
+                    placeholder="30"
                     value={duration}
                     onChangeText={setDuration}
                   />
+                  <Text
+                    style={{
+                      fontFamily: "NunitoMedium",
+                      color: Colors[theme].text_secondary,
+                    }}
+                  >
+                    mins
+                  </Text>
                 </View>
               </View>
               <View style={{ flex: 1 }}>

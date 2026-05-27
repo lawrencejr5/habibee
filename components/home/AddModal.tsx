@@ -248,7 +248,7 @@ const AddModal: React.FC<{
                     alignItems: "center",
                   }}
                 >
-                  <Feather name="plus" size={16} color="transparent" />
+                  <Feather name="plus" size={16} color="#fff" />
                 </Pressable>
               </Pressable>
 
@@ -308,15 +308,32 @@ const AddModal: React.FC<{
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text
+                    <View
                       style={{
-                        fontFamily: "NunitoBold",
-                        fontSize: 16,
-                        color: Colors[theme].text_secondary,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5,
                       }}
                     >
-                      Time per day
-                    </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 16,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        Duration
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoMedium",
+                          fontSize: 12,
+                          color: Colors[theme].text_secondary,
+                        }}
+                      >
+                        (optional)
+                      </Text>
+                    </View>
                     <View
                       style={[
                         {
