@@ -60,13 +60,45 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
+  // Local state to make the timer UI feel instantaneous, snappy, and responsive
+  const [localIsRunning, setLocalIsRunning] = useState(false);
+  const [localStartTime, setLocalStartTime] = useState<number | null>(null);
+  const [localElapsed, setLocalElapsed] = useState(0);
+
+  // Initialize and auto-start timer locally on fresh open
+  useEffect(() => {
+    if (visible && habit) {
+      const isTimerActive = !!habit.timer_start_time;
+      const start = habit.timer_start_time;
+      const elapsed = habit.timer_elapsed || 0;
+
+      // Handle auto-start on fresh open:
+      if (!isTimerActive && elapsed === 0) {
+        const now = Date.now();
+        setLocalIsRunning(true);
+        setLocalStartTime(now);
+        setLocalElapsed(0);
+
+        // Update database in the background
+        update_timer({
+          habit_id: habit._id,
+          timer_elapsed: 0,
+          timer_start_time: now,
+        }).catch((err) => console.error("Auto-start failed", err));
+      } else {
+        setLocalIsRunning(isTimerActive);
+        setLocalStartTime(start!);
+        setLocalElapsed(elapsed);
+      }
+    }
+  }, [visible, habit?._id]);
+
   const calculateTotalSeconds = () => {
     if (!habit) return 0;
-    const elapsed = habit.timer_elapsed || 0;
-    const currentSession = habit.timer_start_time
-      ? Math.floor((Date.now() - habit.timer_start_time) / 1000)
+    const currentSession = localStartTime
+      ? Math.floor((Date.now() - localStartTime) / 1000)
       : 0;
-    const total = elapsed + currentSession;
+    const total = localElapsed + currentSession;
     const maxSeconds = (habit?.duration ?? 0) * 60;
 
     // If no duration set (or 0), act as stopwatch (no limit)
@@ -75,27 +107,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     return Math.min(total, maxSeconds);
   };
 
-  // Auto-start timer on fresh open
-  useEffect(() => {
-    if (
-      visible &&
-      habit &&
-      !habit.timer_start_time &&
-      (habit.timer_elapsed || 0) === 0
-    ) {
-      update_timer({
-        habit_id: habit._id,
-        timer_elapsed: 0,
-        timer_start_time: Date.now(),
-      }).catch((err) => console.error("Auto-start failed", err));
-    }
-  }, [visible]);
-
   const [displaySeconds, setDisplaySeconds] = useState(0);
 
   const snapPoints = useMemo(() => ["90%"], []);
 
-  const isRunning = !!habit?.timer_start_time;
+  const isRunning = localIsRunning;
 
   // Update display timer locally when running
   useEffect(() => {
@@ -105,13 +121,13 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     setDisplaySeconds(calculateTotalSeconds());
 
     let interval: any;
-    if (isRunning) {
+    if (localIsRunning) {
       interval = setInterval(() => {
         setDisplaySeconds(calculateTotalSeconds());
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, visible, habit?.timer_start_time, habit?.timer_elapsed]);
+  }, [localIsRunning, localStartTime, localElapsed, visible]);
 
   useEffect(() => {
     if (visible) {
@@ -144,19 +160,27 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     const currentTotal = calculateTotalSeconds();
 
     try {
-      if (isRunning) {
-        // Pause: save accumulated time, clear start time
+      if (localIsRunning) {
+        // Pause: save accumulated time, clear start time locally first
+        setLocalIsRunning(false);
+        setLocalStartTime(null);
+        setLocalElapsed(currentTotal);
+
         await update_timer({
           habit_id: habit._id,
           timer_elapsed: currentTotal,
           timer_start_time: null,
         });
       } else {
-        // Resume/Start: save current timestamp
+        // Resume/Start: update locally first
+        const now = Date.now();
+        setLocalIsRunning(true);
+        setLocalStartTime(now);
+
         await update_timer({
           habit_id: habit._id,
           timer_elapsed: currentTotal,
-          timer_start_time: Date.now(),
+          timer_start_time: now,
         });
       }
     } catch (err) {
@@ -193,7 +217,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         week_day,
       });
 
-      // Reset timer on finish
+      // Reset timer locally and on database
+      setLocalIsRunning(false);
+      setLocalStartTime(null);
+      setLocalElapsed(0);
+
       await update_timer({
         habit_id: habit._id,
         timer_elapsed: 0,
@@ -201,8 +229,14 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       });
 
       showCustomAlert("Streak increased for this habit", "success");
-      
-      if (res?.newStreak && res?.goal && res.newStreak >= res.goal && onGoalCompleted && habit) {
+
+      if (
+        res?.newStreak &&
+        res?.goal &&
+        res.newStreak >= res.goal &&
+        onGoalCompleted &&
+        habit
+      ) {
         onGoalCompleted(habit);
       } else if (res?.isFirstOfDay && onFirstStreakOfDay) {
         onFirstStreakOfDay();
