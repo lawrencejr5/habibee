@@ -79,7 +79,7 @@ const AddModal: React.FC<{
     setHabit("");
     setDuration("");
     setGoal("");
-    setStrict(false);
+    setStrict(true);
     setSelectedColor(getRandomColor());
     setSelectedIcon("default");
     setSubHabits([]);
@@ -129,6 +129,12 @@ const AddModal: React.FC<{
       setBtnLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (visible) {
+      setStrict(true);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible && !isPremium && habitsData && habitsData.length >= 3) {
@@ -322,7 +328,7 @@ const AddModal: React.FC<{
                           color: Colors[theme].text_secondary,
                         }}
                       >
-                        Duration
+                        Timer
                       </Text>
                       <Text
                         style={{
@@ -442,7 +448,7 @@ const AddModal: React.FC<{
                       fontSize: 16,
                     }}
                   >
-                    Lock completion until timer ends
+                    Lock streak until timer ends
                   </Text>
                   <ToggleButton
                     isOn={strict}

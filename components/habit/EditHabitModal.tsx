@@ -298,7 +298,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                       color: Colors[theme].text_secondary,
                     }}
                   >
-                    Duration
+                    Timer
                   </Text>
                   <Text
                     style={{
@@ -415,7 +415,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
                   fontSize: 16,
                 }}
               >
-                Lock completion until timer ends
+                Lock streak until timer ends
               </Text>
               <ToggleButton isOn={strict} onToggle={() => setStrict(!strict)} />
             </View>

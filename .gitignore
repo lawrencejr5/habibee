@@ -52,3 +52,6 @@ google-services.json
 
 #convex
 convex/_generated
+
+#agent
+*AGENTS.md
