@@ -180,7 +180,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
               </View>
             </View>
 
-            {!isPremium && (
+            {!isPremium ? (
               <Pressable
                 onPress={() => {
                   haptics.impact();
@@ -203,6 +203,16 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
                   Upgrade
                 </Text>
               </Pressable>
+            ) : (
+              <ThemedText
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 18,
+                  color: Colors[theme].blue,
+                }}
+              >
+                {user?.freezes || 0}
+              </ThemedText>
             )}
           </View>
         </BottomSheetView>
