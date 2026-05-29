@@ -41,42 +41,49 @@ const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.42;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.2;
 
 interface OnboardingSlide {
-  image: ImageSourcePropType;
+  lightImage: ImageSourcePropType;
+  darkImage: ImageSourcePropType;
   title: string;
   subtitle: string;
 }
 
 const slides: OnboardingSlide[] = [
   {
-    image: require("@/assets/onbarding/onboarding_1.png"),
+    lightImage: require("@/assets/onbarding/onboarding_1_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_1_dark.png"),
     title: "Total Organization.",
     subtitle: "All your goals, categorized and easy to manage.",
   },
   {
-    image: require("@/assets/onbarding/onboarding_2.png"),
+    lightImage: require("@/assets/onbarding/onboarding_2_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_2_dark.png"),
     title: "Break It Down.",
     subtitle: "Turn big goals into manageable, atomic steps.",
   },
   {
-    image: require("@/assets/onbarding/onboarding_3.png"),
+    lightImage: require("@/assets/onbarding/onboarding_3_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_3_dark.png"),
     title: "Visualize Your Growth.",
     subtitle:
       "Track your consistency with an elegant, interactive progress grid.",
   },
   {
-    image: require("@/assets/onbarding/onboarding_4.png"),
+    lightImage: require("@/assets/onbarding/onboarding_4_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_4_dark.png"),
     title: "Habibee AI at your disposal.",
     subtitle:
       "Let AI build and manage the perfect routine tailored to your lifestyle.",
   },
   {
-    image: require("@/assets/onbarding/onboarding_5.png"),
+    lightImage: require("@/assets/onbarding/onboarding_5_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_5_dark.png"),
     title: "Focus in the Moment.",
     subtitle:
       "Use the precision timer to crush your habits without distractions.",
   },
   {
-    image: require("@/assets/onbarding/onboarding_6.png"),
+    lightImage: require("@/assets/onbarding/onboarding_6_light.png"),
+    darkImage: require("@/assets/onbarding/onboarding_6_dark.png"),
     title: "Build Your Hive.",
     subtitle:
       "Stay accountable with your inner circle and buzz friends to stay on track.",
@@ -236,7 +243,7 @@ const OnboardingScreen = () => {
             ]}
           >
             <Image
-              source={slide.image}
+              source={theme === "dark" ? slide.darkImage : slide.lightImage}
               style={styles.screenshotImage}
               resizeMode="cover"
             />

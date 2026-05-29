@@ -653,7 +653,14 @@ export default function HivePage() {
                     >
                       <Image
                         source={require("../../assets/icons/fire.png")}
-                        style={{ width: 22, height: 22 }}
+                        style={{
+                          width: 22,
+                          height: 22,
+                          tintColor:
+                            selectedHive.last_streak_date === today
+                              ? undefined
+                              : Colors[theme].text_secondary,
+                        }}
                       />
                       <Text
                         style={{
