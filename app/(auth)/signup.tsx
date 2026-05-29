@@ -148,6 +148,10 @@ const SignUpPage = () => {
     }
   };
 
+  // Returns true if the email is an Apple private relay address
+  const isAppleHiddenEmail = (email: string) =>
+    !!email?.endsWith("@privaterelay.appleid.com");
+
   const handleAppleSignin = async () => {
     if (Platform.OS !== "ios") {
       showCustomAlert("Sign in with Apple failed", "warning");
@@ -176,6 +180,13 @@ const SignUpPage = () => {
       const token = await registerForPushNotificationsAsync();
       if (token) {
         await storePushToken({ token });
+      }
+
+      // Detect hidden Apple user: relay email means we can't trust the name
+      const credentialEmail = credential.email ?? "";
+      if (isAppleHiddenEmail(credentialEmail)) {
+        router.replace("/(auth)/addUsername?needsFullname=true");
+        return;
       }
 
       showCustomAlert("Signed up successfully", "success");

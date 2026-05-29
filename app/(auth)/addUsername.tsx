@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View as ThemedView } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useHapitcs } from "@/context/HapticsContext";
 
@@ -27,9 +27,16 @@ const AddUsername = () => {
   const { theme } = useTheme();
   const { showCustomAlert } = useCustomAlert();
 
+  // needsFullname=true when coming from Apple hidden user sign-in
+  const params = useLocalSearchParams<{ needsFullname?: string }>();
+  const needsFullname = params.needsFullname === "true";
+
   const [username, setUsername] = useState<string>("");
+  const [fullname, setFullname] = useState<string>("");
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
+
   const add_username = useMutation(api.users.update_username);
+  const update_user_details = useMutation(api.users.update_user_details);
 
   const handleSubmit = async () => {
     setBtnLoading(true);
@@ -38,12 +45,25 @@ const AddUsername = () => {
         showCustomAlert("Username cannot be empty", "warning");
         return;
       }
-      await add_username({ username: username.trim().toLowerCase() });
-      showCustomAlert("Username set successfully", "success");
+
+      if (needsFullname) {
+        if (fullname.trim().length === 0) {
+          showCustomAlert("Full name cannot be empty", "warning");
+          return;
+        }
+        await update_user_details({
+          fullname: fullname.trim(),
+          username: username.trim().toLowerCase(),
+        });
+      } else {
+        await add_username({ username: username.trim().toLowerCase() });
+      }
+
+      showCustomAlert("Profile set successfully", "success");
       router.replace("/(tabs)");
     } catch (err) {
       console.log(err);
-      showCustomAlert("An error occured", "danger");
+      showCustomAlert("An error occurred", "danger");
     } finally {
       setBtnLoading(false);
     }
@@ -76,7 +96,7 @@ const AddUsername = () => {
             color: Colors[theme].text,
           }}
         >
-          Add Username
+          {needsFullname ? "Complete Your Profile" : "Add Username"}
         </Text>
         <Text
           style={{
@@ -85,17 +105,58 @@ const AddUsername = () => {
             color: Colors[theme].text_secondary,
           }}
         >
-          Add a unique username of your choice.
+          {needsFullname
+            ? "Tell us your name and pick a unique username."
+            : "Add a unique username of your choice."}
         </Text>
       </View>
 
-      <View style={{ marginBottom: 10, paddingTop: 20, flex: 1 }}>
+      <View style={{ marginBottom: 10, paddingTop: 20, flex: 1, gap: 12 }}>
+        {/* Fullname field — only visible for Apple hidden users */}
+        {needsFullname && (
+          <View
+            style={{
+              backgroundColor: Colors[theme].surface,
+              borderColor: Colors[theme].border,
+              borderWidth: 3,
+              paddingHorizontal: 10,
+              borderRadius: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 7,
+            }}
+          >
+            <Image
+              source={require("@/assets/icons/user.png")}
+              style={{
+                width: 15,
+                height: 15,
+                tintColor: Colors[theme].text_secondary,
+              }}
+            />
+            <TextInput
+              placeholder={"Full Name"}
+              autoCapitalize="words"
+              value={fullname}
+              onChangeText={setFullname}
+              style={{
+                fontFamily: "NunitoMedium",
+                fontSize: 16,
+                color: Colors[theme].text,
+                width: "100%",
+                paddingVertical: 12,
+              }}
+              placeholderTextColor={Colors[theme].text_secondary}
+            />
+          </View>
+        )}
+
+        {/* Username field — always visible */}
         <View
           style={{
             backgroundColor: Colors[theme].surface,
             borderColor: Colors[theme].border,
             borderWidth: 3,
-            marginTop: 10,
             paddingHorizontal: 10,
             borderRadius: 10,
             flexDirection: "row",
@@ -121,7 +182,9 @@ const AddUsername = () => {
               fontSize: 16,
               color: Colors[theme].text,
               width: "100%",
+              paddingVertical: 12,
             }}
+            placeholderTextColor={Colors[theme].text_secondary}
           />
         </View>
       </View>
