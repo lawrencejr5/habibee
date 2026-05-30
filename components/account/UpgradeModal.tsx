@@ -26,6 +26,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHapitcs } from "@/context/HapticsContext";
 import { usePremium } from "@/context/PremiumContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import * as WebBrowser from "expo-web-browser";
 
 interface UpgradeModalProps {
   visible: boolean;
@@ -366,28 +367,47 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
             ))}
           </View>
 
-          {/* Restore Purchases Button */}
-          <Pressable
-            onPress={handleRestore}
-            disabled={restoring}
-            style={styles.restoreContainer}
-          >
-            {restoring ? (
-              <ActivityIndicator
-                size="small"
-                color={Colors[theme].text_secondary}
-              />
-            ) : (
+          {/* Terms & Privacy Links */}
+          <View style={styles.footerLinksRow}>
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/terms");
+              }}
+            >
               <Text
                 style={[
-                  styles.restoreText,
+                  styles.footerLinkText,
                   { color: Colors[theme].text_secondary },
                 ]}
               >
-                Restore purchases
+                Terms of Use
               </Text>
-            )}
-          </Pressable>
+            </Pressable>
+            <Text
+              style={[
+                styles.footerLinkSeparator,
+                { color: Colors[theme].text_secondary },
+              ]}
+            >
+              {" • "}
+            </Text>
+            <Pressable
+              onPress={() => {
+                haptics.impact();
+                WebBrowser.openBrowserAsync("https://habibee.lawjun.ng/privacy");
+              }}
+            >
+              <Text
+                style={[
+                  styles.footerLinkText,
+                  { color: Colors[theme].text_secondary },
+                ]}
+              >
+                Privacy Policy
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </BottomSheetScrollView>
     </BottomSheet>
@@ -522,14 +542,20 @@ const styles = StyleSheet.create({
     fontFamily: "NunitoMedium",
     fontSize: 14,
   },
-  restoreContainer: {
+  footerLinksRow: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     paddingVertical: 12,
+    gap: 8,
   },
-  restoreText: {
+  footerLinkText: {
     fontFamily: "NunitoMedium",
     fontSize: 13,
     textDecorationLine: "underline",
+  },
+  footerLinkSeparator: {
+    fontSize: 13,
   },
 });
 

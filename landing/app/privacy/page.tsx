@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
       <main className={styles.container}>
         <header className={styles.header}>
           <h1 className={styles.title}>Privacy Policy</h1>
-          <p className={styles.lastUpdated}>Last Updated: April 24, 2026</p>
+          <p className={styles.lastUpdated}>Last Updated: May 30, 2026</p>
         </header>
 
         <div className={styles.content}>
@@ -103,7 +103,8 @@ export default function PrivacyPolicy() {
               <strong>Third-Party Service Providers:</strong> We may share your
               information with third parties that perform services for us or on
               our behalf, including data analysis, email delivery, hosting
-              services, and customer service.
+              services, customer service, and AI-powered features (see Section
+              5 below).
             </li>
             <li>
               <strong>Interactions with Other Users:</strong> If you interact
@@ -113,7 +114,39 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
-          <h2>4. Security of Your Information</h2>
+          <h2>5. AI Data Processing</h2>
+          <p>
+            Habibee Premium includes an AI Assistant that delivers personalized
+            daily micro-strategies and habit-building insights. To power these
+            features, we work with reputable third-party AI providers (such as
+            OpenAI or Anthropic). When you interact with the AI Assistant or
+            request AI-generated strategies, the following applies:
+          </p>
+          <ul>
+            <li>
+              <strong>What is sent:</strong> Only anonymized, relevant context
+              — such as your habit titles and aggregated performance metrics —
+              is transmitted to the AI provider to generate a response. Your
+              name, email address, and other directly identifying information
+              are never included in these requests.
+            </li>
+            <li>
+              <strong>Purpose limitation:</strong> Your data is used solely to
+              fulfill your live feature request (e.g., generating today's
+              micro-strategy). It is not stored by us beyond what is necessary
+              to deliver the response, and it is not sold to third parties,
+              used for advertising, or fed into any publicly accessible model
+              training pipeline.
+            </li>
+            <li>
+              <strong>Provider obligations:</strong> Our AI partners are
+              contractually bound to process your data only as directed by
+              Lawjun Labs and in accordance with applicable data protection
+              laws.
+            </li>
+          </ul>
+
+          <h2>6. Security of Your Information</h2>
           <p>
             We use administrative, technical, and physical security measures to
             help protect your personal information. While we have taken
@@ -123,7 +156,7 @@ export default function PrivacyPolicy() {
             be guaranteed against any interception or other type of misuse.
           </p>
 
-          <h2>5. Children's Privacy</h2>
+          <h2>7. Children's Privacy</h2>
           <p>
             We do not knowingly solicit information from or market to children
             under the age of 13. If we learn that we have collected personal
@@ -132,7 +165,7 @@ export default function PrivacyPolicy() {
             possible.
           </p>
 
-          <h2>6. Contact Us</h2>
+          <h2>8. Contact Us</h2>
           <p>
             If you have questions or comments about this Privacy Policy, please
             contact us at:
