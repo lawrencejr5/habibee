@@ -9,11 +9,14 @@ import React, {
 import {
   ActivityIndicator,
   BackHandler,
+  Modal,
   Pressable,
   Text,
   View,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Feather } from "@expo/vector-icons";
 
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,6 +39,50 @@ interface TaskTimerModalProps {
   onFirstStreakOfDay?: () => void;
   onGoalCompleted?: (habit: HabitType) => void;
 }
+
+// ─── AsyncStorage helpers ────────────────────────────────────────────────────
+
+interface TimerStorageState {
+  isRunning: boolean;
+  startTime: number | null;
+  elapsed: number;
+}
+
+const timerStorageKey = (habitId: string) => `habibee:timer:${habitId}`;
+
+const saveTimerToStorage = async (
+  habitId: string,
+  state: TimerStorageState,
+) => {
+  try {
+    await AsyncStorage.setItem(timerStorageKey(habitId), JSON.stringify(state));
+  } catch (err) {
+    console.error("Failed to save timer to storage", err);
+  }
+};
+
+const loadTimerFromStorage = async (
+  habitId: string,
+): Promise<TimerStorageState | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(timerStorageKey(habitId));
+    if (!raw) return null;
+    return JSON.parse(raw) as TimerStorageState;
+  } catch (err) {
+    console.error("Failed to load timer from storage", err);
+    return null;
+  }
+};
+
+const clearTimerFromStorage = async (habitId: string) => {
+  try {
+    await AsyncStorage.removeItem(timerStorageKey(habitId));
+  } catch (err) {
+    console.error("Failed to clear timer from storage", err);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   visible,
@@ -60,38 +107,68 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const update_timer = useMutation(api.habits.update_habit_timer);
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
+  const [restartModalVisible, setRestartModalVisible] = useState<boolean>(false);
 
   // Local state to make the timer UI feel instantaneous, snappy, and responsive
   const [localIsRunning, setLocalIsRunning] = useState(false);
   const [localStartTime, setLocalStartTime] = useState<number | null>(null);
   const [localElapsed, setLocalElapsed] = useState(0);
 
-  // Initialize and auto-start timer locally on fresh open
+  // Initialize timer — AsyncStorage is the primary source of truth.
+  // Convex data is used only as a fallback (e.g. first install, new device).
   useEffect(() => {
-    if (visible && habit) {
+    if (!visible || !habit) return;
+
+    const initTimer = async () => {
+      const stored = await loadTimerFromStorage(habit._id);
+
+      if (stored) {
+        // AsyncStorage has data — use it directly, ignore Convex timer fields
+        setLocalIsRunning(stored.isRunning);
+        setLocalStartTime(stored.startTime);
+        setLocalElapsed(stored.elapsed);
+        return;
+      }
+
+      // No local storage found — fall back to Convex data
       const isTimerActive = !!habit.timer_start_time;
       const start = habit.timer_start_time;
       const elapsed = habit.timer_elapsed || 0;
 
-      // Handle auto-start on fresh open:
       if (!isTimerActive && elapsed === 0) {
+        // Auto-start on fresh open
         const now = Date.now();
+        const newState: TimerStorageState = {
+          isRunning: true,
+          startTime: now,
+          elapsed: 0,
+        };
         setLocalIsRunning(true);
         setLocalStartTime(now);
         setLocalElapsed(0);
 
-        // Update database in the background
+        // Persist locally first, then sync to cloud
+        await saveTimerToStorage(habit._id, newState);
         update_timer({
           habit_id: habit._id,
           timer_elapsed: 0,
           timer_start_time: now,
-        }).catch((err) => console.error("Auto-start failed", err));
+        }).catch((err) => console.error("Auto-start cloud sync failed", err));
       } else {
         setLocalIsRunning(isTimerActive);
         setLocalStartTime(start!);
         setLocalElapsed(elapsed);
+
+        // Persist the Convex state locally so future opens use AsyncStorage
+        await saveTimerToStorage(habit._id, {
+          isRunning: isTimerActive,
+          startTime: start ?? null,
+          elapsed,
+        });
       }
-    }
+    };
+
+    initTimer();
   }, [visible, habit?._id]);
 
   const calculateTotalSeconds = () => {
@@ -160,34 +237,80 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     haptics.impact("light");
     const currentTotal = calculateTotalSeconds();
 
-    try {
-      if (localIsRunning) {
-        // Pause: save accumulated time, clear start time locally first
-        setLocalIsRunning(false);
-        setLocalStartTime(null);
-        setLocalElapsed(currentTotal);
+    if (localIsRunning) {
+      // Pause: update local state
+      const newState: TimerStorageState = {
+        isRunning: false,
+        startTime: null,
+        elapsed: currentTotal,
+      };
+      setLocalIsRunning(false);
+      setLocalStartTime(null);
+      setLocalElapsed(currentTotal);
 
-        await update_timer({
-          habit_id: habit._id,
-          timer_elapsed: currentTotal,
-          timer_start_time: null,
-        });
-      } else {
-        // Resume/Start: update locally first
-        const now = Date.now();
-        setLocalIsRunning(true);
-        setLocalStartTime(now);
+      // Persist locally first (guaranteed even if offline)
+      await saveTimerToStorage(habit._id, newState);
 
-        await update_timer({
-          habit_id: habit._id,
-          timer_elapsed: currentTotal,
-          timer_start_time: now,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to toggle timer", err);
-      showCustomAlert("Failed to update timer", "danger");
+      // Best-effort cloud sync
+      update_timer({
+        habit_id: habit._id,
+        timer_elapsed: currentTotal,
+        timer_start_time: null,
+      }).catch((err) => console.error("Pause cloud sync failed", err));
+    } else {
+      // Resume/Start: update local state
+      const now = Date.now();
+      const newState: TimerStorageState = {
+        isRunning: true,
+        startTime: now,
+        elapsed: currentTotal,
+      };
+      setLocalIsRunning(true);
+      setLocalStartTime(now);
+
+      // Persist locally first (guaranteed even if offline)
+      await saveTimerToStorage(habit._id, newState);
+
+      // Best-effort cloud sync
+      update_timer({
+        habit_id: habit._id,
+        timer_elapsed: currentTotal,
+        timer_start_time: now,
+      }).catch((err) => console.error("Resume cloud sync failed", err));
     }
+  };
+
+  const handleRestart = () => {
+    haptics.impact("medium");
+    setRestartModalVisible(true);
+  };
+
+  const confirmRestart = async () => {
+    haptics.impact("success");
+    setRestartModalVisible(false);
+    const now = localIsRunning ? Date.now() : null;
+
+    // 1. Update React local states
+    setLocalStartTime(now);
+    setLocalElapsed(0);
+    setDisplaySeconds(0);
+
+    // 2. Persist to AsyncStorage
+    const newState: TimerStorageState = {
+      isRunning: localIsRunning,
+      startTime: now,
+      elapsed: 0,
+    };
+    await saveTimerToStorage(habit!._id, newState);
+
+    // 3. Best-effort Convex sync
+    update_timer({
+      habit_id: habit!._id,
+      timer_elapsed: 0,
+      timer_start_time: now,
+    }).catch((err) => console.error("Restart cloud sync failed", err));
+
+    showCustomAlert("Timer restarted", "success");
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -222,6 +345,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       setLocalIsRunning(false);
       setLocalStartTime(null);
       setLocalElapsed(0);
+
+      // Clear local storage for this habit's timer
+      await clearTimerFromStorage(habit._id);
 
       await update_timer({
         habit_id: habit._id,
@@ -315,70 +441,111 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           </Text>
         </View>
 
-          {/* Timer Display */}
+        {/* Timer Display */}
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <View
             style={{
-              flex: 1,
+              width: 280,
+              height: 280,
               justifyContent: "center",
               alignItems: "center",
+              position: "relative",
             }}
           >
-            <View
-              style={{
-                width: 280,
-                height: 280,
+            {/* SVG Progress Circle */}
+            <Svg width={280} height={280} style={{ position: "absolute" }}>
+              <Circle
+                cx={140}
+                cy={140}
+                r={132}
+                stroke={Colors[theme].border}
+                strokeWidth={12}
+                fill={Colors[theme].surface}
+              />
+              <Circle
+                cx={140}
+                cy={140}
+                r={132}
+                stroke={habit.theme ?? Colors[theme].primary}
+                strokeWidth={12}
+                strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
+                strokeDashoffset={
+                  2 *
+                  Math.PI *
+                  132 *
+                  (1 -
+                    ((habit.duration ?? 0) * 60 > 0
+                      ? Math.min(
+                          displaySeconds / ((habit.duration ?? 0) * 60),
+                          1,
+                        )
+                      : 1))
+                }
+                strokeLinecap="round"
+                fill="none"
+                transform="rotate(-90 140 140)"
+              />
+            </Svg>
+
+            <View style={{ justifyContent: "center", alignItems: "center" }}>
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: displaySeconds >= 3600 ? 46 : 64,
+                  color: Colors[theme].text,
+                }}
+              >
+                {formatTime(displaySeconds)}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "NunitoMedium",
+                  fontSize: 16,
+                  color: Colors[theme].text_secondary,
+                  marginTop: 10,
+                }}
+              >
+                {isRunning ? "In Progress..." : "Paused"}
+              </Text>
+            </View>
+
+            {/* Absolute Restart Button at Bottom Right of the Circle */}
+            <Pressable
+              onPress={handleRestart}
+              style={({ pressed }) => ({
+                position: "absolute",
+                bottom: 0,
+                right: -20,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: Colors[theme].surface,
+                borderWidth: 2,
+                borderColor: Colors[theme].border,
                 justifyContent: "center",
                 alignItems: "center",
-                position: "relative",
-              }}
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 3,
+                elevation: 3,
+                opacity: pressed ? 0.7 : 1,
+              })}
             >
-              {/* SVG Progress Circle */}
-              <Svg width={280} height={280} style={{ position: "absolute" }}>
-                <Circle
-                  cx={140}
-                  cy={140}
-                  r={132}
-                  stroke={Colors[theme].border}
-                  strokeWidth={12}
-                  fill={Colors[theme].surface}
-                />
-                <Circle
-                  cx={140}
-                  cy={140}
-                  r={132}
-                  stroke={habit.theme ?? Colors[theme].primary}
-                  strokeWidth={12}
-                  strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
-                  strokeDashoffset={2 * Math.PI * 132 * (1 - ((habit.duration ?? 0) * 60 > 0 ? Math.min(displaySeconds / ((habit.duration ?? 0) * 60), 1) : 1))}
-                  strokeLinecap="round"
-                  fill="none"
-                  transform="rotate(-90 140 140)"
-                />
-              </Svg>
-
-              <View style={{ justifyContent: "center", alignItems: "center" }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 64,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  {formatTime(displaySeconds)}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoMedium",
-                    fontSize: 16,
-                    color: Colors[theme].text_secondary,
-                    marginTop: 10,
-                  }}
-                >
-                  {isRunning ? "In Progress..." : "Paused"}
-                </Text>
-              </View>
-            </View>
+              <Feather
+                name="rotate-ccw"
+                size={18}
+                color={Colors[theme].text_secondary}
+              />
+            </Pressable>
           </View>
+        </View>
 
         {/* Control Buttons */}
         <View style={{ gap: 15 }}>
@@ -442,6 +609,139 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           </Pressable>
         </View>
       </BottomSheetView>
+
+      {/* Mini Custom Confirmation Modal for Restarting */}
+      <Modal
+        visible={restartModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRestartModalVisible(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+          }}
+          onPress={() => setRestartModalVisible(false)}
+        >
+          <Pressable
+            style={{
+              width: "85%",
+              backgroundColor: Colors[theme].surface,
+              borderRadius: 20,
+              padding: 24,
+              borderWidth: 2,
+              borderColor: Colors[theme].border,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 10,
+              elevation: 5,
+            }}
+            onPress={() => {}}
+          >
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "NunitoExtraBold",
+                  fontSize: 20,
+                  color: Colors[theme].text,
+                }}
+              >
+                Restart Timer
+              </Text>
+              <Pressable
+                onPress={() => setRestartModalVisible(false)}
+                style={{
+                  padding: 4,
+                  borderRadius: 20,
+                }}
+              >
+                <Feather name="x" size={20} color={Colors[theme].text_secondary} />
+              </Pressable>
+            </View>
+
+            {/* Description */}
+            <Text
+              style={{
+                fontFamily: "NunitoRegular",
+                fontSize: 16,
+                color: Colors[theme].text_secondary,
+                lineHeight: 22,
+                marginBottom: 24,
+              }}
+            >
+              Are you sure you want to restart the timer? This will reset the elapsed time back to 0.
+            </Text>
+
+            {/* Action Row */}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 12,
+              }}
+            >
+              <Pressable
+                onPress={() => setRestartModalVisible(false)}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: Colors[theme].border,
+                  backgroundColor: Colors[theme].surface,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    fontSize: 15,
+                    color: Colors[theme].text_secondary,
+                  }}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={confirmRestart}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  backgroundColor: habit.theme ?? Colors[theme].primary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoExtraBold",
+                    fontSize: 15,
+                    color: "#fff",
+                  }}
+                >
+                  Restart
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </BottomSheet>
   );
 };

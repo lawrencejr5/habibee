@@ -7,6 +7,7 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { Text as ThemedText } from "@/components/Themed";
 import Colors from "@/constants/Colors";
@@ -49,6 +50,7 @@ export const HabitCard: React.FC<{
   streak,
   habitType,
   themeColor,
+  id,
   onFireIconPress,
   onCardPress,
   timer_start_time,
@@ -66,12 +68,40 @@ export const HabitCard: React.FC<{
 
   const haptics = useHapitcs();
 
+  // Local timer state — AsyncStorage is the source of truth.
+  // Falls back to Convex props (timer_start_time / timer_elapsed) if no local state exists.
+  const [localStartTime, setLocalStartTime] = useState<number | null>(
+    timer_start_time ?? null,
+  );
+  const [localElapsed, setLocalElapsed] = useState<number>(timer_elapsed ?? 0);
+
+  useEffect(() => {
+    const loadFromStorage = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(`habibee:timer:${id}`);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          setLocalStartTime(stored.startTime ?? null);
+          setLocalElapsed(stored.elapsed ?? 0);
+        } else {
+          // No local state — fall back to Convex props
+          setLocalStartTime(timer_start_time ?? null);
+          setLocalElapsed(timer_elapsed ?? 0);
+        }
+      } catch {
+        setLocalStartTime(timer_start_time ?? null);
+        setLocalElapsed(timer_elapsed ?? 0);
+      }
+    };
+    loadFromStorage();
+  }, [id, timer_start_time, timer_elapsed]);
+
   const [currentTime, setCurrentTime] = useState<number>(0);
 
   const calculateCurrentTime = () => {
-    const elapsed = timer_elapsed || 0;
-    const currentSession = timer_start_time
-      ? Math.floor((Date.now() - timer_start_time) / 1000)
+    const elapsed = localElapsed;
+    const currentSession = localStartTime
+      ? Math.floor((Date.now() - localStartTime) / 1000)
       : 0;
     const total = elapsed + currentSession;
     const maxSeconds = (target_duration || 0) * 60;
@@ -79,7 +109,7 @@ export const HabitCard: React.FC<{
     return Math.min(total, maxSeconds);
   };
 
-  const isRunning = !!timer_start_time;
+  const isRunning = !!localStartTime;
   useEffect(() => {
     // Periodic update if the timer is running
     setCurrentTime(calculateCurrentTime());
@@ -87,13 +117,12 @@ export const HabitCard: React.FC<{
     if (isRunning) {
       interval = setInterval(() => {
         setCurrentTime(calculateCurrentTime());
-        // console.log(calculateCurrentTime());
       }, 1000);
       return () => clearInterval(interval);
     } else {
       setCurrentTime(calculateCurrentTime());
     }
-  }, [timer_start_time, timer_elapsed, target_duration, isRunning]);
+  }, [localStartTime, localElapsed, target_duration, isRunning]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
