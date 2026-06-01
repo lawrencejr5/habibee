@@ -215,7 +215,7 @@ export default function Home() {
                 </span>
               </a>
               <a
-                href="https://apps.apple.com"
+                href="https://apps.apple.com/dz/app/habibee/id6769607092"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${styles.storeBtn} ${styles.storeBtnSecondary}`}
