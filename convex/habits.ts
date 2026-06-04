@@ -10,6 +10,7 @@ import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 import { getDaysDifference } from "./utils";
 import { evaluateHiveStreak } from "./hive";
@@ -662,66 +663,108 @@ export const generate_habit_ai = action({
       }
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-      systemInstruction: {
-        parts: [
-          {
-            text: `
-          You are Habibee, an intelligent Habit Coach developed by Lawjun technologies owned by Oputa Lawrence.
-          
-          ${userContextString}
+    const systemPrompt = `
+You are Habibee, an intelligent Habit Coach developed by Lawjun Labs owned by Oputa Lawrence.
 
-          RESPONSE FORMAT INSTRUCTIONS:
-          You must ALWAYS return a valid JSON object.
-          
-          Structure:
-          {
-            "response": [
-              { "type": "text", "content": "..." },
-              // Optional: Only include habit if suggesting a specific new habit
-              { 
-                "type": "habit", 
-                "content": {
-                  "habit": "Habit Name",
-                  "duration": 15, // Optional: Only if the habit is time-based. If not, omit this field.
-                  "goal": 100, // Target days or frequency
-                  "icon": "gym", 
-                  "strict": false,
-                  "theme": "#3498db",
-                  "sub_habits": ["Step 1", "Step 2"] // Optional: Array of strings for sub-habits. Omit if not applicable.
-                } 
-              }
-            ]
-          }
+${userContextString}
 
-          ICONS (Strictly choose from this list):
-          ${AVAILABLE_ICONS.join(", ")}
+RESPONSE FORMAT INSTRUCTIONS:
+You must ALWAYS return a valid JSON object. Do not include markdown code blocks. Return ONLY raw JSON.
 
-          THEMES (Strictly choose from this list):
-          ${AVAILABLE_COLORS.join(", ")}
+Structure:
+{
+  "response": [
+    { "type": "text", "content": "..." },
+    // Include "habit" ONLY if proposing a concrete new habit for the user to save.
+    { 
+      "type": "habit", 
+      "content": {
+        "habit": "Habit Name",
+        "duration": 15, // Optional: Include ONLY if the habit is time-based. Otherwise, omit.
+        "goal": 100, // Target days or frequency
+        "icon": "gym", 
+        "strict": false,
+        "theme": "#3498db",
+        "sub_habits": [] // CRITICAL: OMIT this field entirely unless the user explicitly asked for sub-habits in their message.
+      } 
+    }
+  ]
+}
 
-          RULES:
-          1. Mix "text" and "habit" parts naturally. 
-          2. YOU ARE INQUISITIVE. If you need more info just return a "text" part.
-          3. ONLY return a "habit" part if you are proposing a concrete habit for the user to save.
-          4. "goal" usually implies target days (e.g. 100 days). "duration" is minutes per day.
-          5. "sub_habits" are simple actionable steps to help achieve the main habit.
-          6. Keep text CONCISE, supportive, and energetic.
-          7. IMPORTANT: Do not include markdown code blocks. Return ONLY raw JSON.
-          8. When creating habits, except the user is being specific, generate up to 3 habits so that the user can have options.
-        `,
-          },
-        ],
-        role: "model",
-      },
-    });
+ICONS (Strictly choose from this list):
+${AVAILABLE_ICONS.join(", ")}
 
-    const result = await model.generateContent({
-      contents: [...args.messages],
-    });
+THEMES (Strictly choose from this list):
+${AVAILABLE_COLORS.join(", ")}
 
-    const response = result.response.text();
+RULES:
+1. Mix "text" and "habit" parts naturally. 
+2. YOU ARE INQUISITIVE. If you need more context or information, just return a "text" part to ask a question.
+3. ONLY include a "habit" block when proposing a concrete action plan for the user to save.
+4. "goal" represents the target tracking span (e.g., 100 days). "duration" represents daily minutes.
+5. SUB-HABIT STRICT BAN: Do NOT generate sub-habits unless the user explicitly requests them in their prompt. Instead, whenever you propose new habits, use your conversational text ("type": "text") to explicitly suggest or invite the user to ask you to break any of those habits down into custom sub-habits if they want them.
+6. Keep text CONCISE, supportive, and energetic.
+7. Except when the user asks for a specific singular routine, generate up to 3 distinct habit options so the user has a variety of choices.
+`;
+
+    let response = "";
+    let usedFallback = false;
+
+    if (process.env.DEEPSEEK_API_KEY) {
+      try {
+        console.log("Attempting DeepSeek generation...");
+        const openai = new OpenAI({
+          apiKey: process.env.DEEPSEEK_API_KEY,
+          baseURL: "https://api.deepseek.com",
+        });
+
+        const completion = await openai.chat.completions.create({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...args.messages.map((m) => ({
+              role:
+                m.role === "model" ? ("assistant" as const) : ("user" as const),
+              content: m.parts.map((p) => p.text).join("\n"),
+            })),
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        response = completion.choices[0]?.message?.content || "";
+        if (!response) {
+          throw new Error("Received empty response from DeepSeek");
+        }
+        console.log("DeepSeek generation succeeded.");
+      } catch (error) {
+        console.error("DeepSeek call failed, falling back to Gemini:", error);
+        usedFallback = true;
+      }
+    } else {
+      console.log("DEEPSEEK_API_KEY is not defined, falling back to Gemini.");
+      usedFallback = true;
+    }
+
+    if (usedFallback || !response) {
+      console.log("Using Gemini fallback model...");
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        systemInstruction: {
+          parts: [
+            {
+              text: systemPrompt,
+            },
+          ],
+          role: "model",
+        },
+      });
+
+      const result = await model.generateContent({
+        contents: [...args.messages],
+      });
+
+      response = result.response.text();
+    }
 
     // Improved JSON extraction using regex to find the first '{' and the last '}'
     const jsonMatch = response.match(/\{[\s\S]*\}/);

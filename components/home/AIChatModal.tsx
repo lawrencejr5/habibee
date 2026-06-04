@@ -105,6 +105,8 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
       typeof customInput === "string" ? customInput : input;
     if (!messageContent.trim()) return;
 
+    Keyboard.dismiss();
+
     setGenerating(true);
     haptics.impact();
     const startTime = Date.now();
