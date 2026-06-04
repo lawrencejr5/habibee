@@ -40,14 +40,14 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
 
   const subHabits = useQuery(
     api.sub_habits.get_sub_habits,
-    habit ? { parent_habit_id: habit._id } : "skip"
+    habit ? { parent_habit_id: habit._id } : "skip",
   );
 
   const snapPoints = useMemo(() => {
     if (subHabits && subHabits.length > 0) {
-      return ["47%"];
+      return ["45%"];
     }
-    return ["38%"];
+    return ["40%"];
   }, [subHabits]);
 
   useEffect(() => {
@@ -143,96 +143,42 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
           </Text>
         </View>
 
-        {/* Clickable Sub-habits progress card if any exist */}
-        {subHabits && subHabits.length > 0 && (
-          <Pressable
-            onPress={() => {
-              haptics.impact("light");
-              onToggleExpand?.();
-              bottomSheetRef.current?.close();
-            }}
-            style={({ pressed }) => ({
-              backgroundColor: Colors[theme].surface,
-              borderRadius: 16,
-              padding: 14,
-              borderWidth: 1.5,
-              borderColor: pressed ? themeColor : Colors[theme].border,
-              marginVertical: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            })}
-          >
-            <View style={{ flex: 1 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: Colors[theme].text,
-                  }}
-                >
-                  Sub-habits Progress
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 12,
-                    color: themeColor,
-                  }}
-                >
-                  {subHabits.filter((sh) => sh.completed).length}/{subHabits.length} Completed
-                </Text>
-              </View>
-
-              {/* Progress Bar */}
-              <View
-                style={{
-                  height: 6,
-                  backgroundColor: Colors[theme].border,
-                  borderRadius: 3,
-                  overflow: "hidden",
-                }}
-              >
-                <View
-                  style={{
-                    height: "100%",
-                    backgroundColor: themeColor,
-                    width: `${(subHabits.filter((sh) => sh.completed).length / subHabits.length) * 100}%`,
-                    borderRadius: 3,
-                  }}
-                />
-              </View>
-            </View>
-
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: themeColor + "15",
-                justifyContent: "center",
-                alignItems: "center",
+        {/* Actions */}
+        <View style={{ gap: 4 }}>
+          {/* Toggle Expand Sub-habits */}
+          {subHabits && subHabits.length > 0 && (
+            <Pressable
+              onPress={() => {
+                haptics.impact("light");
+                onClose();
+                onToggleExpand?.();
               }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 30,
+                paddingVertical: 14,
+                paddingHorizontal: 4,
+                borderRadius: 14,
+                backgroundColor: pressed ? Colors[theme].border : "transparent",
+              })}
             >
               <Feather
                 name={isExpanded ? "eye-off" : "eye"}
                 size={18}
-                color={themeColor}
+                color={Colors[theme].text}
               />
-            </View>
-          </Pressable>
-        )}
-
-        {/* Actions */}
-        <View style={{ gap: 4 }}>
+              <Text
+                style={{
+                  fontFamily: "NunitoBold",
+                  fontSize: 15,
+                  color: Colors[theme].text,
+                }}
+              >
+                {isExpanded ? "Hide Sub-habits" : "Show Sub-habits"}
+              </Text>
+            </Pressable>
+          )}
           {/* Edit */}
           <Pressable
             onPress={() => {
@@ -326,5 +272,3 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
 };
 
 export default HabitContextMenu;
-
-
