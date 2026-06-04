@@ -37,6 +37,7 @@ import { api } from "@/convex/_generated/api";
 import { habitIcons } from "@/data/habits";
 import { usePremium } from "@/context/PremiumContext";
 import UpgradeModal from "@/components/account/UpgradeModal";
+import AnalysisCard, { AnalyticsData } from "@/components/home/AnalysisCard";
 
 interface AIChatModalProps {
   visible: boolean;
@@ -55,7 +56,8 @@ type HabitData = {
 
 type ChatPart =
   | { type: "text"; content: string }
-  | { type: "habit"; content: HabitData };
+  | { type: "habit"; content: HabitData }
+  | { type: "analysis"; content: AnalyticsData };
 
 type AiChatMsgType = {
   role: "user" | "model";
@@ -89,7 +91,9 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         text:
           p.type === "text"
             ? p.content
-            : `[Suggested Habit: ${p.content.habit}]`,
+            : p.type === "habit"
+              ? `[Suggested Habit: ${p.content.habit}]`
+              : "[Progress Analysis]",
       })),
     }));
   };
@@ -1015,6 +1019,18 @@ const ModelChat: FC<{
               />
             );
           }
+
+          if (part.type === "analysis") {
+            return (
+              <AnalysisCard
+                key={index}
+                data={part.content}
+              />
+            );
+          }
+
+          // Only text parts reach here; guard against unexpected types
+          if (part.type !== "text") return null;
 
           const partParsed = parseText(part.content);
           const realLength = partParsed.reduce(

@@ -663,11 +663,37 @@ export const generate_habit_ai = action({
       }
     }
 
+    // Detect if this is an analysis request
+    const lastUserMessage = [...args.messages]
+      .reverse()
+      .find((m) => m.role === "user");
+    const lastText = lastUserMessage?.parts.map((p) => p.text).join(" ") ?? "";
+    const isAnalysisRequest =
+      /\b(analyz|progress|stats?|how am i doing|my data|my habit|overview|report|summary|insight|completion|streak)\b/i.test(
+        lastText,
+      );
+
+    let analyticsData: any = null;
+    let analyticsPromptSection = "";
+
+    if (isAnalysisRequest && userId) {
+      analyticsData = await ctx.runQuery(
+        internal.habits.get_user_analysis_data,
+        { userId },
+      );
+      if (analyticsData) {
+        analyticsPromptSection = `
+ANALYSIS DATA (last 7 days, computed from real user records):
+${JSON.stringify(analyticsData, null, 2)}
+`;
+      }
+    }
+
     const systemPrompt = `
 You are Habibee, an intelligent Habit Coach developed by Lawjun Labs owned by Oputa Lawrence.
 
 ${userContextString}
-
+${analyticsPromptSection}
 RESPONSE FORMAT INSTRUCTIONS:
 You must ALWAYS return a valid JSON object. Do not include markdown code blocks. Return ONLY raw JSON.
 
@@ -680,14 +706,15 @@ Structure:
       "type": "habit", 
       "content": {
         "habit": "Habit Name",
-        "duration": 15, // Optional: Include ONLY if the habit is time-based. Otherwise, omit.
-        "goal": 100, // Target days or frequency
+        "duration": 15,
+        "goal": 100,
         "icon": "gym", 
         "strict": false,
-        "theme": "#3498db",
-        "sub_habits": [] // CRITICAL: OMIT this field entirely unless the user explicitly asked for sub-habits in their message.
+        "theme": "#3498db"
       } 
-    }
+    },
+    // Include "analysis" ONLY when ANALYSIS DATA is provided above.
+    { "type": "analysis", "content": { ...analyticsData verbatim... } }
   ]
 }
 
@@ -705,6 +732,20 @@ RULES:
 5. SUB-HABIT STRICT BAN: Do NOT generate sub-habits unless the user explicitly requests them in their prompt. Instead, whenever you propose new habits, use your conversational text ("type": "text") to explicitly suggest or invite the user to ask you to break any of those habits down into custom sub-habits if they want them.
 6. Keep text CONCISE, supportive, and energetic.
 7. Except when the user asks for a specific singular routine, generate up to 3 distinct habit options so the user has a variety of choices.
+${
+  isAnalysisRequest && analyticsData
+    ? `
+ANALYSIS MODE (these rules OVERRIDE all others for this response):
+- ANALYSIS DATA has been provided above. This is ground-truth computed from the user's real habit records.
+- You MUST structure your JSON response array with exactly THREE parts in this exact order:
+  1. A "text" part with the content exactly like: "Hey [First Name], here's your Habibee report for the last 7 days." (e.g., "Hey Lawrence, here's your Habibee report for the last 7 days.", using the user's first name from their fullname in the USER CONTEXT). Do not include any other feedback text in this first part.
+  2. An "analysis" part with "content" set to the EXACT analyticsData object provided — copy it verbatim. Do NOT alter, summarize, or fabricate any numbers.
+  3. A second "text" part containing 2–4 sentences of warm, personalized coaching insight referencing specific numbers from the data (e.g., completion rate, best streak, preferred time window).
+- Do NOT include any "habit" parts in this response.
+- The "analysis" content shape must be: { dailyCompletions, completionRate, bestStreak, currentStreak, mostConsistentHabit, totalCompletions, preferredTimeWindow, timeWindowBreakdown, habitBreakdown }
+`
+    : ""
+}
 `;
 
     let response = "";
@@ -894,6 +935,114 @@ export const get_user_context_data = internalQuery({
       streak: user.streak || 0,
       totalHabits: habits.length,
       habitsSummary: habitsSummary || "No active habits yet.",
+    };
+  },
+});
+
+export const get_user_analysis_data = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) return null;
+
+    const activeHabits = (
+      await ctx.db
+        .query("habits")
+        .withIndex("by_user", (q) => q.eq("user", args.userId))
+        .collect()
+    ).filter((h) => !h.archived);
+
+    // Build the last 7 days (YYYY-MM-DD strings, from 6 days ago to today)
+    const today = new Date();
+    const sevenDays: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      sevenDays.push(d.toISOString().split("T")[0]);
+    }
+
+    const startDate = sevenDays[0];
+    const endDate = sevenDays[6];
+
+    // Fetch all entries in range for this user
+    const entries = await ctx.db
+      .query("habit_enteries")
+      .withIndex("by_user_date", (q) =>
+        q.eq("user", args.userId).gte("date", startDate).lte("date", endDate),
+      )
+      .collect();
+
+    const completedEntries = entries.filter((e) => e.status === "completed");
+
+    // Daily completion counts
+    const totalHabits = activeHabits.length;
+    const dailyCompletions = sevenDays.map((date) => {
+      const count = completedEntries.filter((e) => e.date === date).length;
+      return { date, count, total: totalHabits };
+    });
+
+    // Overall completion rate over 7 days
+    const maxPossible = totalHabits * 7;
+    const totalCompletions = completedEntries.length;
+    const completionRate =
+      maxPossible > 0
+        ? Math.round((totalCompletions / maxPossible) * 100)
+        : 0;
+
+    // Best and current streak from user habits
+    const bestStreak = activeHabits.reduce(
+      (max, h) => Math.max(max, h.highest_streak ?? 0),
+      0,
+    );
+    const currentStreak = user.streak ?? 0;
+
+    // Most consistent habit (highest current_streak)
+    const topHabit = activeHabits.reduce<typeof activeHabits[0] | null>(
+      (best, h) =>
+        !best || (h.current_streak ?? 0) > (best.current_streak ?? 0)
+          ? h
+          : best,
+      null,
+    );
+    const mostConsistentHabit = topHabit
+      ? { name: topHabit.habit, streak: topHabit.current_streak ?? 0 }
+      : null;
+
+    // Time-of-day breakdown using _creationTime (in ms, UTC)
+    const timeWindowBreakdown = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+    for (const e of completedEntries) {
+      const hour = new Date(e._creationTime).getHours(); // local hour via UTC (server)
+      if (hour >= 5 && hour < 12) timeWindowBreakdown.morning++;
+      else if (hour >= 12 && hour < 17) timeWindowBreakdown.afternoon++;
+      else if (hour >= 17 && hour < 21) timeWindowBreakdown.evening++;
+      else timeWindowBreakdown.night++;
+    }
+    const maxWindow = Math.max(...Object.values(timeWindowBreakdown));
+    let preferredTimeWindow: string | null = null;
+    if (maxWindow > 0) {
+      preferredTimeWindow = (
+        Object.entries(timeWindowBreakdown) as [string, number][]
+      ).find(([, v]) => v === maxWindow)![0];
+    }
+
+    // Per-habit breakdown for the 7-day period
+    const habitBreakdown = activeHabits.map((h) => {
+      const completed = completedEntries.filter(
+        (e) => e.habit === h._id,
+      ).length;
+      return { habit: h.habit, completed, total: 7 };
+    });
+
+    return {
+      dailyCompletions,
+      completionRate,
+      bestStreak,
+      currentStreak,
+      mostConsistentHabit,
+      totalCompletions,
+      preferredTimeWindow,
+      timeWindowBreakdown,
+      habitBreakdown,
     };
   },
 });
