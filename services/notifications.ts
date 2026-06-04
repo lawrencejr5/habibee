@@ -127,3 +127,21 @@ export async function cancelAllHabitReminders() {
     console.warn("Failed to cancel parent habit reminders:", error);
   }
 }
+
+/**
+ * Send an immediate local notification when a habit timer completes.
+ */
+export async function sendTimerCompletedNotification(habitName: string) {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Timer is up! ⏰",
+        body: `Your timer for "${habitName}" has finished. Great job!`,
+        sound: "habibee_alert.wav",
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.warn("Failed to send timer completed notification:", error);
+  }
+}

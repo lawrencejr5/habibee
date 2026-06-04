@@ -31,6 +31,7 @@ import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
+import { sendTimerCompletedNotification } from "../../services/notifications";
 
 interface TaskTimerModalProps {
   visible: boolean;
@@ -113,6 +114,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const [localIsRunning, setLocalIsRunning] = useState(false);
   const [localStartTime, setLocalStartTime] = useState<number | null>(null);
   const [localElapsed, setLocalElapsed] = useState(0);
+  const notificationSentRef = useRef(false);
 
   // Initialize timer — AsyncStorage is the primary source of truth.
   // Convex data is used only as a fallback (e.g. first install, new device).
@@ -127,6 +129,21 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalIsRunning(stored.isRunning);
         setLocalStartTime(stored.startTime);
         setLocalElapsed(stored.elapsed);
+
+        if (stored.isRunning) {
+          const currentSession = stored.startTime
+            ? Math.floor((Date.now() - stored.startTime) / 1000)
+            : 0;
+          const currentTotal = stored.elapsed + currentSession;
+          const maxSeconds = (habit.duration ?? 0) * 60;
+          if (maxSeconds > 0 && currentTotal >= maxSeconds) {
+            notificationSentRef.current = true;
+          } else {
+            notificationSentRef.current = false;
+          }
+        } else {
+          notificationSentRef.current = false;
+        }
         return;
       }
 
@@ -146,6 +163,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalIsRunning(true);
         setLocalStartTime(now);
         setLocalElapsed(0);
+        notificationSentRef.current = false;
 
         // Persist locally first, then sync to cloud
         await saveTimerToStorage(habit._id, newState);
@@ -158,6 +176,21 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalIsRunning(isTimerActive);
         setLocalStartTime(start!);
         setLocalElapsed(elapsed);
+
+        if (isTimerActive) {
+          const currentSession = start
+            ? Math.floor((Date.now() - start) / 1000)
+            : 0;
+          const currentTotal = elapsed + currentSession;
+          const maxSeconds = (habit.duration ?? 0) * 60;
+          if (maxSeconds > 0 && currentTotal >= maxSeconds) {
+            notificationSentRef.current = true;
+          } else {
+            notificationSentRef.current = false;
+          }
+        } else {
+          notificationSentRef.current = false;
+        }
 
         // Persist the Convex state locally so future opens use AsyncStorage
         await saveTimerToStorage(habit._id, {
@@ -206,6 +239,19 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     }
     return () => clearInterval(interval);
   }, [localIsRunning, localStartTime, localElapsed, visible]);
+
+  // Send local notification when timer completes
+  useEffect(() => {
+    if (!habit || !localIsRunning) return;
+
+    const maxSeconds = (habit.duration ?? 0) * 60;
+    if (maxSeconds > 0 && displaySeconds >= maxSeconds) {
+      if (!notificationSentRef.current) {
+        notificationSentRef.current = true;
+        sendTimerCompletedNotification(habit.habit);
+      }
+    }
+  }, [displaySeconds, localIsRunning, habit]);
 
   useEffect(() => {
     if (visible) {
@@ -268,6 +314,14 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       setLocalIsRunning(true);
       setLocalStartTime(now);
 
+      // Reset notificationSentRef when starting/resuming
+      const maxSeconds = (habit.duration ?? 0) * 60;
+      if (maxSeconds > 0 && currentTotal >= maxSeconds) {
+        notificationSentRef.current = true;
+      } else {
+        notificationSentRef.current = false;
+      }
+
       // Persist locally first (guaranteed even if offline)
       await saveTimerToStorage(habit._id, newState);
 
@@ -294,6 +348,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     setLocalStartTime(now);
     setLocalElapsed(0);
     setDisplaySeconds(0);
+    notificationSentRef.current = false;
 
     // 2. Persist to AsyncStorage
     const newState: TimerStorageState = {
