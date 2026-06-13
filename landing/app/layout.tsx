@@ -23,8 +23,8 @@ export const metadata: Metadata = {
     "Lawjun Labs",
   ],
   icons: {
-    icon: "/images/icon-nobg-white.png",
-    apple: "/images/icon-nobg-white.png",
+    icon: "/images/habibee-black.png",
+    apple: "/images/habibee-black.png",
   },
   openGraph: {
     title: "Habibee — Keep Streaks, Build Better Habits",

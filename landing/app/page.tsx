@@ -48,7 +48,7 @@ const FEATURES = [
 const FAQS = [
   {
     q: "Is Habibee free to use?",
-    a: "Yes! Habibee is completely free to download and use. All core features including habit tracking, sub-habits, streaks, and Hive are available at no cost. Habibee AI is also free to try.",
+    a: "Yes! Habibee is free to download, and the vast majority of its core features—such as tracking daily habits, sub-habits, managing streaks, and Hives—are completely free to use. You only pay for premium for advanced features like Habibee AI.",
   },
   {
     q: "How does the streak system work?",
@@ -63,8 +63,8 @@ const FAQS = [
     a: "Absolutely. You can set custom reminder times for each habit and even for individual sub-habits. Habibee sends you push notifications so you never miss a beat.",
   },
   {
-    q: "What platforms is Habibee available on?",
-    a: "Habibee is available on both Android (Google Play Store) and iOS (App Store). Your data syncs seamlessly across devices.",
+    q: "How do streak freezes work?",
+    a: "You are given 2 streak freezes every month. If you miss a day for any of your habits, a streak freeze will automatically be applied to protect your progress and prevent your streak from resetting. This can be used up to twice a month to keep your momentum going.",
   },
   {
     q: "How does Habibee AI help me?",
@@ -109,14 +109,6 @@ export default function Home() {
           <Link href="/terms" className={styles.navLink}>
             Terms &amp; Conditions
           </Link>
-          <a
-            href="https://play.google.com/store/apps/details?id=com.lawrencejr.habibee"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.navCta}
-          >
-            Download App
-          </a>
         </div>
 
         {/* Mobile hamburger */}
