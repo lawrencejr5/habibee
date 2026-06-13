@@ -16,6 +16,7 @@ import { HabitType } from "@/constants/Types";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
+import { cancelTimerCompletedNotification } from "../../services/notifications";
 
 type DeleteHabitModalProps = {
   visible: boolean;
@@ -40,6 +41,7 @@ const DeleteHabitModal: React.FC<DeleteHabitModalProps> = ({
     haptics.impact();
     try {
       await delete_habit({ habit_id: habit._id });
+      await cancelTimerCompletedNotification(habit._id);
       showCustomAlert("Habit deleted successfully", "success");
       onClose();
     } catch (error) {

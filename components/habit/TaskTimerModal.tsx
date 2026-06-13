@@ -31,7 +31,10 @@ import { api } from "@/convex/_generated/api";
 import { HabitType } from "@/constants/Types";
 import { useCustomAlert } from "@/context/AlertContext";
 import { useTheme } from "@/context/ThemeContext";
-import { sendTimerCompletedNotification } from "../../services/notifications";
+import {
+  scheduleTimerCompletedNotification,
+  cancelTimerCompletedNotification,
+} from "../../services/notifications";
 
 interface TaskTimerModalProps {
   visible: boolean;
@@ -140,6 +143,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             notificationSentRef.current = true;
           } else {
             notificationSentRef.current = false;
+            // Schedule background notification
+            const remainingSeconds = maxSeconds - currentTotal;
+            await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
           }
         } else {
           notificationSentRef.current = false;
@@ -165,6 +171,12 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalElapsed(0);
         notificationSentRef.current = false;
 
+        // Schedule background notification
+        const maxSeconds = (habit.duration ?? 0) * 60;
+        if (maxSeconds > 0) {
+          await scheduleTimerCompletedNotification(habit._id, habit.habit, maxSeconds);
+        }
+
         // Persist locally first, then sync to cloud
         await saveTimerToStorage(habit._id, newState);
         update_timer({
@@ -187,6 +199,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             notificationSentRef.current = true;
           } else {
             notificationSentRef.current = false;
+            // Schedule background notification
+            const remainingSeconds = maxSeconds - currentTotal;
+            await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
           }
         } else {
           notificationSentRef.current = false;
@@ -240,18 +255,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     return () => clearInterval(interval);
   }, [localIsRunning, localStartTime, localElapsed, visible]);
 
-  // Send local notification when timer completes
-  useEffect(() => {
-    if (!habit || !localIsRunning) return;
 
-    const maxSeconds = (habit.duration ?? 0) * 60;
-    if (maxSeconds > 0 && displaySeconds >= maxSeconds) {
-      if (!notificationSentRef.current) {
-        notificationSentRef.current = true;
-        sendTimerCompletedNotification(habit.habit);
-      }
-    }
-  }, [displaySeconds, localIsRunning, habit]);
 
   useEffect(() => {
     if (visible) {
@@ -297,6 +301,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       // Persist locally first (guaranteed even if offline)
       await saveTimerToStorage(habit._id, newState);
 
+      // Cancel background notification
+      await cancelTimerCompletedNotification(habit._id);
+
       // Best-effort cloud sync
       update_timer({
         habit_id: habit._id,
@@ -320,6 +327,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         notificationSentRef.current = true;
       } else {
         notificationSentRef.current = false;
+        // Schedule background notification
+        const remainingSeconds = maxSeconds - currentTotal;
+        await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
       }
 
       // Persist locally first (guaranteed even if offline)
@@ -350,7 +360,15 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     setDisplaySeconds(0);
     notificationSentRef.current = false;
 
-    // 2. Persist to AsyncStorage
+    // 2. Schedule or cancel background notification
+    if (localIsRunning) {
+      const maxSeconds = (habit!.duration ?? 0) * 60;
+      await scheduleTimerCompletedNotification(habit!._id, habit!.habit, maxSeconds);
+    } else {
+      await cancelTimerCompletedNotification(habit!._id);
+    }
+
+    // 3. Persist to AsyncStorage
     const newState: TimerStorageState = {
       isRunning: localIsRunning,
       startTime: now,
@@ -358,7 +376,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     };
     await saveTimerToStorage(habit!._id, newState);
 
-    // 3. Best-effort Convex sync
+    // 4. Best-effort Convex sync
     update_timer({
       habit_id: habit!._id,
       timer_elapsed: 0,
@@ -400,6 +418,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       setLocalIsRunning(false);
       setLocalStartTime(null);
       setLocalElapsed(0);
+
+      // Cancel background notification
+      await cancelTimerCompletedNotification(habit._id);
 
       // Clear local storage for this habit's timer
       await clearTimerFromStorage(habit._id);

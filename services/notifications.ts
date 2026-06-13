@@ -145,3 +145,49 @@ export async function sendTimerCompletedNotification(habitName: string) {
     console.warn("Failed to send timer completed notification:", error);
   }
 }
+
+const TIMER_COMPLETED_PREFIX = "timer-completed-";
+
+/**
+ * Schedule a local notification to fire when the habit timer completes.
+ */
+export async function scheduleTimerCompletedNotification(
+  habitId: string,
+  habitName: string,
+  seconds: number,
+) {
+  if (seconds <= 0) return;
+  try {
+    // Cancel any existing scheduled notification for this habit first
+    await cancelTimerCompletedNotification(habitId);
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: `${TIMER_COMPLETED_PREFIX}${habitId}`,
+      content: {
+        title: "Timer is up! ⏰",
+        body: `Your timer for "${habitName}" has finished. Great job!`,
+        sound: "habibee_alert.wav",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds,
+        channelId: "habibee-alerts",
+      },
+    });
+  } catch (error) {
+    console.warn("Failed to schedule timer completed notification:", error);
+  }
+}
+
+/**
+ * Cancel the scheduled timer completed notification for a habit.
+ */
+export async function cancelTimerCompletedNotification(habitId: string) {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(
+      `${TIMER_COMPLETED_PREFIX}${habitId}`,
+    );
+  } catch (error) {
+    console.warn("Failed to cancel timer completed notification:", error);
+  }
+}
