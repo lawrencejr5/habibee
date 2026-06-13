@@ -28,7 +28,7 @@ export const DEFAULT_COLORS = [
   "#9b59b6",
   "#e74c3c",
   "#3498db",
-  "#10947aff",
+  "#10947a",
   "#f1c40f",
   "#2ecc71",
   "#e91e63",
@@ -46,7 +46,7 @@ export default function IconColorPicker({
   const haptics = useHapitcs();
 
   const [color, setColor] = React.useState<string>(
-    selectedColor || DEFAULT_COLORS[0]
+    selectedColor || DEFAULT_COLORS[0],
   );
   const [selectedIconIndex, setSelectedIconIndex] = React.useState<number>(0);
 
@@ -86,7 +86,7 @@ export default function IconColorPicker({
               borderColor: Colors[theme].border,
             },
           ]}
-          onPress={() => { }}
+          onPress={() => {}}
         >
           <View style={styles.headerRow}>
             <Text
@@ -138,7 +138,11 @@ export default function IconColorPicker({
                 onPress={() => setColor(c)}
                 style={[
                   styles.swatch,
-                  { backgroundColor: c, borderWidth: color === c ? 2 : 0, borderColor: Colors[theme].text },
+                  {
+                    backgroundColor: c,
+                    borderWidth: color === c ? 2 : 0,
+                    borderColor: Colors[theme].text,
+                  },
                 ]}
               />
             ))}
