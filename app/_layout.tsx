@@ -8,7 +8,7 @@ import { router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import CustomSplash from "./splashscreen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { AppState, Linking } from "react-native";
 import "react-native-url-polyfill/auto";
 
@@ -153,11 +153,18 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
     };
   }, [isAuthenticated]);
 
-  // Handle Splash Screen hiding
-  useEffect(() => {
-    // Hide the native splash screen immediately so our CustomSplash is shown
+  // Handle Splash Screen hiding.
+  // We only call hideAsync() from inside the CustomSplash onLayout callback
+  // (via handleSplashReady below) so the native splash is removed only AFTER
+  // the custom splash has fully painted — this eliminates the blank-frame glitch.
+  const splashHidden = useRef(false);
+  const handleSplashReady = useCallback(() => {
+    if (splashHidden.current) return;
+    splashHidden.current = true;
     SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
+  useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
@@ -190,7 +197,7 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
 
   // Show Custom Splash until fonts load AND Auth determines state
   if (!loaded || showSplash || hasSeenOnboarding === null) {
-    return <CustomSplash />;
+    return <CustomSplash onReady={handleSplashReady} />;
   }
 
   return (
