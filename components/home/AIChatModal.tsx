@@ -281,13 +281,14 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         }}
       >
         <BottomSheetView style={{ flex: 1, height: "100%" }}>
-          <View
-            style={{
-              flex: 1,
-              height: "100%",
-              backgroundColor: Colors[theme].background,
-            }}
-          >
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+            <View
+              style={{
+                flex: 1,
+                height: "100%",
+                backgroundColor: Colors[theme].background,
+              }}
+            >
             {/* Header */}
             <View
               style={{
@@ -344,6 +345,8 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             <ScrollView
               ref={scrollViewRef}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               contentContainerStyle={{
                 flexGrow: 1,
                 paddingBottom: messages.length > 0 ? 100 + keyboardHeight : 100, // Dynamic space for sticky input + keyboard
@@ -649,7 +652,8 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
                 </Text>
               </View>
             </KeyboardStickyView>
-          </View>
+            </View>
+          </Pressable>
         </BottomSheetView>
       </BottomSheet>
       <UpgradeModal

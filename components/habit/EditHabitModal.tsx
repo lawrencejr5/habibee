@@ -17,6 +17,7 @@ import {
   ScrollView,
   ActivityIndicator,
   BackHandler,
+  Keyboard,
 } from "react-native";
 
 import BottomSheet, {
@@ -169,10 +170,13 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       }}
     >
       <BottomSheetView style={{ flex: 1, paddingHorizontal: 20 }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 50 }}
-        >
+        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 50 }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
           {/* Header */}
           <View style={{ marginTop: 20 }}>
             <Text
@@ -482,7 +486,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
             )}
           </Pressable>
         </View>
-      </BottomSheetView>
+      </Pressable>
+    </BottomSheetView>
 
       <IconColorPicker
         visible={iconPickerVisible}

@@ -13,6 +13,7 @@ import {
   Text,
   TextInput,
   View,
+  Keyboard,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -99,14 +100,15 @@ const JoinHiveModal: React.FC<JoinHiveModalProps> = ({
 
   return (
     <Modal transparent visible={visible} animationType="slide">
-      <ThemedView
-        style={{
-          flex: 1,
-          paddingTop: insets.top + 10,
-          paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 50,
-        }}
-      >
+      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+        <ThemedView
+          style={{
+            flex: 1,
+            paddingTop: insets.top + 10,
+            paddingHorizontal: 20,
+            paddingBottom: insets.bottom + 50,
+          }}
+        >
         {/* Header */}
         <View
           style={{
@@ -243,7 +245,8 @@ const JoinHiveModal: React.FC<JoinHiveModalProps> = ({
             )}
           </Pressable>
         </KeyboardStickyView>
-      </ThemedView>
+        </ThemedView>
+      </Pressable>
       <CustomAlertPortal />
     </Modal>
   );

@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  Keyboard,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -91,14 +92,15 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
 
   return (
     <Modal transparent visible={visible} animationType="slide">
-      <ThemedView
-        style={{
-          flex: 1,
-          paddingTop: insets.top + 10,
-          paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 50,
-        }}
-      >
+      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+        <ThemedView
+          style={{
+            flex: 1,
+            paddingTop: insets.top + 10,
+            paddingHorizontal: 20,
+            paddingBottom: insets.bottom + 50,
+          }}
+        >
         {/* Header */}
         <View
           style={{
@@ -347,7 +349,8 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
             </Pressable>
           </View>
         )}
-      </ThemedView>
+        </ThemedView>
+      </Pressable>
       <CustomAlertPortal />
     </Modal>
   );

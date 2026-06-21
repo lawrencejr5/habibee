@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
   ScrollView,
+  Keyboard,
 } from "react-native";
 
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -165,14 +166,15 @@ const AddModal: React.FC<{
   return (
     <>
       <Modal transparent visible={visible} animationType="slide">
-        <ThemedView
-          style={{
-            flex: 1,
-            paddingTop: insets.top,
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + 50,
-          }}
-        >
+        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+          <ThemedView
+            style={{
+              flex: 1,
+              paddingTop: insets.top,
+              paddingHorizontal: 20,
+              paddingBottom: insets.bottom + 50,
+            }}
+          >
           <KeyboardStickyView
             style={{ backgroundColor: Colors[theme].background, flex: 1 }}
             offset={{ opened: 250, closed: insets.bottom }}
@@ -210,6 +212,8 @@ const AddModal: React.FC<{
             <ScrollView
               style={{ flex: 1 }}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
             >
               {/* Pick icon */}
               <Pressable
@@ -543,7 +547,8 @@ const AddModal: React.FC<{
               </Text>
             )}
           </Pressable>
-        </ThemedView>
+          </ThemedView>
+        </Pressable>
         <CustomAlertPortal />
       </Modal>
       <IconColorPicker

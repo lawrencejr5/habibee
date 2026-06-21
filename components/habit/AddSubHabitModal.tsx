@@ -9,6 +9,7 @@ import {
   View,
   ScrollView,
   Image,
+  Keyboard,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -161,16 +162,17 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
           }}
         >
           <Pressable style={StyleSheet.absoluteFill} onPress={close} />
-          <ThemedView
-            style={{
-              flex: 1,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              paddingTop: insets.top + 20,
-              paddingHorizontal: 20,
-              paddingBottom: insets.bottom + 30,
-            }}
-          >
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
+            <ThemedView
+              style={{
+                flex: 1,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                paddingTop: insets.top + 20,
+                paddingHorizontal: 20,
+                paddingBottom: insets.bottom + 30,
+              }}
+            >
             {/* Header with Close Button */}
             <View
               style={{
@@ -206,6 +208,8 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
             <ScrollView
               style={{ flex: 1 }}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               contentContainerStyle={{ paddingBottom: 20 }}
             >
               {/* Input Section */}
@@ -545,7 +549,8 @@ const AddSubHabitModal: React.FC<AddSubHabitModalProps> = ({
               setVisible={setUpgradeModalVisible}
             />
           </ThemedView>
-        </View>
+        </Pressable>
+      </View>
       </GestureHandlerRootView>
     </Modal>
   );
