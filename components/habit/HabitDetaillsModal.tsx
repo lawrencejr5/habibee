@@ -218,7 +218,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     }
     setIsRecording(true);
     try {
-      await restore_habit({ habit_id });
+      const today = new Date().toLocaleDateString("en-CA");
+      await restore_habit({ habit_id, today });
       showCustomAlert("Habit restored", "success");
       setVisible(false);
     } catch (error) {

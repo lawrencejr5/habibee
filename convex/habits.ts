@@ -424,7 +424,10 @@ export const archive_habit = mutation({
 });
 
 export const restore_habit = mutation({
-  args: { habit_id: v.id("habits") },
+  args: {
+    habit_id: v.id("habits"),
+    today: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
     if (!user_id) throw new Error("Unauthenticated");
@@ -450,7 +453,7 @@ export const restore_habit = mutation({
     }
 
     let newStreak = habit.current_streak || 0;
-    const today = new Date().toLocaleDateString("en-CA");
+    const today = args.today ?? new Date().toLocaleDateString("en-CA");
 
     if (habit.lastCompleted) {
       const diff = getDaysDifference(habit.lastCompleted, today);
@@ -521,7 +524,10 @@ export const check_streak_and_reset = mutation({
 
     const activeHabits = habits.filter(
       (h) =>
-        h.lastCompleted && h.current_streak > 0 && h.lastCompleted < yesterday,
+        !h.archived &&
+        h.lastCompleted &&
+        h.current_streak > 0 &&
+        h.lastCompleted < yesterday,
     );
 
     let userNeedsFreeze = false;
