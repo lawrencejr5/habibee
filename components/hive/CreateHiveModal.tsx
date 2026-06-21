@@ -58,7 +58,8 @@ const CreateHiveModal: React.FC<CreateHiveModalProps> = ({
     }
     setLoading(true);
     try {
-      const result = await createHive({ name: name.trim() });
+      const today = new Date().toLocaleDateString("en-CA");
+      const result = await createHive({ name: name.trim(), today });
       setCreatedCode(result.code);
       showCustomAlert("Hive created!", "success");
     } catch (err: any) {

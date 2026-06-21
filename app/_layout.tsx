@@ -106,7 +106,10 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
         return;
       }
       const today = new Date().toLocaleDateString("en-CA");
-      await checkStreak({ today });
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterday = yesterdayDate.toLocaleDateString("en-CA");
+      await checkStreak({ today, yesterday });
     } catch (err) {
       console.log(err);
     }

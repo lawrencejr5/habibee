@@ -61,7 +61,8 @@ const JoinHiveModal: React.FC<JoinHiveModalProps> = ({
     }
     setLoading(true);
     try {
-      const result = await joinHive({ code });
+      const today = new Date().toLocaleDateString("en-CA");
+      const result = await joinHive({ code, today });
       showCustomAlert(`Joined "${result.name}"!`, "success");
       setCode("");
       setVisible(false);

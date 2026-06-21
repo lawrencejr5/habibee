@@ -12,7 +12,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 
-import { getDaysDifference } from "./utils";
+import { getDaysDifference, localDateString } from "./utils";
 import { evaluateHiveStreak } from "./hive";
 
 // Available habit icons that can be suggested by AI
@@ -473,7 +473,7 @@ export const restore_habit = mutation({
 });
 
 export const check_streak_and_reset = mutation({
-  args: { today: v.string() },
+  args: { today: v.string(), yesterday: v.string() },
   handler: async (ctx, args) => {
     const user_id = await getAuthUserId(ctx);
     if (!user_id) {
@@ -517,10 +517,8 @@ export const check_streak_and_reset = mutation({
       }
     }
 
-    // Freeze logic
-    const yesterdayDate = new Date(args.today);
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = yesterdayDate.toISOString().split("T")[0];
+    // Freeze logic — use client-supplied yesterday to avoid UTC timezone shift
+    const yesterday = args.yesterday;
 
     const activeHabits = habits.filter(
       (h) =>
@@ -557,8 +555,8 @@ export const check_streak_and_reset = mutation({
       let d_date = new Date(oldest_date_str);
       d_date.setDate(d_date.getDate() + 1);
 
-      while (d_date.toISOString().split("T")[0] <= yesterday) {
-        const d_str = d_date.toISOString().split("T")[0];
+      while (localDateString(d_date) <= yesterday) {
+        const d_str = localDateString(d_date);
 
         const anyMissing =
           activeHabits.some(
@@ -645,6 +643,8 @@ export const generate_habit_ai = action({
         ),
       }),
     ),
+    today: v.string(),
+    utcOffsetMinutes: v.number(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -685,7 +685,7 @@ export const generate_habit_ai = action({
     if (isAnalysisRequest && userId) {
       analyticsData = await ctx.runQuery(
         internal.habits.get_user_analysis_data,
-        { userId },
+        { userId, today: args.today, utcOffsetMinutes: args.utcOffsetMinutes },
       );
       if (analyticsData) {
         analyticsPromptSection = `
@@ -946,7 +946,11 @@ export const get_user_context_data = internalQuery({
 });
 
 export const get_user_analysis_data = internalQuery({
-  args: { userId: v.id("users") },
+  args: {
+    userId: v.id("users"),
+    today: v.string(),
+    utcOffsetMinutes: v.number(),
+  },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) return null;
@@ -958,13 +962,15 @@ export const get_user_analysis_data = internalQuery({
         .collect()
     ).filter((h) => !h.archived);
 
-    // Build the last 7 days (YYYY-MM-DD strings, from 6 days ago to today)
-    const today = new Date();
+    // Build the last 7 days using the client-supplied `today` string
+    // to avoid UTC timezone shifts on the server.
     const sevenDays: string[] = [];
+    const [ty, tm, td] = args.today.split("-").map(Number);
+    const todayBase = new Date(ty, tm - 1, td); // local midnight, no UTC shift
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      sevenDays.push(d.toISOString().split("T")[0]);
+      const d = new Date(todayBase);
+      d.setDate(todayBase.getDate() - i);
+      sevenDays.push(localDateString(d));
     }
 
     const startDate = sevenDays[0];
@@ -1014,10 +1020,12 @@ export const get_user_analysis_data = internalQuery({
       ? { name: topHabit.habit, streak: topHabit.current_streak ?? 0 }
       : null;
 
-    // Time-of-day breakdown using _creationTime (in ms, UTC)
+    // Time-of-day breakdown.
+    // Shift _creationTime (UTC ms) by the client's UTC offset so getHours() reflects local time.
     const timeWindowBreakdown = { morning: 0, afternoon: 0, evening: 0, night: 0 };
     for (const e of completedEntries) {
-      const hour = new Date(e._creationTime).getHours(); // local hour via UTC (server)
+      const localMs = e._creationTime + args.utcOffsetMinutes * 60 * 1000;
+      const hour = new Date(localMs).getUTCHours(); // UTC of the shifted timestamp = local hour
       if (hour >= 5 && hour < 12) timeWindowBreakdown.morning++;
       else if (hour >= 12 && hour < 17) timeWindowBreakdown.afternoon++;
       else if (hour >= 17 && hour < 21) timeWindowBreakdown.evening++;

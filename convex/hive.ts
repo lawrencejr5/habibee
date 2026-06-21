@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { getDaysDifference } from "./utils";
+import { getDaysDifference, localDateString } from "./utils";
 
 // ---------- helpers ----------
 
@@ -17,7 +17,7 @@ function generateHiveCode(): string {
 // ---------- mutations ----------
 
 export const create_hive = mutation({
-  args: { name: v.string() },
+  args: { name: v.string(), today: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("User not authenticated");
@@ -48,7 +48,7 @@ export const create_hive = mutation({
     await ctx.db.insert("hive_members", {
       hive: hiveId,
       user: userId,
-      joined_at: new Date().toISOString().split("T")[0],
+      joined_at: args.today ?? localDateString(new Date()),
     });
 
     return { hiveId, code };
@@ -56,7 +56,7 @@ export const create_hive = mutation({
 });
 
 export const join_hive = mutation({
-  args: { code: v.string() },
+  args: { code: v.string(), today: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("User not authenticated");
@@ -83,7 +83,7 @@ export const join_hive = mutation({
     await ctx.db.insert("hive_members", {
       hive: hive._id,
       user: userId,
-      joined_at: new Date().toISOString().split("T")[0],
+      joined_at: args.today ?? localDateString(new Date()),
     });
 
     return { hiveId: hive._id, name: hive.name };

@@ -9,6 +9,19 @@ export const getDaysDifference = (oldDate: string, newDate: string) => {
   );
 };
 
+/**
+ * Format a Date object as a YYYY-MM-DD string using LOCAL time getters.
+ * Always use this instead of .toISOString().split("T")[0] to avoid UTC date shifts
+ * for users in positive (UTC+N) or negative (UTC-N) timezone offsets.
+ */
+export const localDateString = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+
 export const getFirstDayOfTheWeek = () => {
   const now = new Date();
   const day_number = now.getDay();

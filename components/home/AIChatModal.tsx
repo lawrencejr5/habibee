@@ -128,8 +128,12 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
 
       // Send context to AI
       const apiMessages = serializeMessagesForApi([...messages, new_message]);
+      const today = new Date().toLocaleDateString("en-CA");
+      const utcOffsetMinutes = -new Date().getTimezoneOffset();
       const responseString = await generate_habit({
         messages: apiMessages,
+        today,
+        utcOffsetMinutes,
       });
 
       const endTime = Date.now();

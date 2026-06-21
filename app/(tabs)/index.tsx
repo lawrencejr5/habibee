@@ -48,6 +48,7 @@ import { formatTime12h } from "@/components/habit/AddSubHabitModal";
 import {
   scheduleSubHabitReminders,
   scheduleHabitReminders,
+  scheduleGlobalDailyReminders,
 } from "@/services/notifications";
 import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
 import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
@@ -77,6 +78,11 @@ const Home = () => {
 
   const { signedIn } = useUser();
   const today = new Date().toLocaleDateString("en-CA");
+  const yesterday = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toLocaleDateString("en-CA");
+  })();
 
   const getLocalDateStringForIndex = (sunStr: string, index: number) => {
     const [year, month, day] = sunStr.split("-").map(Number);
@@ -177,10 +183,10 @@ const Home = () => {
   // ── check_streak_and_reset: only run after sync queue is flushed ──────────
   useEffect(() => {
     if (!syncReady) return;
-    check_streak_and_reset({ today });
+    check_streak_and_reset({ today, yesterday });
   }, [syncReady]);
 
-  // Schedule local notifications for sub-habit reminders
+  // Schedule local notifications for sub-habit reminders and global daily nudges
   useEffect(() => {
     if (!subHabitsData || !habitData) return;
 
@@ -192,6 +198,7 @@ const Home = () => {
 
     scheduleSubHabitReminders(subHabitsData as any, habitsMap);
     scheduleHabitReminders(habitData as any);
+    scheduleGlobalDailyReminders();
   }, [subHabitsData, habitData]);
 
   const toggleExpansion = (habitId: string) => {

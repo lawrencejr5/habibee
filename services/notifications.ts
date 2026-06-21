@@ -1,5 +1,63 @@
 import * as Notifications from "expo-notifications";
 
+const GLOBAL_REMINDER_PREFIX = "global-reminder-";
+
+/**
+ * Schedule daily local notifications for the three global reminder slots:
+ * Morning (8 AM), Evening (6 PM), Night (10 PM) — all in the user's LOCAL timezone.
+ * This replaces the server-side UTC crons so every user receives them at the right local time.
+ * Safe to call repeatedly — cancels and re-schedules the three slots each time.
+ */
+export async function scheduleGlobalDailyReminders() {
+  const slots = [
+    {
+      id: `${GLOBAL_REMINDER_PREFIX}morning`,
+      hour: 8,
+      minute: 0,
+      title: "Good Morning Habibee! ☀️",
+      body: "Start your day with a win! Complete a habit now.",
+    },
+    {
+      id: `${GLOBAL_REMINDER_PREFIX}evening`,
+      hour: 18,
+      minute: 0,
+      title: "Time for a Nudge! 🔔",
+      body: "Don't let the day end without a win.",
+    },
+    {
+      id: `${GLOBAL_REMINDER_PREFIX}night`,
+      hour: 23,
+      minute: 45,
+      title: "STREAK DANGER! 🚨",
+      body: "YOUR STREAK IS IN DANGER! Complete your habits before midnight!",
+    },
+  ];
+
+  for (const slot of slots) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(slot.id).catch(
+        () => {},
+      );
+      await Notifications.scheduleNotificationAsync({
+        identifier: slot.id,
+        content: {
+          title: slot.title,
+          body: slot.body,
+          sound: "habibee_alert.wav",
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: slot.hour,
+          minute: slot.minute,
+          channelId: "habibee-alerts",
+        },
+      });
+    } catch (error) {
+      console.warn(`Failed to schedule global reminder (${slot.id}):`, error);
+    }
+  }
+}
+
 const SUB_HABIT_REMINDER_PREFIX = "subhabit-reminder-";
 
 /**
