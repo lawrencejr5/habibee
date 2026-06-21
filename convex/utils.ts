@@ -16,5 +16,8 @@ export const getFirstDayOfTheWeek = () => {
   const sunday = new Date(now);
   sunday.setDate(now.getDate() - day_number);
 
-  return sunday.toISOString().split("T")[0];
+  const y = sunday.getFullYear();
+  const m = String(sunday.getMonth() + 1).padStart(2, "0");
+  const d = String(sunday.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 };
