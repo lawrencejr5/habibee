@@ -252,13 +252,17 @@ export const update_premium_status = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("User not authenticated");
 
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
     const patch: any = {
       is_premium: args.is_premium,
       sub_type: args.sub_type,
       date_of_sub: args.date_of_sub,
     };
 
-    if (args.is_premium) {
+    // Only reset/initialize freezes to 2 if they are transitioning to premium status
+    if (args.is_premium && !user.is_premium) {
       patch.freezes = 2;
     }
 
