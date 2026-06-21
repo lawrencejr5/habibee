@@ -184,6 +184,7 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members }) => {
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
                 <Image
+                  key={member.completedToday ? "active" : "inactive"}
                   source={require("../../assets/icons/fire.png")}
                   style={{
                     width: 14,

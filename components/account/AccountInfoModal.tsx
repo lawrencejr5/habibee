@@ -259,6 +259,7 @@ const AccountInfoModal: FC<AccountModalProps> = ({ visible, setVisible }) => {
               }}
             >
               <Image
+                key={signedIn?.last_streak_date === today ? "active" : "inactive"}
                 source={require("@/assets/icons/fire.png")}
                 style={{
                   height: 16,

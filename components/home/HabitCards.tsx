@@ -392,6 +392,7 @@ export const HabitCard: React.FC<{
                   }}
                 >
                   <Image
+                    key={done ? "active" : "inactive"}
                     source={require("../../assets/icons/fire.png")}
                     style={{
                       tintColor: !done
@@ -440,6 +441,7 @@ export const HabitCard: React.FC<{
             ]}
           >
             <Image
+              key={done ? "active-large" : "inactive-large"}
               source={require("../../assets/icons/fire.png")}
               style={{
                 tintColor: !done ? Colors[theme].text_secondary : undefined,

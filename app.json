@@ -14,8 +14,8 @@
     },
     "ios": {
       "supportsTablet": false,
+      "icon": "./assets/images/Habibee-black.png",
       "bundleIdentifier": "com.lawrencejr.habibee",
-      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -25,7 +25,6 @@
         "foregroundImage": "./assets/images/app-icon.png",
         "backgroundColor": "#1f2428"
       },
-      "versionCode": 3,
       "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false,
       "package": "com.lawrencejr.habibee",

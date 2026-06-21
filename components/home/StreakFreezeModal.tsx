@@ -106,6 +106,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
               style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
             >
               <Image
+                key={isStreakDone ? "active" : "inactive"}
                 source={require("@/assets/icons/fire.png")}
                 style={{
                   width: 24,

@@ -394,6 +394,7 @@ const Home = () => {
               {signedIn.streak ?? 0}
             </Text>
             <Image
+              key={signedIn.last_streak_date === today ? "active" : "inactive"}
               source={require("../../assets/icons/fire.png")}
               style={{
                 width: 20,
