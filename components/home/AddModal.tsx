@@ -550,29 +550,29 @@ const AddModal: React.FC<{
           </ThemedView>
         </Pressable>
         <CustomAlertPortal />
+        <IconColorPicker
+          visible={iconPickerVisible}
+          icons={Object.keys(habitIcons)}
+          selectedColor={selectedColor}
+          selectedIcon={selectedIcon}
+          onClose={() => setIconPickerVisible(false)}
+          onSelect={(icon, color) => {
+            setSelectedIcon(icon);
+            setSelectedColor(color);
+          }}
+        />
+        <AddSubHabitModal
+          visible={subHabitModalVisible}
+          setVisible={setSubHabitModalVisible}
+          subHabits={subHabits}
+          setSubHabits={setSubHabits}
+          themeColor={selectedColor}
+        />
+        <UpgradeModal
+          visible={upgradeModalVisible}
+          setVisible={setUpgradeModalVisible}
+        />
       </Modal>
-      <IconColorPicker
-        visible={iconPickerVisible}
-        icons={Object.keys(habitIcons)}
-        selectedColor={selectedColor}
-        selectedIcon={selectedIcon}
-        onClose={() => setIconPickerVisible(false)}
-        onSelect={(icon, color) => {
-          setSelectedIcon(icon);
-          setSelectedColor(color);
-        }}
-      />
-      <AddSubHabitModal
-        visible={subHabitModalVisible}
-        setVisible={setSubHabitModalVisible}
-        subHabits={subHabits}
-        setSubHabits={setSubHabits}
-        themeColor={selectedColor}
-      />
-      <UpgradeModal
-        visible={upgradeModalVisible}
-        setVisible={setUpgradeModalVisible}
-      />
     </>
   );
 };

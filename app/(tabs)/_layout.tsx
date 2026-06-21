@@ -4,7 +4,7 @@ import React from "react";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { Image } from "react-native";
+import { Image, View } from "react-native";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
@@ -17,83 +17,96 @@ export default function TabLayout() {
   const { signedIn } = useUser();
 
   return (
-    <Tabs
-      screenListeners={{
-        tabPress: () => {
-          haptics.impact();
-        },
-      }}
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
-        headerShown: useClientOnlyValue(false, false),
-        tabBarStyle: {
-          elevation: 0,
-          borderTopWidth: 0,
-          backgroundColor: Colors[theme].background,
-        },
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: Colors[theme].background,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require("../../assets/icons/home.png")}
-              style={{
-                height: 22,
-                width: 22,
-                tintColor: focused ? Colors[theme].primary : "#797979",
-              }}
-              resizeMode="contain"
-            />
-          ),
+      <Tabs
+        screenListeners={{
+          tabPress: () => {
+            haptics.impact();
+          },
         }}
-      />
-      <Tabs.Screen
-        name="hive"
-        options={{
-          title: "Hive",
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require("../../assets/icons/hive.png")}
-              style={{
-                height: 30,
-                width: 30,
-                tintColor: focused ? Colors[theme].primary : "#797979",
-              }}
-              resizeMode="contain"
-            />
-          ),
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
+          headerShown: useClientOnlyValue(false, false),
+          tabBarStyle: {
+            height: 80,
+            elevation: 0,
+            borderTopWidth: 0,
+            backgroundColor: Colors[theme].background,
+          },
+          tabBarLabelStyle: {
+            marginTop: 10,
+          },
         }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "",
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={
-                signedIn?.profile_url
-                  ? { uri: signedIn.profile_url }
-                  : require("../../assets/images/avatar.png")
-              }
-              style={{
-                height: 35,
-                width: 35,
-                borderRadius: 25,
-                alignSelf: "center",
-                marginBottom: -15,
-                borderColor: focused
-                  ? Colors[theme].text
-                  : Colors[theme].text_secondary,
-                borderWidth: focused ? 2 : 1,
-              }}
-              resizeMode="contain"
-            />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={require("../../assets/icons/home.png")}
+                style={{
+                  marginTop: 15,
+                  height: 22,
+                  width: 22,
+                  tintColor: focused ? Colors[theme].primary : "#797979",
+                }}
+                resizeMode="contain"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="hive"
+          options={{
+            title: "Hive",
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={require("../../assets/icons/hive.png")}
+                style={{
+                  marginTop: 15,
+                  height: 30,
+                  width: 30,
+                  tintColor: focused ? Colors[theme].primary : "#797979",
+                }}
+                resizeMode="contain"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="account"
+          options={{
+            title: "",
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={
+                  signedIn?.profile_url
+                    ? { uri: signedIn.profile_url }
+                    : require("../../assets/images/avatar.png")
+                }
+                style={{
+                  height: 35,
+                  width: 35,
+                  borderRadius: 25,
+                  alignSelf: "center",
+                  marginTop: 30,
+                  borderColor: focused
+                    ? Colors[theme].text
+                    : Colors[theme].text_secondary,
+                  borderWidth: focused ? 2 : 1,
+                }}
+                resizeMode="contain"
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </View>
   );
 }
