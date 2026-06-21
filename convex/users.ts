@@ -261,9 +261,13 @@ export const update_premium_status = mutation({
       date_of_sub: args.date_of_sub,
     };
 
-    // Only reset/initialize freezes to 2 if they are transitioning to premium status
-    if (args.is_premium && !user.is_premium) {
-      patch.freezes = 2;
+    // Handle premium freezes based on status transition
+    if (args.is_premium) {
+      if (!user.is_premium) {
+        patch.freezes = 2;
+      }
+    } else {
+      patch.freezes = undefined;
     }
 
     await ctx.db.patch(userId, patch);

@@ -172,9 +172,19 @@ export const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, [initialized, processCustomerInfo]);
 
+  // Synchronize local premium state with database cache on launch/login before RevenueCat finishes loading
+  useEffect(() => {
+    if (signedIn && loading) {
+      setIsPremium(!!signedIn.is_premium);
+      setPlanType(
+        (signedIn.sub_type as "monthly" | "lifetime" | undefined) || null
+      );
+    }
+  }, [signedIn, loading]);
+
   // Automatically sync premium status to backend when frontend state updates and is out of sync with DB
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn || loading) return;
 
     const backendIsPremium = !!signedIn.is_premium;
     const backendPlanType = (signedIn.sub_type as "monthly" | "lifetime" | undefined) || null;
@@ -182,7 +192,7 @@ export const PremiumProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (isPremium !== backendIsPremium || planType !== backendPlanType) {
       syncToConvex(isPremium, planType);
     }
-  }, [isPremium, planType, signedIn, syncToConvex]);
+  }, [isPremium, planType, signedIn, syncToConvex, loading]);
 
   // Purchase Execution
   const purchasePackage = useCallback(
