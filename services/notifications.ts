@@ -58,6 +58,25 @@ export async function scheduleGlobalDailyReminders() {
   }
 }
 
+/**
+ * Cancel all three global daily reminder notifications.
+ * Call this when the user has completed all their habits for the day so they
+ * don't get needlessly nagged. They will be re-scheduled the next time the
+ * app is opened (and the day's habits are not yet complete).
+ */
+export async function cancelGlobalReminders() {
+  const ids = [
+    `${GLOBAL_REMINDER_PREFIX}morning`,
+    `${GLOBAL_REMINDER_PREFIX}evening`,
+    `${GLOBAL_REMINDER_PREFIX}night`,
+  ];
+  for (const id of ids) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(id).catch(() => {});
+    } catch {}
+  }
+}
+
 const SUB_HABIT_REMINDER_PREFIX = "subhabit-reminder-";
 
 /**
@@ -128,7 +147,9 @@ const HABIT_REMINDER_PREFIX = "habit-reminder-";
 
 /**
  * Schedule daily repeating local notifications for parent habits that have reminders.
- * Cancels all existing habit reminders first, then re-schedules.
+ * Skips scheduling for habits that are already completed today (completedTodayIds).
+ * For habits already completed today, their reminder is cancelled instead so
+ * the user is not nagged about something they already finished.
  */
 export async function scheduleHabitReminders(
   habits: Array<{
@@ -136,6 +157,7 @@ export async function scheduleHabitReminders(
     habit: string;
     reminder_time?: string;
   }>,
+  completedTodayIds: Set<string> = new Set(),
 ) {
   // Cancel all existing habit reminders first
   await cancelAllHabitReminders();
@@ -148,6 +170,9 @@ export async function scheduleHabitReminders(
     const minute = parseInt(minStr, 10);
 
     if (isNaN(hour) || isNaN(minute)) continue;
+
+    // If this habit is already done today, leave its notification cancelled
+    if (completedTodayIds.has(h._id)) continue;
 
     try {
       await Notifications.scheduleNotificationAsync({

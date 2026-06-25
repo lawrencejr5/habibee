@@ -49,6 +49,7 @@ import {
   scheduleSubHabitReminders,
   scheduleHabitReminders,
   scheduleGlobalDailyReminders,
+  cancelGlobalReminders,
 } from "@/services/notifications";
 import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
 import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
@@ -186,7 +187,11 @@ const Home = () => {
     check_streak_and_reset({ today, yesterday });
   }, [syncReady]);
 
-  // Schedule local notifications for sub-habit reminders and global daily nudges
+  // Schedule / cancel local notifications whenever habit data changes.
+  // - Per-habit reminders are cancelled for habits already completed today.
+  // - Global reminders (morning/evening/night) are cancelled entirely when
+  //   ALL habits are done, so the user isn't nagged after finishing everything.
+  //   They are re-scheduled on the next app open when habits aren't done yet.
   useEffect(() => {
     if (!subHabitsData || !habitData) return;
 
@@ -196,10 +201,29 @@ const Home = () => {
       habitsMap[h._id] = h.habit;
     }
 
+    // Build the set of habit IDs already completed today (for reminder suppression)
+    const completedTodayIds = new Set<string>(
+      habitData
+        .filter(
+          (h) => h.lastCompleted === today || offlineCompletedIds.has(h._id),
+        )
+        .map((h) => h._id),
+    );
+
+    const allDone =
+      habitData.length > 0 && completedTodayIds.size === habitData.length;
+
     scheduleSubHabitReminders(subHabitsData as any, habitsMap);
-    scheduleHabitReminders(habitData as any);
-    scheduleGlobalDailyReminders();
-  }, [subHabitsData, habitData]);
+    scheduleHabitReminders(habitData as any, completedTodayIds);
+
+    if (allDone) {
+      // All habits done — cancel global nudges for today
+      cancelGlobalReminders();
+    } else {
+      // At least one habit pending — ensure global reminders are scheduled
+      scheduleGlobalDailyReminders();
+    }
+  }, [subHabitsData, habitData, offlineCompletedIds]);
 
   const toggleExpansion = (habitId: string) => {
     haptics.impact();
