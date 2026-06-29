@@ -4,6 +4,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
 } from "react-native";
 import React, {
   Dispatch,
@@ -15,7 +16,8 @@ import React, {
   useState,
 } from "react";
 
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -26,6 +28,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHapitcs } from "@/context/HapticsContext";
 import { usePremium } from "@/context/PremiumContext";
 import { useCustomAlert } from "@/context/AlertContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 
 interface UpgradeModalProps {
@@ -44,6 +47,7 @@ const BENEFITS = [
 const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
+  const insets = useSafeAreaInsets();
   const { purchasePackage, restorePurchases, monthlyPackage, lifetimePackage } =
     usePremium();
   const { showCustomAlert } = useCustomAlert();
@@ -54,12 +58,12 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["93%"], []);
 
   useEffect(() => {
-    if (visible) bottomSheetRef.current?.expand();
-    else bottomSheetRef.current?.close();
+    if (visible) bottomSheetRef.current?.present();
+    else bottomSheetRef.current?.dismiss();
   }, [visible]);
 
   const renderBackdrop = (props: any) => (
@@ -105,16 +109,14 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
   const monthlyPrice = monthlyPackage?.product.priceString ?? "₦640";
   const lifetimePrice = lifetimePackage?.product?.priceString ?? "₦12,600";
 
-  if (!visible) return null;
-
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      onClose={() => setVisible(false)}
+      onDismiss={() => setVisible(false)}
       backgroundStyle={{
         backgroundColor: Colors[theme].background,
       }}
@@ -410,7 +412,7 @@ const UpgradeModal: FC<UpgradeModalProps> = ({ visible, setVisible }) => {
           </View>
         </View>
       </BottomSheetScrollView>
-    </BottomSheet>
+    </BottomSheetModal>
   );
 };
 

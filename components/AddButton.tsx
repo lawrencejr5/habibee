@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, View, Platform } from "react-native";
 
 import Colors from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
 import { useHapitcs } from "@/context/HapticsContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AddButtonProps {
   onPress: () => void;
@@ -14,6 +15,7 @@ interface AddButtonProps {
 const AddButton: React.FC<AddButtonProps> = ({ onPress, onAiPress }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
+  const insets = useSafeAreaInsets();
 
   const [showBtns, setShowBtns] = useState<boolean>(false);
 
@@ -25,7 +27,7 @@ const AddButton: React.FC<AddButtonProps> = ({ onPress, onAiPress }) => {
   return (
     <View
       style={{
-        bottom: 10,
+        bottom: Platform.OS === "ios" ? 60 + insets.bottom : 10,
         right: 20,
         zIndex: 3,
         position: "absolute",

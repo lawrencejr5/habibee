@@ -18,7 +18,7 @@ import {
   ActivityIndicator,
   BackHandler,
 } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -188,8 +188,16 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     });
   };
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["100%"], []);
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible]);
 
   // Use the Habibee orange or your primary theme color
   const accentColor = Colors[theme].primary;
@@ -261,18 +269,16 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
     return () => backHandler.remove();
   }, [visible, setVisible]);
 
-  if (!visible) return null;
-
   return (
     <>
-      <BottomSheet
+      <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
         keyboardBehavior="interactive"
         enableDynamicSizing={false}
         enablePanDownToClose={true}
-        onClose={() => setVisible(false)}
+        onDismiss={() => setVisible(false)}
         backgroundStyle={{
           backgroundColor: Colors[theme].background,
         }}
@@ -551,7 +557,6 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
               )}
             </ScrollView>
 
-            {/* Input Area - Fixed at bottom */}
             <KeyboardStickyView
               style={{
                 position: "absolute",
@@ -659,7 +664,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
             </View>
           </Pressable>
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModal>
       <UpgradeModal
         visible={upgradeModalVisible}
         setVisible={setUpgradeModalVisible}

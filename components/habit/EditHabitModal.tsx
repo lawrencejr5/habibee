@@ -18,9 +18,11 @@ import {
   ActivityIndicator,
   BackHandler,
   Keyboard,
+  Platform,
 } from "react-native";
 
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetTextInput,
   BottomSheetView,
@@ -28,6 +30,7 @@ import BottomSheet, {
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "../useColorScheme";
 import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToggleButton from "@/components/ToggleButton";
 import IconColorPicker from "@/components/home/IconColorPicker";
 import { habitIcons } from "@/data/habits";
@@ -51,11 +54,20 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
 }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
+  const insets = useSafeAreaInsets();
 
   const { showCustomAlert } = useCustomAlert();
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["100%"], []);
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible]);
 
   const update_habit = useMutation(api.habits.update_habit);
 
@@ -146,10 +158,8 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
     />
   );
 
-  if (!visible) return null;
-
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
       index={0}
       android_keyboardInputMode="adjustResize"
@@ -157,7 +167,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      onClose={() => setVisible(false)}
+      onDismiss={() => setVisible(false)}
       backgroundStyle={{
         backgroundColor: Colors[theme].background,
       }}
@@ -169,7 +179,13 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
         borderRadius: 30,
       }}
     >
-      <BottomSheetView style={{ flex: 1, paddingHorizontal: 20 }}>
+      <BottomSheetView
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom,
+        }}
+      >
         <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessible={false}>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -500,7 +516,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
           setSelectedColor(color);
         }}
       />
-    </BottomSheet>
+    </BottomSheetModal>
   );
 };
 

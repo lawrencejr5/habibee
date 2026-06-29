@@ -13,6 +13,7 @@ import {
   Pressable,
   Text,
   View,
+  Platform,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,7 +22,8 @@ import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
@@ -100,7 +102,15 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+
+  useEffect(() => {
+    if (visible && habit) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible, habit]);
 
   const today = new Date().toLocaleDateString("en-CA");
   const week_day = new Date().toLocaleDateString("en-US", {
@@ -463,15 +473,13 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     />
   );
 
-  if (!visible || !habit) return null;
-
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
       index={0}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
-      onClose={() => setVisible(false)}
+      onDismiss={() => setVisible(false)}
       backdropComponent={renderBackdrop}
       backgroundStyle={{
         backgroundColor: Colors[theme].surface,
@@ -484,16 +492,18 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         borderRadius: 10,
       }}
     >
-      <BottomSheetView
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: insets.bottom + 20,
-          height: "100%",
-          borderTopLeftRadius: 50,
-          borderTopRightRadius: 50,
-        }}
-      >
+      {habit ? (
+        <>
+          <BottomSheetView
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 20,
+              paddingBottom: insets.bottom + 20,
+              height: "100%",
+              borderTopLeftRadius: 50,
+              borderTopRightRadius: 50,
+            }}
+          >
         {/* Header */}
         <View style={{ alignItems: "center", marginBottom: 40 }}>
           <Text
@@ -818,7 +828,9 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           </Pressable>
         </Pressable>
       </Modal>
-    </BottomSheet>
+        </>
+      ) : null}
+    </BottomSheetModal>
   );
 };
 

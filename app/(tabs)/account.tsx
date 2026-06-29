@@ -1,5 +1,6 @@
 import {
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -63,7 +64,12 @@ export default function Account() {
           <ThemedText style={styles.title}>Account</ThemedText>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: Platform.OS === "ios" ? 100 + insets.bottom : 20,
+          }}
+        >
           <Pressable
             onPress={() => {
               haptics.impact();

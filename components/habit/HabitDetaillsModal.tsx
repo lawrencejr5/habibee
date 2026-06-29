@@ -14,13 +14,17 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
 } from "react-native";
 
 import { Text as ThemedText } from "../Themed";
 
 import Colors from "@/constants/Colors";
 import { Entypo, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -62,14 +66,27 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
   const { showCustomAlert } = useCustomAlert();
   const { theme } = useTheme();
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const habitsData = useQuery(api.habits.get_user_habits);
+  const archivedHabits = useQuery(api.habits.get_archived_habits);
+
+  const habit =
+    habitsData?.find((h) => h._id === habit_id) ||
+    archivedHabits?.find((h) => h._id === habit_id);
+
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["100%"], []);
+
+  useEffect(() => {
+    if (visible && habit) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible, habit]);
+
   const heatMapScrollRef = useRef<ScrollView>(null);
 
   const today = new Date().toLocaleDateString("en-CA");
-
-  const habitsData = useQuery(api.habits.get_user_habits);
-  const archivedHabits = useQuery(api.habits.get_archived_habits);
   const habitEnteries = useQuery(api.habits.get_habit_enteries, { habit_id });
 
   // Generate heat map data (365 days) — memoized so it only runs when `habit_id` changes
@@ -129,7 +146,8 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const { isPremium } = usePremium();
-  const [upgradeModalVisible, setUpgradeModalVisible] = useState<boolean>(false);
+  const [upgradeModalVisible, setUpgradeModalVisible] =
+    useState<boolean>(false);
 
   const subHabits = useQuery(api.sub_habits.get_sub_habits, {
     parent_habit_id: habit_id,
@@ -229,13 +247,6 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
     }
   };
 
-  // Render nothing when not visible to avoid mounting BottomSheet in a closed/half state
-  if (!visible) return null;
-
-  // Find the habit by id
-  const habit =
-    habitsData?.find((h) => h._id === habit_id) ||
-    archivedHabits?.find((h) => h._id === habit_id);
   const isDone = habit?.lastCompleted === today;
 
   if (!habit) {
@@ -244,13 +255,13 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
 
   return (
     <>
-      <BottomSheet
+      <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         enablePanDownToClose={true}
-        onClose={() => setVisible(false)}
+        onDismiss={() => setVisible(false)}
         backgroundStyle={{
           backgroundColor: Colors[theme].background,
         }}
@@ -662,7 +673,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                 position: "absolute",
                 bottom: habit.archived ? 30 : 0,
                 backgroundColor: Colors[theme].background,
-                paddingVertical: 10,
+                paddingVertical: 50,
                 left: 20,
                 right: 20,
               }}
@@ -728,7 +739,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
             </View>
           </View>
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModal>
       <TaskTimerModal
         visible={timerModalVisible}
         setVisible={setTimerModalVisible}

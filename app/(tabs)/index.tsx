@@ -9,7 +9,7 @@ import Svg, { Circle } from "react-native-svg";
 import { useRef } from "react";
 import { Feather, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text as ThemedText, View as ThemedView } from "@/components/Themed";
@@ -552,7 +552,7 @@ const Home = () => {
           },
         ]}
         contentContainerStyle={{
-          paddingBottom: 80,
+          paddingBottom: Platform.OS === "ios" ? 160 + insets.bottom : 80,
         }}
         showsVerticalScrollIndicator={false}
       >

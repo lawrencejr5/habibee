@@ -6,9 +6,11 @@ import React, {
   useRef,
   useState,
   useCallback,
+  useEffect,
 } from "react";
 import { Pressable, Text, View, Image } from "react-native";
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
@@ -37,7 +39,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
   const { isPremium } = usePremium();
   const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["35%"], []);
 
   const user = useQuery(api.users.get_current_user);
@@ -48,6 +50,14 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
   const currentFreezes = user?.freezes || 0;
   const maxFreezes = 2;
   const hasMaxFreezes = currentFreezes >= maxFreezes;
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -61,17 +71,15 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
     [],
   );
 
-  if (!visible) return null;
-
   return (
     <>
-      <BottomSheet
+      <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
         enableDynamicSizing={true}
         enablePanDownToClose={true}
-        onClose={() => setVisible(false)}
+        onDismiss={() => setVisible(false)}
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: Colors[theme].background }}
         handleIndicatorStyle={{
@@ -217,7 +225,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
             )}
           </View>
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModal>
       <UpgradeModal
         visible={upgradeModalVisible}
         setVisible={setUpgradeModalVisible}
