@@ -20,7 +20,7 @@ const TABS = [
   {
     name: "hive",
     label: "Hive",
-    sf: { default: "hexagon", selected: "hexagon.fill" },
+    sf: { default: "circle.grid.hex", selected: "circle.grid.hex.fill" },
     icon: require("../../assets/icons/hive.png"),
   },
   {

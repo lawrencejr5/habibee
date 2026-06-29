@@ -79,6 +79,7 @@ const StreakFreezeModal: FC<StreakFreezeModalProps> = ({
         snapPoints={snapPoints}
         enableDynamicSizing={true}
         enablePanDownToClose={true}
+        stackBehavior="push"
         onDismiss={() => setVisible(false)}
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: Colors[theme].background }}

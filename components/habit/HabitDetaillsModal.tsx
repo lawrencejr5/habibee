@@ -261,6 +261,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         enablePanDownToClose={true}
+        stackBehavior="push"
         onDismiss={() => setVisible(false)}
         backgroundStyle={{
           backgroundColor: Colors[theme].background,

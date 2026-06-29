@@ -167,6 +167,7 @@ const EditHabitModal: FC<EditHabitModalProps> = ({
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
+      stackBehavior="push"
       onDismiss={() => setVisible(false)}
       backgroundStyle={{
         backgroundColor: Colors[theme].background,

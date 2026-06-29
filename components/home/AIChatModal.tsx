@@ -278,6 +278,7 @@ const AIChatModal: FC<AIChatModalProps> = ({ visible, setVisible }) => {
         keyboardBehavior="interactive"
         enableDynamicSizing={false}
         enablePanDownToClose={true}
+        stackBehavior="push"
         onDismiss={() => setVisible(false)}
         backgroundStyle={{
           backgroundColor: Colors[theme].background,

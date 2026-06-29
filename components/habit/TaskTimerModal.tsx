@@ -479,6 +479,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       index={0}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
+      stackBehavior="push"
       onDismiss={() => setVisible(false)}
       backdropComponent={renderBackdrop}
       backgroundStyle={{
