@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useMemo, useRef } from "react";
 import { Pressable, Text, View, Image } from "react-native";
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
@@ -36,7 +37,7 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
 }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const subHabits = useQuery(
     api.sub_habits.get_sub_habits,
@@ -51,12 +52,12 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
   }, [subHabits]);
 
   useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.snapToIndex(0);
+    if (visible && habit) {
+      bottomSheetRef.current?.present();
     } else {
-      bottomSheetRef.current?.close();
+      bottomSheetRef.current?.dismiss();
     }
-  }, [visible]);
+  }, [visible, habit]);
 
   const renderBackdrop = (props: any) => (
     <BottomSheetBackdrop
@@ -73,13 +74,12 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
   const themeColor = habit.theme ?? Colors[theme].primary;
 
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
-      index={visible ? 0 : -1}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      onClose={onClose}
+      onDismiss={onClose}
       backgroundStyle={{
         backgroundColor: Colors[theme].background,
         borderTopLeftRadius: 24,
@@ -267,7 +267,7 @@ const HabitContextMenu: FC<HabitContextMenuProps> = ({
           </Pressable>
         </View>
       </BottomSheetView>
-    </BottomSheet>
+    </BottomSheetModal>
   );
 };
 

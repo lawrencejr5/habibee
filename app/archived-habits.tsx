@@ -111,7 +111,7 @@ export default function ArchivedHabitsScreen() {
                   duration={String(habit.duration)}
                   title={habit.habit}
                   done={true} // Force fire button to be "done" and disabled
-                  streak={habit.current_streak}
+                  streak={habit.highest_streak}
                   habitType={habit.icon ?? "default"}
                   themeColor={habit.theme ?? "#eee"}
                   timer_start_time={habit.timer_start_time}
