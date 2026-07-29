@@ -689,7 +689,7 @@ export const generate_habit_ai = action({
       );
       if (analyticsData) {
         analyticsPromptSection = `
-ANALYSIS DATA (last 7 days, computed from real user records):
+ANALYSIS DATA (past 7 days excluding present day, computed from real user records):
 ${JSON.stringify(analyticsData, null, 2)}
 `;
       }
@@ -962,12 +962,12 @@ export const get_user_analysis_data = internalQuery({
         .collect()
     ).filter((h) => !h.archived);
 
-    // Build the last 7 days using the client-supplied `today` string
+    // Build the 7 days prior to today (excluding today) using client-supplied `today` string
     // to avoid UTC timezone shifts on the server.
     const sevenDays: string[] = [];
     const [ty, tm, td] = args.today.split("-").map(Number);
     const todayBase = new Date(ty, tm - 1, td); // local midnight, no UTC shift
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 7; i >= 1; i--) {
       const d = new Date(todayBase);
       d.setDate(todayBase.getDate() - i);
       sevenDays.push(localDateString(d));
