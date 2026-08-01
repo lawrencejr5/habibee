@@ -48,7 +48,7 @@ const getDayLabel = (dateStr: string): string => {
 
   // If within this week, show day name
   const diffDays = Math.round(
-    (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
   if (diffDays >= 2 && diffDays <= 6) {
     return d.toLocaleDateString("en-US", { weekday: "long" });
@@ -164,12 +164,7 @@ const PlanScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text
-            style={[
-              styles.headerTitle,
-              { color: Colors[theme].text },
-            ]}
-          >
+          <Text style={[styles.headerTitle, { color: Colors[theme].text }]}>
             Plan Your Day
           </Text>
           <Text
@@ -193,12 +188,7 @@ const PlanScreen = () => {
               { backgroundColor: Colors[theme].surface },
             ]}
           >
-            <Text
-              style={[
-                styles.statsText,
-                { color: Colors[theme].primary },
-              ]}
-            >
+            <Text style={[styles.statsText, { color: Colors[theme].primary }]}>
               {completedTasks}/{totalTasks}
             </Text>
           </View>
@@ -218,12 +208,7 @@ const PlanScreen = () => {
             color={Colors[theme].text_secondary}
             style={{ opacity: 0.4 }}
           />
-          <Text
-            style={[
-              styles.emptyTitle,
-              { color: Colors[theme].text },
-            ]}
-          >
+          <Text style={[styles.emptyTitle, { color: Colors[theme].text }]}>
             No plans yet
           </Text>
           <Text
@@ -247,43 +232,6 @@ const PlanScreen = () => {
 
             return (
               <View key={group.date} style={styles.dayGroup}>
-                {/* Day header */}
-                <View style={styles.dayHeader}>
-                  <View style={styles.dayLabelRow}>
-                    <Text
-                      style={[
-                        styles.dayLabel,
-                        {
-                          color: isToday
-                            ? Colors[theme].primary
-                            : isPast
-                              ? Colors[theme].text_secondary
-                              : Colors[theme].text,
-                        },
-                      ]}
-                    >
-                      {group.label}
-                    </Text>
-                    {isToday && (
-                      <View
-                        style={[
-                          styles.todayDot,
-                          { backgroundColor: Colors[theme].primary },
-                        ]}
-                      />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.dayTaskCount,
-                      { color: Colors[theme].text_secondary },
-                    ]}
-                  >
-                    {group.tasks.filter((t) => t.completed).length}/
-                    {group.tasks.length} done
-                  </Text>
-                </View>
-
                 {/* Tasks */}
                 {group.tasks.map((task) => (
                   <PlanTaskItem

@@ -1,11 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Animated,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Pressable, Animated, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
@@ -73,7 +67,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: Colors[theme].surface,
+          backgroundColor: "transparent",
           transform: [{ scale: scaleAnim }],
         },
       ]}
@@ -92,9 +86,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
             },
           ]}
         >
-          {completed && (
-            <Feather name="check" size={12} color="#fff" />
-          )}
+          {completed && <Feather name="check" size={12} color="#fff" />}
         </View>
       </Pressable>
 
@@ -113,17 +105,16 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
           {title}
         </Text>
         {time && (
-          <View style={[styles.timeBadge, { backgroundColor: Colors[theme].card }]}>
+          <View
+            style={[styles.timeBadge, { backgroundColor: Colors[theme].card }]}
+          >
             <Feather
               name="clock"
               size={11}
               color={Colors[theme].text_secondary}
             />
             <Text
-              style={[
-                styles.timeText,
-                { color: Colors[theme].text_secondary },
-              ]}
+              style={[styles.timeText, { color: Colors[theme].text_secondary }]}
             >
               {formatTime(time)}
             </Text>
@@ -139,11 +130,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
         style={styles.deleteArea}
         hitSlop={8}
       >
-        <Feather
-          name="trash-2"
-          size={16}
-          color={Colors[theme].danger}
-        />
+        <Feather name="x" size={18} color={Colors[theme].text_secondary} />
       </Pressable>
     </Animated.View>
   );
@@ -153,7 +140,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingVertical: 14,
     borderRadius: 14,
     marginBottom: 8,

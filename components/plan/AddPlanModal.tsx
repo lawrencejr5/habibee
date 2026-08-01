@@ -6,7 +6,6 @@ import {
   Pressable,
   Modal,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
   Animated,
 } from "react-native";
@@ -17,6 +16,7 @@ import { useHapitcs } from "@/context/HapticsContext";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 interface AddPlanModalProps {
   visible: boolean;
@@ -35,7 +35,6 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
   const [date, setDate] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
@@ -44,7 +43,6 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
       setDate(new Date());
       setTime(null);
       setShowTimePicker(false);
-      setShowDatePicker(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -71,33 +69,9 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
     setTime(null);
   };
 
-  const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setDate(selectedDate);
-  };
-
   const onTimeChange = (_event: DateTimePickerEvent, selectedTime?: Date) => {
     if (Platform.OS === "android") setShowTimePicker(false);
     if (selectedTime) setTime(selectedTime);
-  };
-
-  const formatDate = (d: Date) => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-    if (todayStr === dStr) return "Today";
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
-    if (tomorrowStr === dStr) return "Tomorrow";
-
-    return d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const formatTime = (t: Date) => {
@@ -116,10 +90,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardView}
-        >
+        <KeyboardStickyView style={styles.keyboardView}>
           <Animated.View
             style={[
               styles.sheet,
@@ -164,34 +135,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                 <Pressable
                   onPress={() => {
                     haptics.impact();
-                    setShowDatePicker(!showDatePicker);
-                    setShowTimePicker(false);
-                  }}
-                  style={[
-                    styles.optionChip,
-                    { backgroundColor: Colors[theme].card },
-                  ]}
-                >
-                  <Feather
-                    name="calendar"
-                    size={14}
-                    color={Colors[theme].primary}
-                  />
-                  <Text
-                    style={[
-                      styles.optionText,
-                      { color: Colors[theme].text },
-                    ]}
-                  >
-                    {formatDate(date)}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => {
-                    haptics.impact();
                     setShowTimePicker(!showTimePicker);
-                    setShowDatePicker(false);
                     if (!time) setTime(new Date());
                   }}
                   style={[
@@ -231,18 +175,6 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                 </Pressable>
               </View>
 
-              {/* Date picker */}
-              {showDatePicker && (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={onDateChange}
-                  minimumDate={new Date()}
-                  themeVariant={theme}
-                />
-              )}
-
               {/* Time picker */}
               {showTimePicker && (
                 <DateTimePicker
@@ -272,7 +204,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
               </Pressable>
             </Pressable>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </KeyboardStickyView>
       </Pressable>
     </Modal>
   );
@@ -285,6 +217,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   keyboardView: {
+    width: "100%",
     justifyContent: "flex-end",
   },
   sheet: {
