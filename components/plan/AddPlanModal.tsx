@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   Modal,
+  ActivityIndicator,
   StyleSheet,
   Platform,
   Animated,
@@ -21,7 +22,7 @@ import { KeyboardStickyView } from "react-native-keyboard-controller";
 interface AddPlanModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (title: string, date: string, time?: string) => void;
+  onSave: (title: string, date: string, time?: string) => Promise<void> | void;
 }
 
 const AddPlanModal: React.FC<AddPlanModalProps> = ({
@@ -35,6 +36,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
   const [date, setDate] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [time, setTime] = useState<Date | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
@@ -43,6 +45,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
       setDate(new Date());
       setTime(null);
       setShowTimePicker(false);
+      setIsAdding(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -54,19 +57,26 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
     }
   }, [visible]);
 
-  const handleSave = () => {
-    if (!title.trim()) return;
+  const handleSave = async () => {
+    if (!title.trim() || isAdding) return;
     haptics.impact();
+    setIsAdding(true);
 
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    let timeStr: string | undefined;
-    if (time) {
-      timeStr = `${String(time.getHours()).padStart(2, "0")}:${String(time.getMinutes()).padStart(2, "0")}`;
+    try {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      let timeStr: string | undefined;
+      if (time) {
+        timeStr = `${String(time.getHours()).padStart(2, "0")}:${String(time.getMinutes()).padStart(2, "0")}`;
+      }
+
+      await onSave(title.trim(), dateStr, timeStr);
+      setTitle("");
+      setTime(null);
+    } catch (e) {
+      console.error("Failed to add plan:", e);
+    } finally {
+      setIsAdding(false);
     }
-
-    onSave(title.trim(), dateStr, timeStr);
-    setTitle("");
-    setTime(null);
   };
 
   const onTimeChange = (_event: DateTimePickerEvent, selectedTime?: Date) => {
@@ -128,6 +138,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                 autoFocus
                 returnKeyType="done"
                 onSubmitEditing={handleSave}
+                editable={!isAdding}
               />
 
               {/* Date & Time row */}
@@ -138,9 +149,10 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                     setShowTimePicker(!showTimePicker);
                     if (!time) setTime(new Date());
                   }}
+                  disabled={isAdding}
                   style={[
                     styles.optionChip,
-                    { backgroundColor: Colors[theme].card },
+                    { backgroundColor: Colors[theme].card, opacity: isAdding ? 0.6 : 1 },
                   ]}
                 >
                   <Feather
@@ -156,7 +168,7 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                   >
                     {time ? formatTime(time) : "Add time"}
                   </Text>
-                  {time && (
+                  {time && !isAdding && (
                     <Pressable
                       onPress={(e) => {
                         e.stopPropagation();
@@ -192,15 +204,21 @@ const AddPlanModal: React.FC<AddPlanModalProps> = ({
                 style={[
                   styles.saveButton,
                   {
-                    backgroundColor: title.trim()
+                    backgroundColor: title.trim() && !isAdding
                       ? Colors[theme].primary
                       : Colors[theme].border,
                   },
                 ]}
-                disabled={!title.trim()}
+                disabled={!title.trim() || isAdding}
               >
-                <Feather name="plus" size={18} color="#fff" />
-                <Text style={styles.saveText}>Add Task</Text>
+                {isAdding ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Feather name="plus" size={18} color="#fff" />
+                    <Text style={styles.saveText}>Add Task</Text>
+                  </>
+                )}
               </Pressable>
             </Pressable>
           </Animated.View>

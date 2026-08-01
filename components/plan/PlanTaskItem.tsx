@@ -1,15 +1,29 @@
-import React, { useRef, useEffect } from "react";
-import { View, Text, Pressable, Animated, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
 import { useHapitcs } from "@/context/HapticsContext";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface PlanTaskItemProps {
   title: string;
   time?: string;
   completed: boolean;
-  onToggle: () => void;
+  onToggle: () => Promise<void> | void;
   onDelete: () => void;
 }
 
@@ -22,32 +36,20 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
 }) => {
   const { theme } = useTheme();
   const haptics = useHapitcs();
-  const strikeAnim = useRef(new Animated.Value(completed ? 1 : 0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    Animated.timing(strikeAnim, {
-      toValue: completed ? 1 : 0,
-      duration: 250,
-      useNativeDriver: false,
-    }).start();
-  }, [completed]);
+  const scale = useSharedValue(1);
 
-  const handleToggle = () => {
-    haptics.impact();
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    onToggle();
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 200, mass: 0.5 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 200, mass: 0.5 });
   };
 
   const formatTime = (t: string) => {
@@ -57,40 +59,55 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
     return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
   };
 
-  const textOpacity = strikeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0.45],
-  });
-
   return (
-    <Animated.View
+    <AnimatedPressable
+      onPress={async () => {
+        haptics.impact();
+        setIsLoading(true);
+        try {
+          await onToggle();
+        } finally {
+          setIsLoading(false);
+        }
+      }}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={isLoading}
       style={[
         styles.container,
-        {
-          backgroundColor: "transparent",
-          transform: [{ scale: scaleAnim }],
-        },
+        animatedStyle,
       ]}
     >
-      <Pressable onPress={handleToggle} style={styles.checkboxArea}>
-        <View
-          style={[
-            styles.checkbox,
-            {
-              borderColor: completed
-                ? Colors[theme].primary
-                : Colors[theme].text_secondary,
-              backgroundColor: completed
-                ? Colors[theme].primary
-                : "transparent",
-            },
-          ]}
-        >
-          {completed && <Feather name="check" size={12} color="#fff" />}
-        </View>
-      </Pressable>
+      <View style={styles.checkboxArea}>
+        {isLoading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="small" color={Colors[theme].primary} />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.checkbox,
+              {
+                borderColor: completed
+                  ? Colors[theme].primary
+                  : Colors[theme].text_secondary,
+                backgroundColor: completed
+                  ? Colors[theme].primary
+                  : "transparent",
+              },
+            ]}
+          >
+            {completed && (
+              <Image
+                source={require("../../assets/icons/check-fill.png")}
+                style={styles.checkIcon}
+              />
+            )}
+          </View>
+        )}
+      </View>
 
-      <Animated.View style={[styles.content, { opacity: textOpacity }]}>
+      <View style={[styles.content, { opacity: completed ? 0.45 : 1 }]}>
         <Text
           style={[
             styles.title,
@@ -120,7 +137,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
             </Text>
           </View>
         )}
-      </Animated.View>
+      </View>
 
       <Pressable
         onPress={() => {
@@ -132,7 +149,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
       >
         <Feather name="x" size={18} color={Colors[theme].text_secondary} />
       </Pressable>
-    </Animated.View>
+    </AnimatedPressable>
   );
 };
 
@@ -144,18 +161,29 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     marginBottom: 8,
+    backgroundColor: "transparent",
   },
   checkboxArea: {
     marginRight: 14,
-    padding: 2,
+  },
+  loaderContainer: {
+    width: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 7,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+  },
+  checkIcon: {
+    width: 14,
+    height: 14,
+    tintColor: "#fff",
   },
   content: {
     flex: 1,
