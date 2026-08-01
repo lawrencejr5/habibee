@@ -14,6 +14,7 @@ import {
   Text,
   View,
   Platform,
+  Image,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -52,6 +53,7 @@ interface TimerStorageState {
   isRunning: boolean;
   startTime: number | null;
   elapsed: number;
+  autoComplete?: boolean;
 }
 
 const timerStorageKey = (habitId: string) => `habibee:timer:${habitId}`;
@@ -121,12 +123,14 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
   const update_timer = useMutation(api.habits.update_habit_timer);
 
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
-  const [restartModalVisible, setRestartModalVisible] = useState<boolean>(false);
+  const [restartModalVisible, setRestartModalVisible] =
+    useState<boolean>(false);
 
   // Local state to make the timer UI feel instantaneous, snappy, and responsive
   const [localIsRunning, setLocalIsRunning] = useState(false);
   const [localStartTime, setLocalStartTime] = useState<number | null>(null);
   const [localElapsed, setLocalElapsed] = useState(0);
+  const [autoComplete, setAutoComplete] = useState(false);
   const notificationSentRef = useRef(false);
 
   // Initialize timer — AsyncStorage is the primary source of truth.
@@ -142,6 +146,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalIsRunning(stored.isRunning);
         setLocalStartTime(stored.startTime);
         setLocalElapsed(stored.elapsed);
+        setAutoComplete(!!stored.autoComplete);
 
         if (stored.isRunning) {
           const currentSession = stored.startTime
@@ -151,11 +156,27 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           const maxSeconds = (habit.duration ?? 0) * 60;
           if (maxSeconds > 0 && currentTotal >= maxSeconds) {
             notificationSentRef.current = true;
+            if (stored.autoComplete) {
+              const endTime =
+                (stored.startTime ?? Date.now()) +
+                (maxSeconds - stored.elapsed) * 1000;
+              const customDate = new Date(endTime).toLocaleDateString("en-CA");
+              const customWeekDay = new Date(endTime).toLocaleDateString(
+                "en-US",
+                { weekday: "short" },
+              );
+              await handleFinish(customDate, customWeekDay);
+              return;
+            }
           } else {
             notificationSentRef.current = false;
             // Schedule background notification
             const remainingSeconds = maxSeconds - currentTotal;
-            await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
+            await scheduleTimerCompletedNotification(
+              habit._id,
+              habit.habit,
+              remainingSeconds,
+            );
           }
         } else {
           notificationSentRef.current = false;
@@ -175,16 +196,22 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           isRunning: true,
           startTime: now,
           elapsed: 0,
+          autoComplete: false,
         };
         setLocalIsRunning(true);
         setLocalStartTime(now);
         setLocalElapsed(0);
+        setAutoComplete(false);
         notificationSentRef.current = false;
 
         // Schedule background notification
         const maxSeconds = (habit.duration ?? 0) * 60;
         if (maxSeconds > 0) {
-          await scheduleTimerCompletedNotification(habit._id, habit.habit, maxSeconds);
+          await scheduleTimerCompletedNotification(
+            habit._id,
+            habit.habit,
+            maxSeconds,
+          );
         }
 
         // Persist locally first, then sync to cloud
@@ -198,6 +225,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         setLocalIsRunning(isTimerActive);
         setLocalStartTime(start!);
         setLocalElapsed(elapsed);
+        setAutoComplete(false);
 
         if (isTimerActive) {
           const currentSession = start
@@ -211,7 +239,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
             notificationSentRef.current = false;
             // Schedule background notification
             const remainingSeconds = maxSeconds - currentTotal;
-            await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
+            await scheduleTimerCompletedNotification(
+              habit._id,
+              habit.habit,
+              remainingSeconds,
+            );
           }
         } else {
           notificationSentRef.current = false;
@@ -222,6 +254,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
           isRunning: isTimerActive,
           startTime: start ?? null,
           elapsed,
+          autoComplete: false,
         });
       }
     };
@@ -254,18 +287,65 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     if (!visible || !habit) return;
 
     // Sync immediately
-    setDisplaySeconds(calculateTotalSeconds());
+    const initialSecs = calculateTotalSeconds();
+    setDisplaySeconds(initialSecs);
+
+    const maxSeconds = (habit.duration ?? 0) * 60;
+    if (
+      localIsRunning &&
+      maxSeconds > 0 &&
+      initialSecs >= maxSeconds &&
+      autoComplete &&
+      !btnLoading
+    ) {
+      const completionTime = localStartTime
+        ? localStartTime + (maxSeconds - localElapsed) * 1000
+        : Date.now();
+      const customDate = new Date(completionTime).toLocaleDateString("en-CA");
+      const customWeekDay = new Date(completionTime).toLocaleDateString(
+        "en-US",
+        { weekday: "short" },
+      );
+      handleFinish(customDate, customWeekDay);
+      return;
+    }
 
     let interval: any;
     if (localIsRunning) {
       interval = setInterval(() => {
-        setDisplaySeconds(calculateTotalSeconds());
+        const secs = calculateTotalSeconds();
+        setDisplaySeconds(secs);
+
+        if (
+          maxSeconds > 0 &&
+          secs >= maxSeconds &&
+          autoComplete &&
+          !btnLoading
+        ) {
+          clearInterval(interval);
+          const completionTime = localStartTime
+            ? localStartTime + (maxSeconds - localElapsed) * 1000
+            : Date.now();
+          const customDate = new Date(completionTime).toLocaleDateString(
+            "en-CA",
+          );
+          const customWeekDay = new Date(completionTime).toLocaleDateString(
+            "en-US",
+            { weekday: "short" },
+          );
+          handleFinish(customDate, customWeekDay);
+        }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [localIsRunning, localStartTime, localElapsed, visible]);
-
-
+  }, [
+    localIsRunning,
+    localStartTime,
+    localElapsed,
+    visible,
+    autoComplete,
+    btnLoading,
+  ]);
 
   useEffect(() => {
     if (visible) {
@@ -292,6 +372,22 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     return () => backHandler.remove();
   }, [visible, setVisible]);
 
+  const handleToggleAutoComplete = async () => {
+    if (!habit) return;
+    const nextVal = !autoComplete;
+    setAutoComplete(nextVal);
+    haptics.impact("light");
+
+    const currentTotal = calculateTotalSeconds();
+    const newState: TimerStorageState = {
+      isRunning: localIsRunning,
+      startTime: localStartTime,
+      elapsed: localElapsed,
+      autoComplete: nextVal,
+    };
+    await saveTimerToStorage(habit._id, newState);
+  };
+
   const toggleTimer = async () => {
     if (!habit) return;
     haptics.impact("light");
@@ -303,6 +399,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         isRunning: false,
         startTime: null,
         elapsed: currentTotal,
+        autoComplete,
       };
       setLocalIsRunning(false);
       setLocalStartTime(null);
@@ -327,6 +424,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         isRunning: true,
         startTime: now,
         elapsed: currentTotal,
+        autoComplete,
       };
       setLocalIsRunning(true);
       setLocalStartTime(now);
@@ -339,7 +437,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
         notificationSentRef.current = false;
         // Schedule background notification
         const remainingSeconds = maxSeconds - currentTotal;
-        await scheduleTimerCompletedNotification(habit._id, habit.habit, remainingSeconds);
+        await scheduleTimerCompletedNotification(
+          habit._id,
+          habit.habit,
+          remainingSeconds,
+        );
       }
 
       // Persist locally first (guaranteed even if offline)
@@ -373,7 +475,11 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     // 2. Schedule or cancel background notification
     if (localIsRunning) {
       const maxSeconds = (habit!.duration ?? 0) * 60;
-      await scheduleTimerCompletedNotification(habit!._id, habit!.habit, maxSeconds);
+      await scheduleTimerCompletedNotification(
+        habit!._id,
+        habit!.habit,
+        maxSeconds,
+      );
     } else {
       await cancelTimerCompletedNotification(habit!._id);
     }
@@ -383,6 +489,7 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
       isRunning: localIsRunning,
       startTime: now,
       elapsed: 0,
+      autoComplete,
     };
     await saveTimerToStorage(habit!._id, newState);
 
@@ -413,15 +520,15 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
     )}`;
   };
 
-  const handleFinish = async () => {
+  const handleFinish = async (customDate?: string, customWeekDay?: string) => {
     if (!habit) return;
     haptics.impact("success");
     setBtnLoading(true);
     try {
       const res = await record_streak({
         habit_id: habit._id,
-        current_date: today,
-        week_day,
+        current_date: customDate ?? today,
+        week_day: customWeekDay ?? week_day,
       });
 
       // Reset timer locally and on database
@@ -505,330 +612,385 @@ const TaskTimerModal: React.FC<TaskTimerModalProps> = ({
               borderTopRightRadius: 50,
             }}
           >
-        {/* Header */}
-        <View style={{ alignItems: "center", marginBottom: 40 }}>
-          <Text
-            style={{
-              fontFamily: "NunitoExtraBold",
-              fontSize: 24,
-              color: Colors[theme].text,
-            }}
-          >
-            {habit.habit}
-          </Text>
-          <Text
-            style={{
-              fontFamily: "NunitoRegular",
-              fontSize: 14,
-              color: Colors[theme].text_secondary,
-              marginTop: 5,
-            }}
-          >
-            Target: {habit.duration} min(s)
-          </Text>
-        </View>
-
-        {/* Timer Display */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 280,
-              height: 280,
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-            }}
-          >
-            {/* SVG Progress Circle */}
-            <Svg width={280} height={280} style={{ position: "absolute" }}>
-              <Circle
-                cx={140}
-                cy={140}
-                r={132}
-                stroke={Colors[theme].border}
-                strokeWidth={12}
-                fill={Colors[theme].surface}
-              />
-              <Circle
-                cx={140}
-                cy={140}
-                r={132}
-                stroke={habit.theme ?? Colors[theme].primary}
-                strokeWidth={12}
-                strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
-                strokeDashoffset={
-                  2 *
-                  Math.PI *
-                  132 *
-                  (1 -
-                    ((habit.duration ?? 0) * 60 > 0
-                      ? Math.min(
-                          displaySeconds / ((habit.duration ?? 0) * 60),
-                          1,
-                        )
-                      : 1))
-                }
-                strokeLinecap="round"
-                fill="none"
-                transform="rotate(-90 140 140)"
-              />
-            </Svg>
-
-            <View style={{ justifyContent: "center", alignItems: "center" }}>
+            {/* Header */}
+            <View style={{ alignItems: "center", marginBottom: 40 }}>
               <Text
                 style={{
                   fontFamily: "NunitoExtraBold",
-                  fontSize: displaySeconds >= 3600 ? 46 : 64,
+                  fontSize: 24,
                   color: Colors[theme].text,
                 }}
               >
-                {formatTime(displaySeconds)}
+                {habit.habit}
               </Text>
               <Text
                 style={{
-                  fontFamily: "NunitoMedium",
-                  fontSize: 16,
+                  fontFamily: "NunitoRegular",
+                  fontSize: 14,
                   color: Colors[theme].text_secondary,
-                  marginTop: 10,
+                  marginTop: 5,
                 }}
               >
-                {isRunning ? "In Progress..." : "Paused"}
+                Target: {habit.duration} min(s)
               </Text>
             </View>
 
-            {/* Absolute Restart Button at Bottom Right of the Circle */}
-            <Pressable
-              onPress={handleRestart}
-              style={({ pressed }) => ({
-                position: "absolute",
-                bottom: 0,
-                right: -20,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: Colors[theme].surface,
-                borderWidth: 2,
-                borderColor: Colors[theme].border,
+            {/* Timer Display */}
+            <View
+              style={{
+                flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 3,
-                elevation: 3,
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Feather
-                name="rotate-ccw"
-                size={18}
-                color={Colors[theme].text_secondary}
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Control Buttons */}
-        <View style={{ gap: 15 }}>
-          <Pressable
-            onPress={toggleTimer}
-            style={{
-              backgroundColor: Colors[theme].surface,
-              paddingVertical: 15,
-              borderRadius: 50,
-              alignItems: "center",
-              borderWidth: 2,
-              borderColor: Colors[theme].border,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "NunitoBold",
-                fontSize: 16,
-                color: Colors[theme].text,
               }}
             >
-              {isRunning ? "Pause" : "Resume"}
-            </Text>
-          </Pressable>
+              <View
+                style={{
+                  width: 280,
+                  height: 280,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  position: "relative",
+                }}
+              >
+                {/* SVG Progress Circle */}
+                <Svg width={280} height={280} style={{ position: "absolute" }}>
+                  <Circle
+                    cx={140}
+                    cy={140}
+                    r={132}
+                    stroke={Colors[theme].border}
+                    strokeWidth={12}
+                    fill={Colors[theme].surface}
+                  />
+                  <Circle
+                    cx={140}
+                    cy={140}
+                    r={132}
+                    stroke={habit.theme ?? Colors[theme].primary}
+                    strokeWidth={12}
+                    strokeDasharray={`${2 * Math.PI * 132} ${2 * Math.PI * 132}`}
+                    strokeDashoffset={
+                      2 *
+                      Math.PI *
+                      132 *
+                      (1 -
+                        ((habit.duration ?? 0) * 60 > 0
+                          ? Math.min(
+                              displaySeconds / ((habit.duration ?? 0) * 60),
+                              1,
+                            )
+                          : 1))
+                    }
+                    strokeLinecap="round"
+                    fill="none"
+                    transform="rotate(-90 140 140)"
+                  />
+                </Svg>
 
-          <Pressable
-            onPress={handleFinish}
-            disabled={
-              btnLoading ||
-              (habit.strict &&
-                (habit.duration ?? 0) > 0 &&
-                displaySeconds < (habit.duration ?? 0) * 60)
-            }
-            style={{
-              backgroundColor: habit.theme ?? Colors[theme].primary,
-              paddingVertical: 15,
-              borderRadius: 50,
-              alignItems: "center",
-              opacity:
-                btnLoading ||
-                (habit.strict &&
-                  (habit.duration ?? 0) > 0 &&
-                  displaySeconds < (habit.duration ?? 0) * 60)
-                  ? 0.5
-                  : 1,
-            }}
-          >
-            {btnLoading ? (
-              <ActivityIndicator color={"#eee"} />
-            ) : (
-              <Text
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 16,
-                  color: "#fff",
-                }}
-              >
-                Finished Task
-              </Text>
-            )}
-          </Pressable>
-        </View>
-      </BottomSheetView>
+                <View
+                  style={{ justifyContent: "center", alignItems: "center" }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: displaySeconds >= 3600 ? 46 : 64,
+                      color: Colors[theme].text,
+                    }}
+                  >
+                    {formatTime(displaySeconds)}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoMedium",
+                      fontSize: 16,
+                      color: Colors[theme].text_secondary,
+                      marginTop: 10,
+                    }}
+                  >
+                    {isRunning ? "In Progress..." : "Paused"}
+                  </Text>
+                </View>
 
-      {/* Mini Custom Confirmation Modal for Restarting */}
-      <Modal
-        visible={restartModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRestartModalVisible(false)}
-      >
-        <Pressable
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-          }}
-          onPress={() => setRestartModalVisible(false)}
-        >
-          <Pressable
-            style={{
-              width: "85%",
-              backgroundColor: Colors[theme].surface,
-              borderRadius: 20,
-              padding: 24,
-              borderWidth: 2,
-              borderColor: Colors[theme].border,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 10,
-              elevation: 5,
-            }}
-            onPress={() => {}}
-          >
-            {/* Header */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 20,
-                  color: Colors[theme].text,
-                }}
-              >
-                Restart Timer
-              </Text>
-              <Pressable
-                onPress={() => setRestartModalVisible(false)}
-                style={{
-                  padding: 4,
-                  borderRadius: 20,
-                }}
-              >
-                <Feather name="x" size={20} color={Colors[theme].text_secondary} />
-              </Pressable>
+                {/* Absolute Restart Button at Bottom Right of the Circle */}
+                <Pressable
+                  onPress={handleRestart}
+                  style={({ pressed }) => ({
+                    position: "absolute",
+                    bottom: 0,
+                    right: -20,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: Colors[theme].surface,
+                    borderWidth: 2,
+                    borderColor: Colors[theme].border,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 3,
+                    elevation: 3,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Feather
+                    name="rotate-ccw"
+                    size={18}
+                    color={Colors[theme].text_secondary}
+                  />
+                </Pressable>
+              </View>
             </View>
 
-            {/* Description */}
-            <Text
-              style={{
-                fontFamily: "NunitoRegular",
-                fontSize: 16,
-                color: Colors[theme].text_secondary,
-                lineHeight: 22,
-                marginBottom: 24,
-              }}
-            >
-              Are you sure you want to restart the timer? This will reset the elapsed time back to 0.
-            </Text>
+            {/* Control Buttons */}
+            <View style={{ gap: 15 }}>
+              {(habit.duration ?? 0) > 0 && (
+                <Pressable
+                  onPress={handleToggleAutoComplete}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    gap: 10,
+                    marginBottom: 5,
+                    marginLeft: 10,
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 6,
+                      borderWidth: 2,
+                      borderColor: autoComplete
+                        ? (habit.theme ?? Colors[theme].primary)
+                        : Colors[theme].text_secondary,
+                      backgroundColor: autoComplete
+                        ? (habit.theme ?? Colors[theme].primary)
+                        : "transparent",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {autoComplete && (
+                      <Image
+                        source={require("../../assets/icons/check-fill.png")}
+                        style={{ width: 12, height: 12, tintColor: "#fff" }}
+                      />
+                    )}
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "NunitoMedium",
+                      fontSize: 14,
+                      color: Colors[theme].text,
+                    }}
+                  >
+                    Complete habit when timer ends
+                  </Text>
+                </Pressable>
+              )}
 
-            {/* Action Row */}
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 12,
-              }}
-            >
               <Pressable
-                onPress={() => setRestartModalVisible(false)}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: Colors[theme].border,
+                onPress={toggleTimer}
+                style={{
                   backgroundColor: Colors[theme].surface,
+                  paddingVertical: 15,
+                  borderRadius: 50,
                   alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.7 : 1,
-                })}
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                }}
               >
                 <Text
                   style={{
                     fontFamily: "NunitoBold",
-                    fontSize: 15,
-                    color: Colors[theme].text_secondary,
+                    fontSize: 16,
+                    color: Colors[theme].text,
                   }}
                 >
-                  Cancel
+                  {isRunning ? "Pause" : "Resume"}
                 </Text>
               </Pressable>
 
               <Pressable
-                onPress={confirmRestart}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: 12,
+                onPress={() => handleFinish()}
+                disabled={
+                  btnLoading ||
+                  (habit.strict &&
+                    (habit.duration ?? 0) > 0 &&
+                    displaySeconds < (habit.duration ?? 0) * 60)
+                }
+                style={{
                   backgroundColor: habit.theme ?? Colors[theme].primary,
+                  paddingVertical: 15,
+                  borderRadius: 50,
                   alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.7 : 1,
-                })}
+                  opacity:
+                    btnLoading ||
+                    (habit.strict &&
+                      (habit.duration ?? 0) > 0 &&
+                      displaySeconds < (habit.duration ?? 0) * 60)
+                      ? 0.5
+                      : 1,
+                }}
               >
-                <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 15,
-                    color: "#fff",
-                  }}
-                >
-                  Restart
-                </Text>
+                {btnLoading ? (
+                  <ActivityIndicator color={"#eee"} />
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 16,
+                      color: "#fff",
+                    }}
+                  >
+                    Finished Task
+                  </Text>
+                )}
               </Pressable>
             </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          </BottomSheetView>
+
+          {/* Mini Custom Confirmation Modal for Restarting */}
+          <Modal
+            visible={restartModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setRestartModalVisible(false)}
+          >
+            <Pressable
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+              }}
+              onPress={() => setRestartModalVisible(false)}
+            >
+              <Pressable
+                style={{
+                  width: "85%",
+                  backgroundColor: Colors[theme].surface,
+                  borderRadius: 20,
+                  padding: 24,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 10,
+                  elevation: 5,
+                }}
+                onPress={() => {}}
+              >
+                {/* Header */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 16,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 20,
+                      color: Colors[theme].text,
+                    }}
+                  >
+                    Restart Timer
+                  </Text>
+                  <Pressable
+                    onPress={() => setRestartModalVisible(false)}
+                    style={{
+                      padding: 4,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Feather
+                      name="x"
+                      size={20}
+                      color={Colors[theme].text_secondary}
+                    />
+                  </Pressable>
+                </View>
+
+                {/* Description */}
+                <Text
+                  style={{
+                    fontFamily: "NunitoRegular",
+                    fontSize: 16,
+                    color: Colors[theme].text_secondary,
+                    lineHeight: 22,
+                    marginBottom: 24,
+                  }}
+                >
+                  Are you sure you want to restart the timer? This will reset
+                  the elapsed time back to 0.
+                </Text>
+
+                {/* Action Row */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 12,
+                  }}
+                >
+                  <Pressable
+                    onPress={() => setRestartModalVisible(false)}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      borderWidth: 1.5,
+                      borderColor: Colors[theme].border,
+                      backgroundColor: Colors[theme].surface,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 15,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      Cancel
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={confirmRestart}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      backgroundColor: habit.theme ?? Colors[theme].primary,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "NunitoExtraBold",
+                        fontSize: 15,
+                        color: "#fff",
+                      }}
+                    >
+                      Restart
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          </Modal>
         </>
       ) : null}
     </BottomSheetModal>
