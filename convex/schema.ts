@@ -92,6 +92,16 @@ const schema = defineSchema({
     .index("by_hive", ["hive"])
     .index("by_user", ["user"])
     .index("by_hive_user", ["hive", "user"]),
+
+  plans: defineTable({
+    user: v.id("users"),
+    title: v.string(),
+    date: v.string(), // "YYYY-MM-DD" for grouping by day
+    time: v.optional(v.string()), // "HH:mm" for ordering within a day
+    completed: v.boolean(),
+  })
+    .index("by_user", ["user"])
+    .index("by_user_date", ["user", "date"]),
 });
 
 export default schema;

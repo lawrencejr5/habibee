@@ -18,6 +18,12 @@ const TABS = [
     icon: require("../../assets/icons/home.png"),
   },
   {
+    name: "plan",
+    label: "Plan",
+    sf: { default: "checklist", selected: "checklist" },
+    icon: require("../../assets/icons/calendar.png"),
+  },
+  {
     name: "hive",
     label: "Hive",
     sf: { default: "circle.grid.hex", selected: "circle.grid.hex.fill" },
@@ -140,6 +146,24 @@ const AndroidTabsLayout = () => {
             tabBarIcon: ({ focused }) => (
               <Image
                 source={require("../../assets/icons/home.png")}
+                style={{
+                  marginTop: 15,
+                  height: 22,
+                  width: 22,
+                  tintColor: focused ? Colors[theme].primary : "#797979",
+                }}
+                resizeMode="contain"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="plan"
+          options={{
+            title: "Plan",
+            tabBarIcon: ({ focused }) => (
+              <Image
+                source={require("../../assets/icons/calendar.png")}
                 style={{
                   marginTop: 15,
                   height: 22,
