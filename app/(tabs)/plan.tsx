@@ -269,6 +269,31 @@ const PlanScreen = () => {
         <Feather name="plus" size={24} color="#fff" />
       </Pressable>
 
+      {/* Watermark */}
+      <View
+        style={{
+          position: "absolute",
+          bottom: insets.bottom + 12,
+          left: 0,
+          right: 0,
+          alignItems: "flex-start",
+          justifyContent: "center",
+          marginLeft: 20,
+        }}
+        pointerEvents="none"
+      >
+        <Text
+          style={{
+            fontFamily: "NunitoMedium",
+            fontSize: 12,
+            color: Colors[theme].text_secondary,
+            opacity: 0.4,
+          }}
+        >
+          Plan resets at the end of the day
+        </Text>
+      </View>
+
       {/* Add modal */}
       <AddPlanModal
         visible={showAddModal}

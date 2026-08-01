@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const get_plans = query({
@@ -100,5 +100,15 @@ export const delete_plan = mutation({
 
     await ctx.db.delete(args.plan_id);
     return { msg: "Plan deleted" };
+  },
+});
+
+export const delete_all_plans_cron = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const plans = await ctx.db.query("plans").collect();
+    for (const plan of plans) {
+      await ctx.db.delete(plan._id);
+    }
   },
 });
