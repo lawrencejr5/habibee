@@ -485,7 +485,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 12,
+                        fontSize: 10,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -502,14 +502,48 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                       <ThemedText
                         style={{
                           fontFamily: "NunitoExtraBold",
-                          fontSize: 25,
+                          fontSize: 20,
                         }}
                       >
                         {habit.current_streak}
                       </ThemedText>
                       <Image
                         source={require("@/assets/icons/fire.png")}
-                        style={{ width: 24, height: 24 }}
+                        style={{ width: 18, height: 18 }}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={{ alignItems: "center" }}>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 10,
+                        color: Colors[theme].text_secondary,
+                      }}
+                    >
+                      Highest Streak
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 5,
+                        gap: 5,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontFamily: "NunitoExtraBold",
+                          fontSize: 20,
+                        }}
+                      >
+                        {habit.highest_streak}
+                      </ThemedText>
+                      <MaterialCommunityIcons
+                        name="trophy"
+                        size={18}
+                        color="#FFD700"
                       />
                     </View>
                   </View>
@@ -518,7 +552,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <Text
                       style={{
                         fontFamily: "NunitoBold",
-                        fontSize: 12,
+                        fontSize: 10,
                         color: Colors[theme].text_secondary,
                       }}
                     >
@@ -527,7 +561,7 @@ const HabitDetaillsModal: FC<HabitDetailsModalProps> = ({
                     <ThemedText
                       style={{
                         fontFamily: "NunitoExtraBold",
-                        fontSize: 25,
+                        fontSize: 20,
                         marginTop: 5,
                       }}
                     >
