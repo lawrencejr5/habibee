@@ -39,6 +39,7 @@ import { Id } from "@/convex/_generated/dataModel";
 
 import AIChatModal from "@/components/home/AIChatModal";
 import UpgradeModal from "@/components/account/UpgradeModal";
+import PlanModal from "@/components/plan/PlanModal";
 
 import { getFirstDayOfTheWeek } from "@/convex/utils";
 import { useCustomAlert } from "@/context/AlertContext";
@@ -181,6 +182,8 @@ const Home = () => {
   const handlePlanPressOut = () => {
     planScale.value = withSpring(1, planPressOutSpringConfig);
   };
+
+  const [planModalVisible, setPlanModalVisible] = useState(false);
 
   const [contextMenuHabit, setContextMenuHabit] = useState<HabitType | null>(
     null,
@@ -633,7 +636,7 @@ const Home = () => {
             <AnimatedPressable
               onPress={() => {
                 haptics.impact();
-                router.push("/plan");
+                setPlanModalVisible(true);
               }}
               onPressIn={handlePlanPressIn}
               onPressOut={handlePlanPressOut}
@@ -1308,6 +1311,10 @@ const Home = () => {
       <UpgradeModal
         visible={upgradeModalVisible}
         setVisible={setUpgradeModalVisible}
+      />
+      <PlanModal
+        visible={planModalVisible}
+        setVisible={setPlanModalVisible}
       />
     </View>
   );
