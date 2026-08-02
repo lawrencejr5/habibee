@@ -274,3 +274,78 @@ export async function cancelTimerCompletedNotification(habitId: string) {
     console.warn("Failed to cancel timer completed notification:", error);
   }
 }
+
+const PLAN_REMINDER_PREFIX = "plan-reminder-";
+
+/**
+ * Schedule one-time local notifications for plans that have a time set.
+ * Cancels all existing plan reminders first, then re-schedules.
+ */
+export async function schedulePlanReminders(
+  plans: Array<{
+    _id: string;
+    title: string;
+    date: string;
+    time?: string;
+    completed: boolean;
+  }>,
+) {
+  await cancelAllPlanReminders();
+
+  const now = new Date();
+
+  for (const plan of plans) {
+    if (plan.completed) continue;
+    if (!plan.time) continue;
+
+    const [yearStr, monthStr, dayStr] = plan.date.split("-");
+    const [hourStr, minStr] = plan.time.split(":");
+
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minStr, 10);
+
+    if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) continue;
+
+    const triggerDate = new Date(year, month, day, hour, minute, 0, 0);
+
+    // Skip trigger if it is in the past
+    if (triggerDate.getTime() <= now.getTime()) continue;
+
+    try {
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${PLAN_REMINDER_PREFIX}${plan._id}`,
+        content: {
+          title: "Plan Reminder 📋",
+          body: `It's time for: "${plan.title}"`,
+          sound: "habibee_alert.wav",
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: triggerDate,
+          channelId: "habibee-alerts",
+        },
+      });
+    } catch (error) {
+      console.warn(`Failed to schedule reminder for plan "${plan.title}":`, error);
+    }
+  }
+}
+
+/**
+ * Cancel all scheduled plan reminders.
+ */
+export async function cancelAllPlanReminders() {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const notif of scheduled) {
+      if (notif.identifier.startsWith(PLAN_REMINDER_PREFIX)) {
+        await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to cancel plan reminders:", error);
+  }
+}

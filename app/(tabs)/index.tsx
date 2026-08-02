@@ -51,6 +51,7 @@ import {
   scheduleHabitReminders,
   scheduleGlobalDailyReminders,
   cancelGlobalReminders,
+  schedulePlanReminders,
 } from "@/services/notifications";
 import ReminderPickerModal from "@/components/habit/ReminderPickerModal";
 import GoalCompletedModal from "@/components/habit/GoalCompletedModal";
@@ -247,6 +248,12 @@ const Home = () => {
       scheduleGlobalDailyReminders();
     }
   }, [subHabitsData, habitData, offlineCompletedIds]);
+
+  useEffect(() => {
+    if (plans) {
+      schedulePlanReminders(plans as any);
+    }
+  }, [plans]);
 
   const toggleExpansion = (habitId: string) => {
     haptics.impact();
