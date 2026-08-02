@@ -24,7 +24,7 @@ interface PlanTaskItemProps {
   time?: string;
   completed: boolean;
   onToggle: () => Promise<void> | void;
-  onDelete: () => void;
+  onDelete: () => Promise<void> | void;
 }
 
 const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
@@ -37,6 +37,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
   const { theme } = useTheme();
   const haptics = useHapitcs();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const scale = useSharedValue(1);
 
@@ -72,7 +73,7 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
       }}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={isLoading}
+      disabled={isLoading || isDeleting}
       style={[
         styles.container,
         animatedStyle,
@@ -140,14 +141,24 @@ const PlanTaskItem: React.FC<PlanTaskItemProps> = ({
       </View>
 
       <Pressable
-        onPress={() => {
+        onPress={async () => {
           haptics.impact();
-          onDelete();
+          setIsDeleting(true);
+          try {
+            await onDelete();
+          } finally {
+            setIsDeleting(false);
+          }
         }}
+        disabled={isLoading || isDeleting}
         style={styles.deleteArea}
         hitSlop={8}
       >
-        <Feather name="x" size={18} color={Colors[theme].text_secondary} />
+        {isDeleting ? (
+          <ActivityIndicator size="small" color={Colors[theme].text_secondary} style={{ transform: [{ scale: 0.8 }] }} />
+        ) : (
+          <Feather name="x" size={18} color={Colors[theme].text_secondary} />
+        )}
       </Pressable>
     </AnimatedPressable>
   );

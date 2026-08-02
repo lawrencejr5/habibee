@@ -67,6 +67,13 @@ import {
   enqueuePendingStreak,
   setLocalLastCompleted,
 } from "@/store/offlineStreakStore";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const Home = () => {
   const insets = useSafeAreaInsets();
@@ -113,6 +120,7 @@ const Home = () => {
     start_date: sundayStr,
     end_date: saturdayStr,
   });
+  const plans = useQuery(api.plans.get_plans);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -161,6 +169,18 @@ const Home = () => {
   const [showNudgeModal, setShowNudgeModal] = useState<boolean>(false);
   const [goalCompletedHabit, setGoalCompletedHabit] =
     useState<HabitType | null>(null);
+
+  const planScale = useSharedValue(1);
+  const planAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: planScale.value }],
+  }));
+  const handlePlanPressIn = () => {
+    planScale.value = withSpring(0.96, { damping: 10, stiffness: 200, mass: 0.5 });
+  };
+  const planPressOutSpringConfig = { damping: 10, stiffness: 200, mass: 0.5 };
+  const handlePlanPressOut = () => {
+    planScale.value = withSpring(1, planPressOutSpringConfig);
+  };
 
   const [contextMenuHabit, setContextMenuHabit] = useState<HabitType | null>(
     null,
@@ -284,7 +304,8 @@ const Home = () => {
     !habitData ||
     !signedIn ||
     !weekly_stats ||
-    !weeklyCompletions;
+    !weeklyCompletions ||
+    !plans;
 
   const totalHabits = habitData?.length || 0;
   const completedHabits =
@@ -602,94 +623,117 @@ const Home = () => {
           </View>
         </View>
 
-        {/* Redesigned Premium AI Promo Card */}
-        {isPremium && (
-          <Pressable
-            onPress={() => {
-              haptics.impact();
-              setAiChatModalVisible(true);
-            }}
-            style={({ pressed }) => ({
-              backgroundColor: Colors[theme].surface,
-              borderWidth: 1.5,
-              borderColor: Colors[theme].border,
-              borderRadius: 15,
-              marginTop: 15,
-              padding: 14,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              opacity: pressed ? 0.9 : 1,
-            })}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                flex: 1,
+        {/* Plan Your Day Card */}
+        {(() => {
+          const todayPlans = plans?.filter((p) => p.date === today) ?? [];
+          const totalTodayPlans = todayPlans.length;
+          const completedTodayPlans = todayPlans.filter((p) => p.completed).length;
+
+          return (
+            <AnimatedPressable
+              onPress={() => {
+                haptics.impact();
+                router.push("/plan");
               }}
+              onPressIn={handlePlanPressIn}
+              onPressOut={handlePlanPressOut}
+              style={[
+                planAnimatedStyle,
+                {
+                  backgroundColor: Colors[theme].surface,
+                  borderWidth: 1.5,
+                  borderColor: Colors[theme].border,
+                  borderRadius: 15,
+                  marginTop: 15,
+                  padding: 14,
+                },
+              ]}
             >
               <View
                 style={{
-                  backgroundColor: Colors[theme].primary + "20",
-                  borderRadius: 12,
-                  padding: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
                 }}
               >
-                <Image
-                  source={require("../../assets/icons/ai-sparkles.png")}
+                <View
                   style={{
-                    width: 20,
-                    height: 20,
-                    tintColor: Colors[theme].primary,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    flex: 1,
                   }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: Colors[theme].primary + "20",
+                      borderRadius: 12,
+                      padding: 8,
+                    }}
+                  >
+                    <Feather
+                      name="check-square"
+                      size={20}
+                      color={Colors[theme].primary}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoBold",
+                        fontSize: 14,
+                        color: Colors[theme].text,
+                      }}
+                    >
+                      Plan Your Day
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "NunitoMedium",
+                        fontSize: 12,
+                        color: Colors[theme].text_secondary,
+                        marginTop: 2,
+                      }}
+                    >
+                      {totalTodayPlans === 0
+                        ? "No plans set for today"
+                        : completedTodayPlans === totalTodayPlans
+                          ? "All plans completed! 🎉"
+                          : `${completedTodayPlans}/${totalTodayPlans} tasks completed`}
+                    </Text>
+                  </View>
+                </View>
+                <Feather
+                  name="chevron-right"
+                  size={20}
+                  color={Colors[theme].text_secondary}
                 />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "NunitoBold",
-                    fontSize: 12,
-                    color: Colors[theme].text_secondary,
-                    marginTop: 2,
-                  }}
-                  numberOfLines={2}
-                >
-                  Generate new habits and insights with habibee ai
-                </Text>
-              </View>
-            </View>
-            <Pressable
-              onPress={() => {
-                haptics.impact();
-                setAiChatModalVisible(true);
-              }}
-              style={{
-                backgroundColor: Colors[theme].primary,
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 20,
-                shadowColor: Colors[theme].primary,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "NunitoExtraBold",
-                  fontSize: 12,
-                  color: "#fff",
-                }}
-              >
-                Try now
-              </Text>
-            </Pressable>
-          </Pressable>
-        )}
+
+              {totalTodayPlans > 0 && (
+                <View style={{ marginTop: 12 }}>
+                  <View
+                    style={{
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: Colors[theme].border,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${(completedTodayPlans / totalTodayPlans) * 100}%`,
+                        height: "100%",
+                        backgroundColor: Colors[theme].primary,
+                      }}
+                    />
+                  </View>
+                </View>
+              )}
+            </AnimatedPressable>
+          );
+        })()}
 
         {/* Redesigned Premium Upgrade Card for Free Users */}
         {!isPremium && (
