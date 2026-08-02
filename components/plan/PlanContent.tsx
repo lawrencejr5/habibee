@@ -93,11 +93,19 @@ export const PlanContent: React.FC<PlanContentProps> = ({
   const togglePlan = useMutation(api.plans.toggle_plan);
   const deletePlan = useMutation(api.plans.delete_plan);
 
+  const today = useMemo(() => getLocalDateStr(new Date()), []);
+
+  const todayPlans = useMemo(() => {
+    if (!plans) return [];
+    return plans.filter((p) => p.date === today);
+  }, [plans, today]);
+
   const dayGroups: DayGroup[] = useMemo(() => {
     if (!plans) return [];
 
     const grouped: Record<string, PlanItem[]> = {};
-    for (const plan of plans) {
+    // Only display today's plans
+    for (const plan of todayPlans) {
       if (!grouped[plan.date]) {
         grouped[plan.date] = [];
       }
@@ -120,7 +128,7 @@ export const PlanContent: React.FC<PlanContentProps> = ({
       label: getDayLabel(date),
       tasks: grouped[date],
     }));
-  }, [plans]);
+  }, [todayPlans]);
 
   const handleAdd = async (title: string, date: string, time?: string) => {
     try {
@@ -147,8 +155,8 @@ export const PlanContent: React.FC<PlanContentProps> = ({
     }
   };
 
-  const totalTasks = plans?.length ?? 0;
-  const completedTasks = plans?.filter((p) => p.completed).length ?? 0;
+  const totalTasks = todayPlans.length;
+  const completedTasks = todayPlans.filter((p) => p.completed).length;
 
   return (
     <View style={styles.sheetContainer}>
@@ -163,7 +171,7 @@ export const PlanContent: React.FC<PlanContentProps> = ({
               <View
                 style={[
                   styles.statsBadge,
-                  { backgroundColor: Colors[theme].surface },
+                  { backgroundColor: Colors[theme].primary + "20" },
                 ]}
               >
                 <Text style={[styles.statsText, { color: Colors[theme].primary }]}>
@@ -184,6 +192,26 @@ export const PlanContent: React.FC<PlanContentProps> = ({
               day: "numeric",
             })}
           </Text>
+          {totalTasks > 0 && (
+            <View style={{ marginTop: 10, width: "90%" }}>
+              <View
+                style={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: Colors[theme].border,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    width: `${(completedTasks / totalTasks) * 100}%`,
+                    height: "100%",
+                    backgroundColor: Colors[theme].primary,
+                  }}
+                />
+              </View>
+            </View>
+          )}
         </View>
 
         {showCloseButton && onClose && (

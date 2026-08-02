@@ -178,7 +178,11 @@ const Home = () => {
     transform: [{ scale: planScale.value }],
   }));
   const handlePlanPressIn = () => {
-    planScale.value = withSpring(0.96, { damping: 10, stiffness: 200, mass: 0.5 });
+    planScale.value = withSpring(0.96, {
+      damping: 10,
+      stiffness: 200,
+      mass: 0.5,
+    });
   };
   const planPressOutSpringConfig = { damping: 10, stiffness: 200, mass: 0.5 };
   const handlePlanPressOut = () => {
@@ -653,7 +657,9 @@ const Home = () => {
         {(() => {
           const todayPlans = plans?.filter((p) => p.date === today) ?? [];
           const totalTodayPlans = todayPlans.length;
-          const completedTodayPlans = todayPlans.filter((p) => p.completed).length;
+          const completedTodayPlans = todayPlans.filter(
+            (p) => p.completed,
+          ).length;
 
           return (
             <AnimatedPressable
@@ -709,29 +715,65 @@ const Home = () => {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
+                    <View
                       style={{
-                        fontFamily: "NunitoBold",
-                        fontSize: 14,
-                        color: Colors[theme].text,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
                       }}
                     >
-                      Plan Your Day
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: "NunitoMedium",
-                        fontSize: 12,
-                        color: Colors[theme].text_secondary,
-                        marginTop: 2,
-                      }}
-                    >
-                      {totalTodayPlans === 0
-                        ? "No plans set for today"
-                        : completedTodayPlans === totalTodayPlans
-                          ? "All plans completed! 🎉"
-                          : `${completedTodayPlans}/${totalTodayPlans} tasks completed`}
-                    </Text>
+                      <Text
+                        style={{
+                          fontFamily: "NunitoBold",
+                          fontSize: 14,
+                          color: Colors[theme].text,
+                        }}
+                      >
+                        Plan Your Day
+                      </Text>
+                      {totalTodayPlans > 0 && (
+                        <View
+                          style={{
+                            backgroundColor: Colors[theme].primary + "20",
+                            paddingHorizontal: 7,
+                            paddingVertical: 1.5,
+                            borderRadius: 10,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "NunitoBold",
+                              fontSize: 10,
+                              color: Colors[theme].primary,
+                            }}
+                          >
+                            {completedTodayPlans}/{totalTodayPlans}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    {totalTodayPlans > 0 && (
+                      <View
+                        style={{ marginTop: 6, width: "100%", maxWidth: 220 }}
+                      >
+                        <View
+                          style={{
+                            height: 4,
+                            borderRadius: 2,
+                            backgroundColor: Colors[theme].border,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: `${(completedTodayPlans / totalTodayPlans) * 100}%`,
+                              height: "100%",
+                              backgroundColor: Colors[theme].primary,
+                            }}
+                          />
+                        </View>
+                      </View>
+                    )}
                   </View>
                 </View>
                 <Feather
@@ -740,27 +782,6 @@ const Home = () => {
                   color={Colors[theme].text_secondary}
                 />
               </View>
-
-              {totalTodayPlans > 0 && (
-                <View style={{ marginTop: 12 }}>
-                  <View
-                    style={{
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: Colors[theme].border,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: `${(completedTodayPlans / totalTodayPlans) * 100}%`,
-                        height: "100%",
-                        backgroundColor: Colors[theme].primary,
-                      }}
-                    />
-                  </View>
-                </View>
-              )}
             </AnimatedPressable>
           );
         })()}
