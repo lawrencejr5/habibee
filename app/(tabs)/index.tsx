@@ -22,6 +22,7 @@ import { HabitCard, SubHabitItem } from "@/components/home/HabitCards";
 
 import HabitDetaillsModal from "@/components/habit/HabitDetaillsModal";
 import TaskTimerModal from "@/components/habit/TaskTimerModal";
+import { eventBus, EVENTS } from "@/services/eventBus";
 import AddModal from "@/components/home/AddModal";
 import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -254,6 +255,21 @@ const Home = () => {
       schedulePlanReminders(plans as any);
     }
   }, [plans]);
+
+  // Listen for streak/goal events emitted by iOS modal screens (which cannot
+  // pass callback props across stack navigation boundaries).
+  useEffect(() => {
+    const offNudge = eventBus.on(EVENTS.FIRST_STREAK_OF_DAY, () => {
+      setShowNudgeModal(true);
+    });
+    const offGoal = eventBus.on<HabitType>(EVENTS.GOAL_COMPLETED, (habit) => {
+      if (habit) setGoalCompletedHabit(habit);
+    });
+    return () => {
+      offNudge();
+      offGoal();
+    };
+  }, []);
 
   const toggleExpansion = (habitId: string) => {
     haptics.impact();
@@ -1085,7 +1101,14 @@ const Home = () => {
                             return;
                           }
                           setSelectedHabitId(habit._id);
-                          setTimerModalVisible(true);
+                          if (Platform.OS === "ios") {
+                            router.push({
+                              pathname: "/task-timer-modal",
+                              params: { habitId: habit._id },
+                            });
+                          } else {
+                            setTimerModalVisible(true);
+                          }
                         }
                       }}
                       onLongPress={() => {
@@ -1096,7 +1119,14 @@ const Home = () => {
                       onCardPress={() => {
                         haptics.impact("light");
                         setSelectedHabitId(habit._id);
-                        setDetailsModalVisible(true);
+                        if (Platform.OS === "ios") {
+                          router.push({
+                            pathname: "/habit-details-modal",
+                            params: { habitId: habit._id },
+                          });
+                        } else {
+                          setDetailsModalVisible(true);
+                        }
                       }}
                     />
                     {isExpanded && (
@@ -1228,14 +1258,16 @@ const Home = () => {
         visible={aiChatModalVisible}
         setVisible={setAiChatModalVisible}
       />
-      <TaskTimerModal
-        visible={timerModalVisible}
-        setVisible={setTimerModalVisible}
-        habit={habitData.find((habit) => habit._id === selectedHabitId)}
-        onFirstStreakOfDay={() => setShowNudgeModal(true)}
-        onGoalCompleted={(h: HabitType) => setGoalCompletedHabit(h)}
-      />
-      {selectedHabitId && (
+      {Platform.OS === "android" && (
+        <TaskTimerModal
+          visible={timerModalVisible}
+          setVisible={setTimerModalVisible}
+          habit={habitData.find((habit) => habit._id === selectedHabitId)}
+          onFirstStreakOfDay={() => setShowNudgeModal(true)}
+          onGoalCompleted={(h: HabitType) => setGoalCompletedHabit(h)}
+        />
+      )}
+      {Platform.OS === "android" && selectedHabitId && (
         <HabitDetaillsModal
           visible={detailsModalVisible}
           setVisible={setDetailsModalVisible}
@@ -1270,7 +1302,17 @@ const Home = () => {
         visible={contextMenuOpen}
         onClose={() => setContextMenuOpen(false)}
         habit={contextMenuHabit}
-        onEdit={() => setEditModalVisible(true)}
+        onEdit={() => {
+          if (Platform.OS === "ios" && contextMenuHabit) {
+            setContextMenuOpen(false);
+            router.push({
+              pathname: "/edit-habit-modal",
+              params: { habitId: contextMenuHabit._id },
+            });
+          } else {
+            setEditModalVisible(true);
+          }
+        }}
         onArchive={() => {
           setContextMenuOpen(false);
           setArchiveModalVisible(true);
@@ -1286,7 +1328,7 @@ const Home = () => {
         }}
       />
 
-      {contextMenuHabit && editModalVisible && (
+      {Platform.OS === "android" && contextMenuHabit && editModalVisible && (
         <EditHabitModal
           visible={editModalVisible}
           setVisible={setEditModalVisible}

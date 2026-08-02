@@ -56,6 +56,11 @@ export default function HabitDetailScreen() {
 
   const handleStart = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (Platform.OS === "ios") {
+      // This screen uses static demo data — timer not available for iOS stack route
+      // until this screen is connected to Convex. Skip timer on iOS.
+      return;
+    }
     setTimerModalVisible(true);
   };
 
@@ -337,11 +342,13 @@ export default function HabitDetailScreen() {
         </Pressable>
       </View>
 
-      <TaskTimerModal
-        visible={timerModalVisible}
-        setVisible={setTimerModalVisible}
-        habit={habit as any}
-      />
+      {Platform.OS === "android" && (
+        <TaskTimerModal
+          visible={timerModalVisible}
+          setVisible={setTimerModalVisible}
+          habit={habit as any}
+        />
+      )}
     </View>
   );
 }

@@ -118,7 +118,9 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signedIn } = useUser();
   const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
+    null,
+  );
 
   // Check if user has seen onboarding
   useEffect(() => {
@@ -193,7 +195,14 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
         router.replace("/(tabs)");
       }
     }
-  }, [isAuthenticated, segments, loaded, isLoading, signedIn?.username, hasSeenOnboarding]);
+  }, [
+    isAuthenticated,
+    segments,
+    loaded,
+    isLoading,
+    signedIn?.username,
+    hasSeenOnboarding,
+  ]);
 
   // Show Custom Splash until fonts load AND Auth determines state
   if (!loaded || showSplash || hasSeenOnboarding === null) {
@@ -214,6 +223,27 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
           >
             <Stack.Screen
               name="plan-modal"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="habit-details-modal"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="task-timer-modal"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="edit-habit-modal"
               options={{
                 presentation: "modal",
                 headerShown: false,

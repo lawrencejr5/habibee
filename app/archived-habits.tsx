@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Text, Pressable } from "react-native";
+import { View, StyleSheet, ScrollView, Text, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -125,7 +125,14 @@ export default function ArchivedHabitsScreen() {
                   onCardPress={() => {
                     haptics.impact("light");
                     setSelectedHabitId(habit._id);
-                    setDetailsModalVisible(true);
+                    if (Platform.OS === "ios") {
+                      router.push({
+                        pathname: "/habit-details-modal",
+                        params: { habitId: habit._id },
+                      });
+                    } else {
+                      setDetailsModalVisible(true);
+                    }
                   }}
                 />
                 {isExpanded && (
@@ -148,7 +155,7 @@ export default function ArchivedHabitsScreen() {
         )}
       </ScrollView>
 
-      {selectedHabitId && (
+      {Platform.OS === "android" && selectedHabitId && (
         <HabitDetaillsModal
           visible={detailsModalVisible}
           setVisible={setDetailsModalVisible}
