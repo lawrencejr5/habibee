@@ -211,7 +211,15 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
               presentation: "card",
               animation: "ios_from_right",
             }}
-          />
+          >
+            <Stack.Screen
+              name="plan-modal"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
+            />
+          </Stack>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

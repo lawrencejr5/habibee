@@ -636,7 +636,11 @@ const Home = () => {
             <AnimatedPressable
               onPress={() => {
                 haptics.impact();
-                setPlanModalVisible(true);
+                if (Platform.OS === "ios") {
+                  router.push("/plan-modal");
+                } else {
+                  setPlanModalVisible(true);
+                }
               }}
               onPressIn={handlePlanPressIn}
               onPressOut={handlePlanPressOut}
@@ -1312,10 +1316,12 @@ const Home = () => {
         visible={upgradeModalVisible}
         setVisible={setUpgradeModalVisible}
       />
-      <PlanModal
-        visible={planModalVisible}
-        setVisible={setPlanModalVisible}
-      />
+      {Platform.OS === "android" && (
+        <PlanModal
+          visible={planModalVisible}
+          setVisible={setPlanModalVisible}
+        />
+      )}
     </View>
   );
 };
