@@ -192,6 +192,7 @@ const PlanModal: FC<PlanModalProps> = ({ visible, setVisible }) => {
         ref={bottomSheetRef}
         index={0}
         snapPoints={snapPoints}
+        enableDynamicSizing={false}
         enablePanDownToClose={true}
         stackBehavior="push"
         onDismiss={() => setVisible(false)}
@@ -207,7 +208,7 @@ const PlanModal: FC<PlanModalProps> = ({ visible, setVisible }) => {
           opacity: 0.5,
         }}
       >
-        <BottomSheetView style={[styles.sheetContainer, { paddingBottom: insets.bottom + 20 }]}>
+        <BottomSheetView style={[styles.sheetContainer, { flex: 1, height: "100%", paddingBottom: insets.bottom + 20 }]}>
           {/* Header */}
           <View style={styles.header}>
             <View>
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 40,
     gap: 10,
-    marginTop: 80,
+    marginBottom: 80,
   },
   emptyTitle: {
     fontSize: 20,
