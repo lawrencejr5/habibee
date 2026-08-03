@@ -11,6 +11,14 @@ export default function PlanModalScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <View
       style={{
@@ -19,7 +27,7 @@ export default function PlanModalScreen() {
         paddingTop: insets.top,
       }}
     >
-      <PlanContent showCloseButton={true} onClose={() => router.back()} />
+      <PlanContent showCloseButton={true} onClose={handleClose} />
     </View>
   );
 }

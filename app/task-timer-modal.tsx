@@ -17,6 +17,14 @@ export default function TaskTimerModalScreen() {
 
   if (!habitId) return null;
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <View
       style={{
@@ -27,7 +35,7 @@ export default function TaskTimerModalScreen() {
     >
       <TaskTimerContent
         habitId={habitId as Id<"habits">}
-        onClose={() => router.back()}
+        onClose={handleClose}
         onFirstStreakOfDay={() => {
           eventBus.emit(EVENTS.FIRST_STREAK_OF_DAY);
         }}

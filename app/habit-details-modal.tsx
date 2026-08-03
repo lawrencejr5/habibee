@@ -17,6 +17,14 @@ export default function HabitDetailsModalScreen() {
 
   if (!habitId) return null;
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <View
       style={{
@@ -26,14 +34,14 @@ export default function HabitDetailsModalScreen() {
     >
       <HabitDetailsContent
         habitId={habitId as Id<"habits">}
-        onClose={() => router.back()}
+        onClose={handleClose}
         onFirstStreakOfDay={() => {
           eventBus.emit(EVENTS.FIRST_STREAK_OF_DAY);
-          router.back();
+          handleClose();
         }}
         onGoalCompleted={(habit: HabitType) => {
           eventBus.emit(EVENTS.GOAL_COMPLETED, habit);
-          router.back();
+          handleClose();
         }}
       />
     </View>

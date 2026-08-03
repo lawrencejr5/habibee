@@ -15,6 +15,14 @@ export default function EditHabitModalScreen() {
 
   if (!habitId) return null;
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <View
       style={{
@@ -25,7 +33,7 @@ export default function EditHabitModalScreen() {
     >
       <EditHabitContent
         habitId={habitId as Id<"habits">}
-        onClose={() => router.back()}
+        onClose={handleClose}
       />
     </View>
   );
