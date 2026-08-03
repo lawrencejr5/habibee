@@ -16,7 +16,12 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { api } from "@/convex/_generated/api";
 
-import { ConvexReactClient, useConvexAuth, useMutation } from "convex/react";
+import {
+  ConvexReactClient,
+  useConvexAuth,
+  useMutation,
+  useQuery,
+} from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,6 +40,10 @@ import {
   usePushNotification,
 } from "@/context/PushNotification";
 import { getPendingStreaks } from "@/store/offlineStreakStore";
+import {
+  useAutoCompleteTimers,
+  HabitDurationMap,
+} from "@/hooks/useAutoCompleteTimers";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -93,11 +102,32 @@ function NavigationWithTheme({ loaded }: { loaded: boolean }) {
   const segments = useSegments();
   const appState = useRef(AppState.currentState);
 
+  // Fetch user habits so we can build the duration map for auto-complete scanning
+  const habitsData = useQuery(api.habits.get_user_habits);
+
+  // Build a { habitId → durationMinutes } map — memoised via useMemo equivalent
+  // (plain object reference changes only when habitsData changes, which is fine).
+  const habitDurationMap: HabitDurationMap = {};
+  if (habitsData) {
+    for (const h of habitsData) {
+      if (h.duration && h.duration > 0) {
+        habitDurationMap[h._id] = h.duration;
+      }
+    }
+  }
+
+  const { scanAndComplete } = useAutoCompleteTimers(habitDurationMap);
+
   const checkStreak = useMutation(api.habits.check_streak_and_reset);
   const performStreakCheck = async () => {
     try {
-      // Don't reset streaks if there are pending offline completions —
-      // wait for useSyncPendingStreaks in index.tsx to flush them first.
+      // 1. First, record any auto-complete timers that finished while the app
+      //    was in the background. This MUST run before check_streak_and_reset
+      //    so lastCompleted is up-to-date and no freeze is wrongly consumed.
+      await scanAndComplete();
+
+      // 2. Don't reset streaks if there are pending offline completions —
+      //    wait for useSyncPendingStreaks in index.tsx to flush them first.
       const pending = getPendingStreaks();
       if (pending.length > 0) {
         console.log(
