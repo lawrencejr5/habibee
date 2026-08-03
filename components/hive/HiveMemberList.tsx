@@ -1,5 +1,12 @@
-import React from "react";
-import { View, Text, Image, Pressable, Alert } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -27,36 +34,38 @@ interface HiveMemberListProps {
   hiveId?: Id<"hives">;
 }
 
-const HiveMemberList: React.FC<HiveMemberListProps> = ({ members, isLeader, hiveId }) => {
+const HiveMemberList: React.FC<HiveMemberListProps> = ({
+  members,
+  isLeader,
+  hiveId,
+}) => {
   const { theme } = useTheme();
   const { signedIn } = useUser();
   const haptics = useHapitcs();
   const { showCustomAlert } = useCustomAlert();
   const removeMember = useMutation(api.hive.remove_member);
 
-  const handleRemoveMember = (member: HiveMember) => {
+  const [memberToRemove, setMemberToRemove] = useState<HiveMember | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  const handleRemovePress = (member: HiveMember) => {
     haptics.impact("medium");
-    Alert.alert(
-      "Remove Member",
-      `Are you sure you want to remove ${member.fullname} from this hive?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (hiveId) {
-                await removeMember({ hiveId, userId: member._id as Id<"users"> });
-                showCustomAlert("Member removed successfully", "success");
-              }
-            } catch (err: any) {
-              showCustomAlert(err.message || "Failed to remove member", "danger");
-            }
-          },
-        },
-      ]
-    );
+    setMemberToRemove(member);
+  };
+
+  const confirmRemove = async () => {
+    if (!memberToRemove || !hiveId) return;
+    setIsRemoving(true);
+    haptics.impact("medium");
+    try {
+      await removeMember({ hiveId, userId: memberToRemove._id as Id<"users"> });
+      showCustomAlert("Member removed successfully", "success");
+      setMemberToRemove(null);
+    } catch (err: any) {
+      showCustomAlert(err.message || "Failed to remove member", "danger");
+    } finally {
+      setIsRemoving(false);
+    }
   };
 
   // Sort: completed first, then by streak descending
@@ -122,7 +131,7 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members, isLeader, hive
               {/* Right Tab: Remove Button */}
               {hasRemoveButton && (
                 <Pressable
-                  onPress={() => handleRemoveMember(member)}
+                  onPress={() => handleRemovePress(member)}
                   style={({ pressed }) => ({
                     backgroundColor: Colors[theme].surface,
                     borderWidth: 2,
@@ -258,7 +267,9 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members, isLeader, hive
               </View>
 
               {/* Right side: streak */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+              >
                 <View
                   style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                 >
@@ -290,6 +301,131 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members, isLeader, hive
           </View>
         );
       })}
+
+      {/* Custom Remove Confirmation Modal */}
+      <Modal visible={!!memberToRemove} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+            zIndex: 100,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: Colors[theme].surface,
+              width: "100%",
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 2,
+              borderColor: Colors[theme].border,
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: "#ef444415",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 15,
+              }}
+            >
+              <Feather name="user-x" size={24} color="#ef4444" />
+            </View>
+            <Text
+              style={{
+                fontFamily: "NunitoExtraBold",
+                fontSize: 20,
+                color: Colors[theme].text,
+                marginBottom: 10,
+                textAlign: "center",
+              }}
+            >
+              Remove Member
+            </Text>
+            <Text
+              style={{
+                fontFamily: "NunitoMedium",
+                fontSize: 14,
+                color: Colors[theme].text_secondary,
+                marginBottom: 20,
+                textAlign: "center",
+                lineHeight: 20,
+              }}
+            >
+              Are you sure you want to remove{" "}
+              <Text
+                style={{ fontFamily: "NunitoBold", color: Colors[theme].text }}
+              >
+                {memberToRemove?.fullname}
+              </Text>{" "}
+              from this hive?
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10, width: "100%" }}>
+              <Pressable
+                onPress={() => {
+                  haptics.impact("light");
+                  setMemberToRemove(null);
+                }}
+                disabled={isRemoving}
+                style={{
+                  flex: 1,
+                  padding: 15,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  backgroundColor: Colors[theme].background,
+                  borderWidth: 1,
+                  borderColor: Colors[theme].border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "NunitoBold",
+                    color: Colors[theme].text,
+                    fontSize: 16,
+                  }}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmRemove}
+                disabled={isRemoving}
+                style={{
+                  flex: 1,
+                  padding: 15,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  backgroundColor: "#ef4444",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {isRemoving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "NunitoBold",
+                      color: "#fff",
+                      fontSize: 16,
+                    }}
+                  >
+                    Remove
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
