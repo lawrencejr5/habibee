@@ -349,3 +349,33 @@ export const get_my_hives_with_members = query({
     return hivesWithMembers.filter(Boolean);
   },
 });
+
+export const remove_member = mutation({
+  args: { hiveId: v.id("hives"), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) throw new Error("User not authenticated");
+
+    const hive = await ctx.db.get(args.hiveId);
+    if (!hive) throw new Error("Hive not found");
+
+    if (hive.creator !== currentUserId) {
+      throw new Error("Only the leader can remove members from the hive");
+    }
+
+    if (args.userId === currentUserId) {
+      throw new Error("You cannot remove yourself");
+    }
+
+    const membership = await ctx.db
+      .query("hive_members")
+      .withIndex("by_hive_user", (q) =>
+        q.eq("hive", args.hiveId).eq("user", args.userId)
+      )
+      .unique();
+
+    if (!membership) throw new Error("Member not found in this hive");
+
+    await ctx.db.delete(membership._id);
+  },
+});

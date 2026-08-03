@@ -684,7 +684,11 @@ export default function HivePage() {
                 ) : hiveMembers.length > 0 ? (
                   <>
                     <HiveHexagonGrid members={hiveMembers as any} />
-                    <HiveMemberList members={hiveMembers as any} />
+                    <HiveMemberList
+                      members={hiveMembers as any}
+                      isLeader={selectedHive.isLeader}
+                      hiveId={selectedHive._id}
+                    />
                   </>
                 ) : (
                   <View style={{ paddingVertical: 40, alignItems: "center" }}>

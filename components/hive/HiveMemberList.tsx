@@ -1,8 +1,14 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, Pressable, Alert } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useHapitcs } from "@/context/HapticsContext";
+import { useCustomAlert } from "@/context/AlertContext";
+import { Id } from "@/convex/_generated/dataModel";
+
 import Colors from "@/constants/Colors";
 import { useTheme } from "@/context/ThemeContext";
-
 import { useUser } from "@/context/UserContext";
 
 interface HiveMember {
@@ -17,11 +23,41 @@ interface HiveMember {
 
 interface HiveMemberListProps {
   members: HiveMember[];
+  isLeader?: boolean;
+  hiveId?: Id<"hives">;
 }
 
-const HiveMemberList: React.FC<HiveMemberListProps> = ({ members }) => {
+const HiveMemberList: React.FC<HiveMemberListProps> = ({ members, isLeader, hiveId }) => {
   const { theme } = useTheme();
   const { signedIn } = useUser();
+  const haptics = useHapitcs();
+  const { showCustomAlert } = useCustomAlert();
+  const removeMember = useMutation(api.hive.remove_member);
+
+  const handleRemoveMember = (member: HiveMember) => {
+    haptics.impact("medium");
+    Alert.alert(
+      "Remove Member",
+      `Are you sure you want to remove ${member.fullname} from this hive?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (hiveId) {
+                await removeMember({ hiveId, userId: member._id as Id<"users"> });
+                showCustomAlert("Member removed successfully", "success");
+              }
+            } catch (err: any) {
+              showCustomAlert(err.message || "Failed to remove member", "danger");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   // Sort: completed first, then by streak descending
   const sorted = [...members].sort((a, b) => {
@@ -41,36 +77,78 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members }) => {
             ? "You"
             : "Member";
 
+        const hasRemoveButton = isLeader && !isMe;
+
         return (
           <View key={member._id} style={{ marginBottom: 5, width: "100%" }}>
-            {/* Extension Tab */}
+            {/* Extension Tabs Row */}
             <View
               style={{
-                backgroundColor: Colors[theme].surface,
-                borderWidth: 2,
-                borderColor: Colors[theme].border,
-                borderBottomWidth: 0,
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                alignSelf: "flex-start",
                 flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
+                justifyContent: "space-between",
+                alignItems: "flex-end",
                 marginBottom: -2,
                 zIndex: 10,
+                width: "100%",
               }}
             >
-              <Text
+              {/* Left Tab: Role */}
+              <View
                 style={{
-                  fontSize: 10,
-                  fontFamily: "NunitoBold",
-                  color: Colors[theme].text_secondary,
+                  backgroundColor: Colors[theme].surface,
+                  borderWidth: 2,
+                  borderColor: Colors[theme].border,
+                  borderBottomWidth: 0,
+                  borderTopLeftRadius: 10,
+                  borderTopRightRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
-                {roleText}
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "NunitoBold",
+                    color: Colors[theme].text_secondary,
+                  }}
+                >
+                  {roleText}
+                </Text>
+              </View>
+
+              {/* Right Tab: Remove Button */}
+              {hasRemoveButton && (
+                <Pressable
+                  onPress={() => handleRemoveMember(member)}
+                  style={({ pressed }) => ({
+                    backgroundColor: Colors[theme].surface,
+                    borderWidth: 2,
+                    borderColor: Colors[theme].border,
+                    borderBottomWidth: 0,
+                    borderTopLeftRadius: 10,
+                    borderTopRightRadius: 10,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    opacity: pressed ? 0.75 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "NunitoBold",
+                      color: "#ef4444",
+                    }}
+                  >
+                    Remove
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             {/* Member Card */}
@@ -84,7 +162,7 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members }) => {
                 borderBottomLeftRadius: 14,
                 borderBottomRightRadius: 14,
                 borderTopLeftRadius: 0,
-                borderTopRightRadius: 14,
+                borderTopRightRadius: hasRemoveButton ? 0 : 14,
                 borderWidth: 2,
                 borderColor: Colors[theme].border,
                 zIndex: 1,
@@ -180,31 +258,33 @@ const HiveMemberList: React.FC<HiveMemberListProps> = ({ members }) => {
               </View>
 
               {/* Right side: streak */}
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-              >
-                <Image
-                  key={member.completedToday ? "active" : "inactive"}
-                  source={require("../../assets/icons/fire.png")}
-                  style={{
-                    width: 14,
-                    height: 14,
-                    tintColor: member.completedToday
-                      ? undefined
-                      : Colors[theme].text_secondary,
-                  }}
-                />
-                <Text
-                  style={{
-                    fontFamily: "NunitoExtraBold",
-                    fontSize: 14,
-                    color: member.completedToday
-                      ? Colors[theme].primary
-                      : Colors[theme].text_secondary,
-                  }}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                 >
-                  {member.streak}
-                </Text>
+                  <Image
+                    key={member.completedToday ? "active" : "inactive"}
+                    source={require("../../assets/icons/fire.png")}
+                    style={{
+                      width: 14,
+                      height: 14,
+                      tintColor: member.completedToday
+                        ? undefined
+                        : Colors[theme].text_secondary,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: "NunitoExtraBold",
+                      fontSize: 14,
+                      color: member.completedToday
+                        ? Colors[theme].primary
+                        : Colors[theme].text_secondary,
+                    }}
+                  >
+                    {member.streak}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>

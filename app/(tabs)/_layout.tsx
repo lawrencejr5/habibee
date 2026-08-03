@@ -207,7 +207,7 @@ const AndroidTabsLayout = () => {
           <Tabs.Screen
             name="account"
             options={{
-              title: "Account",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <Image
                   source={
