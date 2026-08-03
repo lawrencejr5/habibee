@@ -25,7 +25,7 @@ import TaskTimerModal from "@/components/habit/TaskTimerModal";
 import { eventBus, EVENTS } from "@/services/eventBus";
 import AddModal from "@/components/home/AddModal";
 import { usePathname, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useHapitcs } from "@/context/HapticsContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -38,7 +38,7 @@ import { useConvexAuth, useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
-import AIChatModal from "@/components/home/AIChatModal";
+import { LiquidTabContext } from "./_layout";
 import UpgradeModal from "@/components/account/UpgradeModal";
 import PlanModal from "@/components/plan/PlanModal";
 
@@ -88,6 +88,7 @@ const Home = () => {
   const { isOnline } = useNetworkStatus();
 
   const { signedIn } = useUser();
+  const isLiquidTab = useContext(LiquidTabContext);
   const today = new Date().toLocaleDateString("en-CA");
   const yesterday = (() => {
     const d = new Date();
@@ -133,7 +134,6 @@ const Home = () => {
   const { motivationalMsgs } = useMotivationalContext();
 
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
-  const [aiChatModalVisible, setAiChatModalVisible] = useState<boolean>(false);
   const [upgradeModalVisible, setUpgradeModalVisible] =
     useState<boolean>(false);
   const [createHiveModalVisible, setCreateHiveModalVisible] =
@@ -308,7 +308,6 @@ const Home = () => {
     timerModalVisible ||
     addModalVisible ||
     detailsModalVisible ||
-    aiChatModalVisible ||
     showNudgeModal ||
     contextMenuOpen ||
     editModalVisible ||
@@ -777,7 +776,7 @@ const Home = () => {
                   </View>
                 </View>
                 <Feather
-                  name="chevron-right"
+                  name="chevron-down"
                   size={20}
                   color={Colors[theme].text_secondary}
                 />
@@ -1266,19 +1265,32 @@ const Home = () => {
         </View>
       </ScrollView>
       {!modalOpen && (
-        <AddButton
+        <Pressable
           onPress={open}
-          onAiPress={() => {
-            setAiChatModalVisible(true);
-            haptics.impact();
-          }}
-        />
+          style={({ pressed }) => ({
+            position: "absolute",
+            bottom: isLiquidTab ? 60 + insets.bottom : insets.bottom,
+            right: 20,
+            zIndex: 3,
+            backgroundColor: Colors[theme].primary,
+            width: 54,
+            height: 54,
+            borderRadius: 27,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: Colors[theme].border,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 6,
+            elevation: 8,
+            opacity: pressed ? 0.85 : 1,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
+        >
+          <Feather name="plus" color="#fff" size={28} />
+        </Pressable>
       )}
       <AddModal visible={addModalVisible} setVisible={setAddModalVisible} />
-      <AIChatModal
-        visible={aiChatModalVisible}
-        setVisible={setAiChatModalVisible}
-      />
       {Platform.OS === "android" && (
         <TaskTimerModal
           visible={timerModalVisible}

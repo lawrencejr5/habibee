@@ -174,7 +174,9 @@ export const PlanContent: React.FC<PlanContentProps> = ({
                   { backgroundColor: Colors[theme].primary + "20" },
                 ]}
               >
-                <Text style={[styles.statsText, { color: Colors[theme].primary }]}>
+                <Text
+                  style={[styles.statsText, { color: Colors[theme].primary }]}
+                >
                   {completedTasks}/{totalTasks}
                 </Text>
               </View>
@@ -300,7 +302,10 @@ export const PlanContent: React.FC<PlanContentProps> = ({
       </Pressable>
 
       {/* Watermark */}
-      <View style={[styles.watermark, { bottom: insets.bottom + 12 }]} pointerEvents="none">
+      <View
+        style={[styles.watermark, { bottom: insets.bottom + 12 }]}
+        pointerEvents="none"
+      >
         <Text
           style={[
             styles.watermarkText,
@@ -330,7 +335,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 16,
     paddingBottom: 12,
   },
   headerTitle: {
